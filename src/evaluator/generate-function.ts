@@ -3,6 +3,8 @@ import { FindComponentById } from "../component/find";
 import { JournalError } from "../journal/error";
 import { IEvaluateOptions } from "../types/evaluate-options";
 import { ContextKeys } from "../utilities/context-keys";
+import { Future } from "../values/future";
+import { WaitPromise } from "./wait-promise";
 
 const InlineJSContextKey = '__InlineJS_Context__';
 
@@ -48,22 +50,6 @@ export function CallIfFunction(value: any, handler?: (value: any) => void, compo
     return (handler ? handler(value) : value);
 }
 
-export function WaitPromise(value: Promise<any>, handler: (value: any) => void, recursive?: boolean){
-    if (recursive){
-        value.then((value) => {
-            if (value instanceof Promise){
-                WaitPromise(value, handler, true);
-            }
-            else{//Immediate
-                handler(value);
-            }
-        });
-    }
-    else{//Wait one
-        value.then(handler);
-    }
-}
-
 export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Array<any>, contexts?: Record<string, any>) => any;
 
 export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive' }: IEvaluateOptions): GeneratedFunctionType{
@@ -90,12 +76,16 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         
         try{
             let result = target(proxy);
+            if (result instanceof Future){
+                result = result.Get();
+            }
+            
             if (!handler){
                 return (disableFunctionCall ? result : CallIfFunction(result, handler, componentId, params));
             }
 
             let handleResult = (value: any) => {
-                if (waitPromise !== 'none' && value instanceof Promise){
+                if (waitPromise !== 'none'){
                     WaitPromise(value, handler, waitPromise === 'recursive');
                 }
                 else{//Immediate

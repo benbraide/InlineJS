@@ -15,15 +15,7 @@ const keyEvents = ['keydown', 'keyup'], mobileMap = {
 };
 
 function GetOptions(argKey: string, argOptions: Array<string>){
-    let keyOptions = (keyEvents.includes(argKey) ? {
-        meta: false,
-        alt: false,
-        ctrl: false,
-        shift: false,
-        list: new Array<string>(),
-    } : null);
-
-    let options = ResolveOptions({
+    let options = {
         outside: false,
         prevent: false,
         stop: false,
@@ -37,13 +29,25 @@ function GetOptions(argKey: string, argOptions: Array<string>){
         join: false,
         camel: false,
         debounce: -1,
-    }, argOptions, 250, ({ option, options } = {}) => {
-        if (keyOptions && option && option in keyOptions && typeof keyOptions[option] === 'boolean'){
-            keyOptions[option] = true;
-        }
-        else if (keyOptions && option && !(option in options!)){
-            keyOptions.list.push(GetGlobal().GetConfig().MapKeyEvent(ToCamelCase(option, true)));
-        }
+    };
+    
+    let keyOptions = (keyEvents.includes(argKey) ? {
+        meta: false,
+        alt: false,
+        ctrl: false,
+        shift: false,
+        list: new Array<string>(),
+    } : null);
+
+    ResolveOptions({
+        options: [options, keyOptions],
+        list: argOptions,
+        defaultNumber: 250,
+        unknownCallback: ({ option }) => {
+            if (keyOptions && option){
+                keyOptions.list.push(GetGlobal().GetConfig().MapKeyEvent(ToCamelCase(option, true)));
+            }
+        },
     });
 
     return { keyOptions, options };

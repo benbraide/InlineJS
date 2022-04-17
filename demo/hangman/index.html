@@ -15,9 +15,11 @@
 <body class="w-screen h-screen flex flex-row justify-center items-start">
     <main class="mt-16" x-data="{ $config: { reactiveState: 'unoptimized' }, wordList: window['wordList'], word: '', picks: [], wins: 0, losses: 0 }">
         <template x-static="generateWord = () => { let words = wordList[category]; return words[Math.floor(Math.random() * words.length)] }"></template>
+        <template x-static="insertChar = (char) => { picks.push(char); wrongPicks = picks.filter(c => !word.includes(c)).length; fate = (winFate() || lossFate()) }"></template>
         <template x-static="winFate = () => ((word.findIndex(c => !picks.includes(c)) == -1) ? 'win' : null)"></template>
         <template x-static="lossFate = () => ((wrongPicks >= 6) ? 'loss' : null)"></template>
         <template x-effect="wins += ((fate === 'win') ? 1 : 0); losses += ((fate === 'loss') ? 1 : 0)"></template>
+        <template x-on:keydown.window="if (playing && !fate && $event.key.match(/[a-z]/i) && !picks.includes($event.key)){ insertChar($event.key) }"></template>
 
         <div class="fixed top-4 right-4 flex flex-row justify-start items-center font-semibold">
             <p class="text-green-700" x-text="(wins == 1) ? '1 win' : `${wins} wins`"></p>
@@ -39,15 +41,18 @@
             <div class="mt-16 flex flex-row justify-start items-start">
                 <div class="flex flex-col justify-start items-center">
                     <div class="flex flex-row justify-start items-center gap-x-4 text-5xl text-gray-600 font-semibold uppercase">
-                        <template x-each="word as letter">
+                        <template class="bg-green-700" x-each="word as letter">
                             <p class="w-12" x-text="picks.includes(letter) ? letter : '-'"></p>
                         </template>
                     </div>
                     <div class="relative mt-16 w-96 flex flex-row justify-start items-center flex-wrap gap-x-4 gap-y-4">
-                        <template x-each="26 as code">
-                            <button class="flex-shrink-0 w-16 h-12 flex flex-row justify-center items-center text-xl bg-teal-700 text-white font-semibold border rounded-md uppercase disabled:bg-gray-700 disabled:cursor-not-allowed"
+                        <template class="bg-red-600" x-each="26 as code">
+                            <button class="flex-shrink-0 w-16 h-12 flex flex-row justify-center items-center text-xl bg-teal-700 text-white font-semibold border rounded-md uppercase disabled:cursor-not-allowed"
                                 x-static="$locals.char = String.fromCharCode(code + 97)" x-text="$locals.char" x-bind:disabled="picks.includes($locals.char)"
-                                x-on:click="picks.push($locals.char); wrongPicks = picks.filter(c => !word.includes(c)).length; fate = (winFate() || lossFate())"></button>
+                                x-class:bg-teal-700="!picks.includes($locals.char)"
+                                x-class:bg-red-600="$log.and(picks.includes($locals.char), !word.includes($locals.char))"
+                                x-class:bg-green-700="$log.and(picks.includes($locals.char), word.includes($locals.char))"
+                                x-on:click="insertChar($locals.char)"></button>
                         </template>
                         <div class="absolute top-0 left-0 w-full h-full bg-transparent" x-show="fate"></div>
                     </div>

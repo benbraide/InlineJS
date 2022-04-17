@@ -9,11 +9,14 @@ import { ResolveOptions } from "../../options";
 
 export const ModelDirectiveHandler = CreateDirectiveHandlerCallback('model', ({ componentId, component, contextElement, expression, argOptions }) => {
     let evaluate = EvaluateLater({ componentId, contextElement, expression }), options = ResolveOptions({
-        lazy: false,
-        number: false,
-        forced: false,
-        trim: false,
-    }, argOptions);
+        options: {
+            lazy: false,
+            number: false,
+            forced: false,
+            trim: false,
+        },
+        list: argOptions,
+    });
 
     let transformData = (data: any) => {
         let transformed = (options.number ? parseFloat(ToString(data)) : null);

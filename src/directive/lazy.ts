@@ -19,11 +19,15 @@ export interface ILazyParams extends IDirectiveHandlerParams{
 }
 
 export function LazyCheck({ componentId, component, contextElement, expression, argOptions, callback, options, defaultOptionValue, useEffect }: ILazyParams){
-    let evaluate = EvaluateLater({ componentId, contextElement, expression }), resolvedOptions = ResolveOptions((options || {
-        lazy: false,
-        ancestor: -1,
-        threshold: -1,
-    }), argOptions, ((defaultOptionValue === 0) ? 0 : (defaultOptionValue || -1)));
+    let evaluate = EvaluateLater({ componentId, contextElement, expression }), resolvedOptions = ResolveOptions({
+        options: (options || {
+            lazy: false,
+            ancestor: -1,
+            threshold: -1,
+        }),
+        list: argOptions,
+        defaultNumber: ((defaultOptionValue === 0) ? 0 : (defaultOptionValue || -1)),
+    });
 
     let doEvaluation = () => evaluate((data) => GetData(data, callback)), effect = () => ((useEffect === false) ? doEvaluation() : UseEffect({ componentId, contextElement,
         callback: doEvaluation,

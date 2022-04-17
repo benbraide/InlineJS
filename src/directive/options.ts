@@ -5,6 +5,14 @@ interface IResolveOptionsDetail<T>{
     index?: number;
 }
 
+interface IResolveOptionsParams<T>{
+    options: T;
+    list: Array<string>;
+    defaultNumber?: number | ((option: string) => number);
+    callback?: (details: IResolveOptionsDetail<T>) => void | boolean;
+    unknownCallback?: (details: IResolveOptionsDetail<T>) => void;
+}
+
 export function ExtractDuration(value: string, defaultValue = 0){
     const regex = /^[0-9]+(s|ms)?$/;
     if (!value || !value.match(regex)){
@@ -18,19 +26,27 @@ export function ExtractDuration(value: string, defaultValue = 0){
     return parseInt(value);
 }
 
-export function ResolveOptions<T>(options: T, list: Array<string>, defaultNumber = 0, callback?: (details?: IResolveOptionsDetail<T>) => void | boolean){
+export function ResolveOptions<T>({ options, list, defaultNumber, callback, unknownCallback }: IResolveOptionsParams<T>){
+    let resolvedOptions = (Array.isArray(options) ? options : [options]);
+    let getDefaultNumber = (opt: string) => (((typeof defaultNumber === 'number') ? defaultNumber : (defaultNumber && defaultNumber(opt))) || 0);
+
     list.forEach((option, index) => {
-        if ((!callback || callback({ options, list, option, index }) !== true) && option in options){
-            if (typeof options[option] === 'number'){
+        let matched = resolvedOptions.find(opt => (opt && option in opt));
+        if (!matched){//Not found
+            return (unknownCallback && unknownCallback({ options, list, option, index }));
+        }
+        
+        if ((!callback || callback({ options, list, option, index }) !== true)){
+            if (typeof matched[option] === 'number'){
                 if (index < (list.length - 1)){
-                    options[option] = ExtractDuration(list[index + 1].trim(), defaultNumber);
+                    matched[option] = ExtractDuration(list[index + 1].trim(), getDefaultNumber(option));
                 }
                 else{
-                    options[option] = defaultNumber;
+                    matched[option] = getDefaultNumber(option);
                 }
             }
-            else if (typeof options[option] === 'boolean'){
-                options[option] = true;
+            else if (typeof matched[option] === 'boolean'){
+                matched[option] = true;
             }
         }
     });
