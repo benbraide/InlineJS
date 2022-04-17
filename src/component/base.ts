@@ -11,6 +11,7 @@ import { IIntersectionObserver } from "../types/intersection";
 import { IProxy } from "../types/proxy";
 import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
+import { ISelectionStackEntry } from "../types/selection";
 import { ContextKeys } from "../utilities/context-keys";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Nothing } from "../values/nothing";
@@ -37,6 +38,7 @@ export class BaseComponent implements IComponent{
     private refs_: Record<string, HTMLElement> = {};
     
     private currentScope_ = new Stack<string>();
+    private selectionScopes_ = new Stack<ISelectionStackEntry>();
     private uniqueMarkers_ = GetDefaultUniqueMarkers();
 
     private observers_ = {
@@ -151,6 +153,22 @@ export class BaseComponent implements IComponent{
 
     public InferScopeFrom(element: HTMLElement | null): IScope | null{
         return (this.FindScopeById(this.FindElementScope(GetElementScopeId(element))?.GetScopeId() || '') || null);
+    }
+
+    public PushSelectionScope(): ISelectionStackEntry{
+        let scope: ISelectionStackEntry = {
+            set: false,
+        };
+        this.selectionScopes_.Push(scope);
+        return scope;
+    }
+
+    public PopSelectionScope(): ISelectionStackEntry | null{
+        return this.selectionScopes_.Pop();
+    }
+
+    public PeekSelectionScope(): ISelectionStackEntry | null{
+        return this.selectionScopes_.Peek();
     }
 
     public GetRoot(): HTMLElement{

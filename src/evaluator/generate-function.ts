@@ -68,6 +68,11 @@ export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Ar
 
 export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive' }: IEvaluateOptions): GeneratedFunctionType{
     expression = expression.trim();
+    if (!expression){
+        return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>) => {
+            return (handler ? handler(null) : null);
+        };
+    }
 
     let runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true) => {
         let component = FindComponentById(componentId), proxy = component?.GetRootProxy().GetNative();
@@ -120,8 +125,8 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         }
     };
 
-    let valueReturnFunction = (expression ? GenerateValueReturningFunction(expression, contextElement, componentId) : null), voidFunction: any = null;
-    if (expression && typeof valueReturnFunction !== 'function'){
+    let valueReturnFunction = GenerateValueReturningFunction(expression, contextElement, componentId), voidFunction: any = null;
+    if (!valueReturnFunction){
         voidFunction = GenerateVoidFunction(expression, contextElement, componentId);
     }
     

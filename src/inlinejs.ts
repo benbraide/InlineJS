@@ -26,6 +26,7 @@ import { ModelDirectiveHandlerCompact } from './directive/core/flow/model';
 import { ShowDirectiveHandlerCompact } from './directive/core/show';
 
 import { IfDirectiveHandlerCompact } from './directive/core/control/if';
+import { ElseDirectiveHandlerCompact } from './directive/core/control/else';
 import { EachDirectiveHandlerCompact } from './directive/core/control/each';
 
 import { ComponentMagicHandlerCompact } from './magic/core/data/component';
@@ -89,6 +90,7 @@ ModelDirectiveHandlerCompact();
 ShowDirectiveHandlerCompact();
 
 IfDirectiveHandlerCompact();
+ElseDirectiveHandlerCompact();
 EachDirectiveHandlerCompact();
 
 ComponentMagicHandlerCompact();

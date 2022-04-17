@@ -32,11 +32,14 @@ export function ProcessDirectives({ component, element, options = {} }: IProcess
         }
     });
 
+    let resolvedComponent = ((typeof component === 'string') ? FindComponentById(component) : component);
     if (!options.ignoreChildren && !(element instanceof HTMLTemplateElement)){//Process children
+        resolvedComponent?.PushSelectionScope();
         Array.from(element.children).forEach(child => ProcessDirectives({ component, options,
             element: child,
         }));
+        resolvedComponent?.PopSelectionScope();
     }
 
-    ((typeof component === 'string') ? FindComponentById(component) : component)?.CreateElementScope(<HTMLElement>element)?.ExecutePostProcessCallbacks();
+    resolvedComponent?.CreateElementScope(<HTMLElement>element)?.ExecutePostProcessCallbacks();
 }

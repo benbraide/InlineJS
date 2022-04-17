@@ -3,10 +3,10 @@ import { ReactiveStateType } from "./config";
 import { IContext } from "./context";
 import { IElementScope } from "./element-scope";
 import { IIntersectionObserver } from "./intersection";
-import { IMutationObserver } from "./mutation";
 import { IProxy } from "./proxy";
 import { IRootElement } from "./root-element";
 import { IScope } from "./scope";
+import { ISelectionStackEntry } from "./selection";
 
 export interface IComponentBackend{
     context: IContext;
@@ -35,6 +35,10 @@ export interface IComponent{
     PeekCurrentScope(): string | null;
 
     InferScopeFrom(element: HTMLElement | null): IScope | null;
+
+    PushSelectionScope(): ISelectionStackEntry;
+    PopSelectionScope(): ISelectionStackEntry | null;
+    PeekSelectionScope(): ISelectionStackEntry | null;
 
     GetRoot(): HTMLElement;
     FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null;

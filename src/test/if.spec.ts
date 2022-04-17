@@ -12,6 +12,7 @@ import { IfDirectiveHandlerCompact } from '../directive/core/control/if';
 import { OnDirectiveHandlerCompact } from '../directive/core/flow/on';
 import { TextDirectiveHandlerCompact } from '../directive/core/flow/text';
 import { EachDirectiveHandlerCompact } from '../directive/core/control/each';
+import { ElseDirectiveHandlerCompact } from '../directive/core/control/else';
 
 describe('x-if directive', () => {
     it('should create element on truthy value', async () => {
@@ -133,6 +134,108 @@ describe('x-if directive', () => {
         userEvent.click(document.querySelector('button')!);
     
         await waitFor(() => { expect(document.querySelector('span')!.textContent).equal('1') });
+    });
+
+    it('should be complemented by \'x-else\' directive', async () => {
+        document.body.innerHTML = `
+            <div x-data="{ show: false }">
+                <template x-if="show">
+                    <p x-text="'Shown'"></p>
+                </template>
+                <template x-else>
+                    <p x-text="'Hidden'"></p>
+                </template>
+            </div>
+        `;
+    
+        GetOrCreateGlobal();
+
+        DataDirectiveHandlerCompact();
+        IfDirectiveHandlerCompact();
+        ElseDirectiveHandlerCompact();
+        TextDirectiveHandlerCompact();
+
+        BootstrapAndAttach();
+    
+        expect(document.querySelectorAll('p').length).equal(1);
+        expect(document.querySelectorAll('p')[0].textContent).equal('Hidden');
+    });
+
+    it('should be complemented by \'x-else\' directive and be reactive', async () => {
+        document.body.innerHTML = `
+            <div x-data="{ show: true }">
+                <button x-on:click="show = ! show"></button>
+                <template x-if="show">
+                    <p x-text="'Shown'"></p>
+                </template>
+                <template x-else>
+                    <p x-text="'Hidden'"></p>
+                </template>
+            </div>
+        `;
+    
+        GetOrCreateGlobal();
+
+        DataDirectiveHandlerCompact();
+        IfDirectiveHandlerCompact();
+        ElseDirectiveHandlerCompact();
+        TextDirectiveHandlerCompact();
+        OnDirectiveHandlerCompact();
+
+        BootstrapAndAttach();
+    
+        expect(document.querySelectorAll('p').length).equal(1);
+        expect(document.querySelectorAll('p')[0].textContent).equal('Shown');
+
+        userEvent.click(document.querySelector('button')!);
+    
+        await waitFor(() => { expect(document.querySelectorAll('p').length).equal(1) });
+        await waitFor(() => { expect(document.querySelectorAll('p')[0].textContent).equal('Hidden') });
+
+        userEvent.click(document.querySelector('button')!);
+    
+        await waitFor(() => { expect(document.querySelectorAll('p').length).equal(1) });
+        await waitFor(() => { expect(document.querySelectorAll('p')[0].textContent).equal('Shown') });
+    });
+
+    it('should be complemented by a chain of \'x-else\' directives', async () => {
+        document.body.innerHTML = `
+            <div x-data="{ count: 0 }">
+                <button x-on:click="count += 1"></button>
+                <template x-if="count == 0">
+                    <p x-text="'Count 0'"></p>
+                </template>
+                <template x-else="count == 1">
+                    <p x-text="'Count 1'"></p>
+                </template>
+                <template x-else>
+                    <p x-text="'Count *'"></p>
+                </template>
+            </div>
+        `;
+    
+        GetOrCreateGlobal();
+
+        DataDirectiveHandlerCompact();
+        IfDirectiveHandlerCompact();
+        ElseDirectiveHandlerCompact();
+        TextDirectiveHandlerCompact();
+        OnDirectiveHandlerCompact();
+
+        BootstrapAndAttach();
+    
+        expect(document.querySelectorAll('p').length).equal(1);
+        expect(document.querySelectorAll('p')[0].textContent).equal('Count 0');
+
+        userEvent.click(document.querySelector('button')!);
+    
+        await waitFor(() => { expect(document.querySelectorAll('p').length).equal(1) });
+        await waitFor(() => { expect(document.querySelectorAll('p')[0].textContent).equal('Count 1') });
+
+        userEvent.click(document.querySelector('button')!);
+    
+        await waitFor(() => { expect(document.querySelectorAll('p').length).equal(1) });
+        await waitFor(() => { expect(document.querySelectorAll('p')[0].textContent).equal('Count *') });
     });
 
     it('should work inside a loop', () => {

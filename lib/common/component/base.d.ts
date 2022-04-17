@@ -6,6 +6,7 @@ import { IIntersectionObserver } from "../types/intersection";
 import { IProxy } from "../types/proxy";
 import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
+import { ISelectionStackEntry } from "../types/selection";
 export declare class BaseComponent implements IComponent {
     private id_;
     private root_;
@@ -19,6 +20,7 @@ export declare class BaseComponent implements IComponent {
     private proxies_;
     private refs_;
     private currentScope_;
+    private selectionScopes_;
     private uniqueMarkers_;
     private observers_;
     constructor(id_: string, root_: HTMLElement);
@@ -37,6 +39,9 @@ export declare class BaseComponent implements IComponent {
     PopCurrentScope(): string | null;
     PeekCurrentScope(): string | null;
     InferScopeFrom(element: HTMLElement | null): IScope | null;
+    PushSelectionScope(): ISelectionStackEntry;
+    PopSelectionScope(): ISelectionStackEntry | null;
+    PeekSelectionScope(): ISelectionStackEntry | null;
     GetRoot(): HTMLElement;
     FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null;
     FindAncestor(target: HTMLElement, index?: number): HTMLElement | null;
