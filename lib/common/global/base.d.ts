@@ -1,0 +1,33 @@
+import { DirectiveManager } from "../directives/manager";
+import { MagicManager } from "../magics/manager";
+import { MutationObserver } from "../observers/mutation/base";
+import { IComponent } from "../types/component";
+import { IConfig, IConfigOptions } from "../types/config";
+import { IGlobal } from "../types/global";
+import { IProxy } from "../types/proxy";
+export declare class BaseGlobal implements IGlobal {
+    private config_;
+    private components_;
+    private currentComponent_;
+    private managers_;
+    private uniqueMarkers_;
+    private mutationObserver_;
+    constructor(configOptions?: IConfigOptions, idOffset?: number);
+    SwapConfig(config: IConfig): void;
+    GetConfig(): IConfig;
+    GenerateUniqueId(prefix?: string, suffix?: string): string;
+    CreateComponent(root: HTMLElement): IComponent;
+    RemoveComponent(component: IComponent | string): void;
+    FindComponentById(id: string): IComponent | null;
+    FindComponentByName(name: string): IComponent | null;
+    FindComponentByRoot(root: HTMLElement): IComponent | null;
+    PushCurrentComponent(componentId: string): void;
+    PopCurrentComponent(): string | null;
+    PeekCurrentComponent(): string | null;
+    GetCurrentComponent(): IComponent | null;
+    InferComponentFrom(element: HTMLElement | null): IComponent | null;
+    GetDirectiveManager(): DirectiveManager;
+    GetMagicManager(): MagicManager;
+    GetMutationObserver(): MutationObserver;
+    CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
+}
