@@ -68,14 +68,27 @@ export const DataDirectiveHandler = CreateDirectiveHandlerCallback('data', ({ co
                     return ((parent && !(parent instanceof Nothing)) ? parent : null);
                 },
                 data: () => (FindComponentById(componentId)?.GetRootProxy().GetNative()[scopeId] || {}),
-            }, local = CreateInplaceProxy(BuildGetterProxyOptions({ getter: (prop) => (prop && methods.hasOwnProperty(prop) && methods[prop]()), lookup: [...Object.keys(methods)]}));
+            }, local = CreateInplaceProxy(BuildGetterProxyOptions({
+                getter: (prop) => ((prop && methods.hasOwnProperty(prop)) ? methods[prop]() : null),
+                lookup: [...Object.keys(methods)],
+            }));
 
             elementScope.SetLocal(key, local);
             elementScope.AddUninitCallback(() => FindComponentById(componentId)?.RemoveScope(scopeId));
         }
         else{//Root scope
             target = proxyTarget;
-            elementScope.SetLocal(key, proxy);
+
+            let name = (config?.name || ''), methods = {
+                name: () => name,
+                parent: () => null,
+                data: () => proxy,
+            }, local = CreateInplaceProxy(BuildGetterProxyOptions({
+                getter: (prop) => ((prop && methods.hasOwnProperty(prop)) ? methods[prop]() : null),
+                lookup: [...Object.keys(methods)],
+            }));
+            
+            elementScope.SetLocal(key, local);
             
             if (config?.reactiveState){
                 component.SetReactiveState(config.reactiveState);

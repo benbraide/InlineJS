@@ -48,6 +48,7 @@ import { ArithmeticMagicHandlerCompact } from './magic/core/operations/arithmeti
 import { RelationalMagicHandlerCompact } from './magic/core/operations/relational';
 import { LogicalMagicHandlerCompact } from './magic/core/operations/logical';
 
+import { NextTickMagicHandlerCompact } from './magic/core/nexttick';
 import { PickMagicHandlerCompact } from './magic/core/pick';
 import { ClassMagicHandlerCompact } from './magic/core/class';
 import { EvaluateMagicHandlerCompact } from './magic/core/evaluate';
@@ -112,6 +113,7 @@ ArithmeticMagicHandlerCompact();
 RelationalMagicHandlerCompact();
 LogicalMagicHandlerCompact();
 
+NextTickMagicHandlerCompact();
 PickMagicHandlerCompact();
 ClassMagicHandlerCompact();
 EvaluateMagicHandlerCompact();
