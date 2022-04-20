@@ -1,6 +1,6 @@
 import { JournalTry } from "../../journal/try";
 import { IIntersectionObserver, IntersectionObserverHandlerType } from "../../types/intersection";
-import { BuildIntersectionOptions } from "./options";
+import { BuildIntersectionOptions, IIntersectionOptions } from "./options";
 
 interface IIntersectionObserverHandlerInfo{
     target: Element;
@@ -11,7 +11,7 @@ export class IntersectionObserver implements IIntersectionObserver{
     private observer_: globalThis.IntersectionObserver | null = null;
     private handlers_ = new Array<IIntersectionObserverHandlerInfo>();
     
-    public constructor(private id_: string, options: IntersectionObserverInit){
+    public constructor(private id_: string, options: IIntersectionOptions){
         let id = this.id_;
         this.observer_ = new globalThis.IntersectionObserver((entries, observer) => {
             entries.forEach((entry) => {

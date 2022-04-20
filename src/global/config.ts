@@ -8,17 +8,17 @@ export class Config implements IConfig{
     private directiveNameBuilder_: DirectiveNameBuilderType;
 
     private keyMap_: Record<string, string> = {
-        Ctrl: 'Control',
-        Return: 'Enter',
-        Esc: 'Escape',
-        Space: ' ',
-        Menu: 'ContextMenu',
-        Del: 'Delete',
-        Ins: 'Insert',
-        Plus: '+',
-        Minus: '-',
-        Star: '*',
-        Slash: '/',
+        'return': 'enter',
+        ctrl: 'control',
+        esc: 'escape',
+        space: ' ',
+        menu: 'contextmenu',
+        del: 'delete',
+        ins: 'insert',
+        plus: '+',
+        minus: '-',
+        star: '*',
+        slash: '/',
     };
 
     private booleanAttributes_ = new Array<string>(

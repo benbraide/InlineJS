@@ -45,7 +45,7 @@ function GetOptions(argKey: string, argOptions: Array<string>){
         defaultNumber: 250,
         unknownCallback: ({ option }) => {
             if (keyOptions && option){
-                keyOptions.list.push(GetGlobal().GetConfig().MapKeyEvent(ToCamelCase(option, true)));
+                keyOptions.list.push(GetGlobal().GetConfig().MapKeyEvent(ToCamelCase(option).toLowerCase()));
             }
         },
     });
@@ -60,7 +60,7 @@ export const OnDirectiveHandler = CreateDirectiveHandlerCallback('on', ({ compon
             return;//Event is debounced OR event target is not context element OR specified key option is not pressed
         }
 
-        if (keyOptions && keyOptions.list.length > 0 && !keyOptions.list.includes((e as KeyboardEvent).key)){
+        if (keyOptions && keyOptions.list.length > 0 && !keyOptions.list.includes((e as KeyboardEvent).key.toLowerCase())){
             return;//Key pressed doesn't match any specified
         }
 

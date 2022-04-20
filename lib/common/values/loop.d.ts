@@ -1,7 +1,7 @@
-export declare class Loop {
+export declare class Loop<T = any> {
     private whileCallbacks_;
     private finalCallbacks_;
-    constructor(callback: (doWhile: (value: any) => void, doFinal: (value: any) => void) => void);
-    While(callback: (value: any) => void): this;
-    Final(callback: (value: any) => void): this;
+    constructor(callback: (doWhile: (value: T) => void, doFinal: (value: T) => void) => void);
+    While(callback: (value: T) => void): this;
+    Final(callback: (value: T) => void): this;
 }

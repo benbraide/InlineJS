@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InlineJS Demo | Playfield</title>
+    <link rel="stylesheet" href="../plublic/style.css">
+    <style>
+        [x-cloak]{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <section class="w-full flex flex-row justify-start items-start">
+        <x-canvas width="500" height="500" x-post="this.Render()" x-tick.delay.5.steps.250 x-data="{ circleColor: 'magenta' }">
+            <x-canvas-rect :x="10 + $tick.steps * 1.5" y="10" width="10" height="10" color="red"></x-canvas-rect>
+            <x-canvas-round-rect x="10" y="50" width="100" height="40" radius="5" color="blue" mode="stroke" x-on:click="console.log('Clicked round rect')"></x-canvas-round-rect>
+            <x-canvas-path :x="10 + $tick.steps" y="100" color="green" x-on:click="console.log('Clicked green path')">
+                <x-canvas-line x="50" y="0"></x-canvas-line>
+                <x-canvas-line x="50" y="50"></x-canvas-line>
+            </x-canvas-path>
+            <x-canvas-path x="10" y="170" :color="circleColor" x-on:mouseenter="circleColor = 'cyan'" x-on:mouseleave="circleColor = 'magenta'">
+                <x-canvas-circle x="0" y="0" radius="50"></x-canvas-circle>
+            </x-canvas-path>
+        </x-canvas>
+        <x-canvas class="ml-8 h-0 border" width="500" height="500" x-post="this.Render()" x-data="{ x: 10, y: 10, dx: 1, dy: 0, speed: 1 }"
+            x-tick.delay.5="x += (dx * speed); y += (dy * speed)" x-on:keydown.a.arrow-left.window="if (dx == 0){ dx = -1; dy = 0 }"
+            x-on:keydown.d.arrow-right.window="if (dx == 0){ dx = 1; dy = 0 }" x-on:keydown.w.arrow-up.window="if (dy == 0){ dx = 0; dy = -1 }"
+            x-on:keydown.s.arrow-down.window="if (dy == 0){ dx = 0; dy = 1 }">
+            <template x-effect="if ($log.and((dx == -1), $rel.lt(x, -5))){ x = 500 }else if ($log.and((dx == 1), $rel.gt(x, 500))){ x = 0 }"></template>
+            <template x-effect="if ($log.and((dy == -1), $rel.lt(y, -5))){ y = 500 }else if ($log.and((dy == 1), $rel.gt(y, 500))){ y = 0 }"></template>
+            <x-canvas-rect :position="`${x} ${y}`" width="10" height="10" color="red"></x-canvas-rect>
+        </x-canvas>
+    </section>
+    <div x-tick.steps.100.stopped x-data>
+        <p>
+            <span>Running:</span>
+            <span x-text="$tick.running"></span>
+        </p>
+        <p>
+            <span>Steps:</span>
+            <span x-text="$tick.steps"></span>
+        </p>
+        <p>
+            <span>Countdown:</span>
+            <span x-text="100 - $tick.steps"></span>
+        </p>
+        <button class="px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.pause()">Pause</button>
+        <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.run()">Run</button>
+        <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.stop()">Stop</button>
+        <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.reset()">Reset</button>
+    </div>
+    <div class="h-96"></div>
+    <div class="mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
+        x-intersection:visible="console.log('visible')" x-intersection:hidden="console.log('hidden')">
+        <p>
+            <span>Intersected:</span>
+            <span x-text="$intersection.intersected"></span>
+        </p>
+        <p>
+            <span>Visible:</span>
+            <span x-text="$intersection.visible"></span>
+        </p>
+        <p>
+            <span>Ratio:</span>
+            <span x-text="$intersection.ratio"></span>
+        </p>
+    </div>
+    <script src="../dist/inlinejs-canvas.js"></script>
+    <script src="../dist/inlinejs-extended.js"></script>
+    <script src="../dist/inlinejs.js"></script>
+</body>
+</html>

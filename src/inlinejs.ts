@@ -1,4 +1,4 @@
-import { CreateGlobal } from './global/create';
+import { GetOrCreateGlobal } from './global/create';
 import { BootstrapAndAttach } from './bootstrap/attach';
 
 import { DataDirectiveHandlerCompact } from './directive/core/data/data';
@@ -53,7 +53,7 @@ import { PickMagicHandlerCompact } from './magic/core/pick';
 import { ClassMagicHandlerCompact } from './magic/core/class';
 import { EvaluateMagicHandlerCompact } from './magic/core/evaluate';
 
-CreateGlobal();
+GetOrCreateGlobal();
 
 queueMicrotask(() => {//Bootstrap
     if (document.readyState == "loading"){
