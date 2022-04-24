@@ -1,9 +1,8 @@
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { GetTarget } from "./get-target";
-import { IsObject } from "./is-object";
 
-export function ToString(target: any){
+export function ToString(target: any): string{
     target = GetTarget(target);
     if (target instanceof Future){
         return ToString(target.Get());

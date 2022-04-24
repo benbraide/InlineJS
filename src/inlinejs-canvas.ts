@@ -5,11 +5,14 @@ import { CanvasPathCompact } from './components/canvas/path';
 import { CanvasLineCompact } from './components/canvas/line';
 import { CanvasArcCompact } from './components/canvas/arc';
 import { CanvasCircleCompact } from './components/canvas/circle';
+import { WaitForGlobal } from './global/get';
 
-CanvasSurfaceCompact();
-CanvasRectCompact();
-CanvasRoundRectCompact();
-CanvasPathCompact();
-CanvasLineCompact();
-CanvasArcCompact();
-CanvasCircleCompact();
+WaitForGlobal().then(() => {
+    CanvasSurfaceCompact();
+    CanvasRectCompact();
+    CanvasRoundRectCompact();
+    CanvasPathCompact();
+    CanvasLineCompact();
+    CanvasArcCompact();
+    CanvasCircleCompact();
+});

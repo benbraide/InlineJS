@@ -1,4 +1,4 @@
-import { GetOrCreateGlobal } from "../../global/create";
+import { GetGlobal } from "../../global/get";
 import { JournalTry } from "../../journal/try";
 import { CanvasRefreshEvent } from "../../types/canvas";
 import { CanvasElement } from "./element";
@@ -133,5 +133,5 @@ export class CanvasSurface extends CanvasElement{
 }
 
 export function CanvasSurfaceCompact(){
-    customElements.define(GetOrCreateGlobal().GetConfig().GetDirectiveName('canvas'), CanvasSurface);
+    customElements.define(GetGlobal().GetConfig().GetDirectiveName('canvas'), CanvasSurface);
 }

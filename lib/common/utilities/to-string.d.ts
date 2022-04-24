@@ -1,1 +1,1 @@
-export declare function ToString(target: any): any;
+export declare function ToString(target: any): string;

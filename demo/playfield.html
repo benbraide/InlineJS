@@ -34,7 +34,8 @@
             <x-canvas-rect :position="`${x} ${y}`" width="10" height="10" color="red"></x-canvas-rect>
         </x-canvas>
     </section>
-    <div x-tick.steps.100.stopped x-data>
+
+    <section x-tick.steps.100.stopped x-data>
         <p>
             <span>Running:</span>
             <span x-text="$tick.running"></span>
@@ -51,9 +52,35 @@
         <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.run()">Run</button>
         <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.stop()">Stop</button>
         <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.reset()">Reset</button>
-    </div>
-    <div class="h-96"></div>
-    <div class="mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
+    </section>
+
+    <section>
+        <nav class="flex flex-row justify-start items-center gap-x-4 text-gray-600 font-semibold underline" x-data>
+            <a href="/" x-router:link>Home</a>
+            <a href="/about" x-router:link>About</a>
+            <a href="/contact" x-router:link>Contact</a>
+        </nav>
+        <template x-router:fetch="'/'" x-data>
+            <h2>Home Page</h2>
+            <p>Hello world! My fellow peeps</p>
+        </template>
+        <template x-router:fetch="'/about'" x-data>
+            <h2>About Us</h2>
+            <p>This should describe us</p>
+        </template>
+        <template x-router:fetch="'/contact'" x-data>
+            <h2>Contact Us</h2>
+            <label>
+                <span>Name</span>
+                <input type="text">
+            </label>
+        </template>
+        <template x-static="$router.addPage({ path: /^.+$/ })" x-post="$router.mount(false)" x-router:mount x-data></template>
+    </section>
+    
+    <section class="h-96"></section>
+
+    <section class="mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
         x-intersection:visible="console.log('visible')" x-intersection:hidden="console.log('hidden')">
         <p>
             <span>Intersected:</span>
@@ -67,8 +94,9 @@
             <span>Ratio:</span>
             <span x-text="$intersection.ratio"></span>
         </p>
-    </div>
+    </section>
     <script src="../dist/inlinejs-canvas.js"></script>
+    <script src="../dist/inlinejs-router.js"></script>
     <script src="../dist/inlinejs-extended.js"></script>
     <script src="../dist/inlinejs.js"></script>
 </body>

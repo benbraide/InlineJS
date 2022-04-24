@@ -9,6 +9,8 @@ import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IGlobal } from "../types/global";
 import { IProxy } from "../types/proxy";
+import { IResourceConcept } from "../types/resource";
+import { IRouterConcept } from "../types/router";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Config } from "./config";
 
@@ -25,6 +27,9 @@ export class BaseGlobal implements IGlobal{
     
     private uniqueMarkers_ = GetDefaultUniqueMarkers();
     private mutationObserver_ = new MutationObserver();
+
+    private routerConcept_: IRouterConcept | null = null;
+    private resourceConcept_: IResourceConcept | null = null;
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
         this.config_ = new Config(configOptions || {});
@@ -102,6 +107,22 @@ export class BaseGlobal implements IGlobal{
 
     public GetMutationObserver(){
         return this.mutationObserver_;
+    }
+
+    public SetRouterConcept(concept: IRouterConcept){
+        this.routerConcept_ = concept;
+    }
+
+    public GetRouterConcept(){
+        return this.routerConcept_;
+    }
+
+    public SetResourceConcept(concept: IResourceConcept){
+        this.resourceConcept_ = concept;
+    }
+
+    public GetResourceConcept(){
+        return this.resourceConcept_;
     }
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{

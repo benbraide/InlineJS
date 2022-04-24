@@ -1,4 +1,4 @@
-import { GetOrCreateGlobal } from "../../global/create";
+import { GetGlobal } from "../../global/get";
 import { CanvasRefreshEvent, ICanvasArcState, ICanvasElement, ICanvasPosition } from "../../types/canvas";
 import { CanvasBlockElement } from "./element";
 
@@ -101,5 +101,5 @@ export class CanvasRoundRect extends CanvasBlockElement<ICanvasArcState>{
 }
 
 export function CanvasRoundRectCompact(){
-    customElements.define(GetOrCreateGlobal().GetConfig().GetDirectiveName('canvas-round-rect'), CanvasRoundRect);
+    customElements.define(GetGlobal().GetConfig().GetDirectiveName('canvas-round-rect'), CanvasRoundRect);
 }

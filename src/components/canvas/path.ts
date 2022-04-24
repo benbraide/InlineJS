@@ -1,5 +1,5 @@
+import { GetGlobal } from "../../global/get";
 import { ICanvasCoreState, ICanvasElement, ICanvasPosition, ICanvasShapeState } from "../../types/canvas";
-import { GetOrCreateGlobal } from "../../global/create";
 import { CanvasParent } from "./parent";
 
 export class CanvasPath extends CanvasParent<ICanvasCoreState>{
@@ -63,5 +63,5 @@ export class CanvasPath extends CanvasParent<ICanvasCoreState>{
 }
 
 export function CanvasPathCompact(){
-    customElements.define(GetOrCreateGlobal().GetConfig().GetDirectiveName('canvas-path'), CanvasPath);
+    customElements.define(GetGlobal().GetConfig().GetDirectiveName('canvas-path'), CanvasPath);
 }

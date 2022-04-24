@@ -1,13 +1,15 @@
-import { GetOrCreateGlobal } from './global/create';
+import { WaitForGlobal } from './global/get';
 
 import { IntersectionDirectiveHandlerCompact } from './directive/extended/intersection';
 import { TickDirectiveHandlerCompact } from './directive/extended/tick';
+import { FormDirectiveHandlerCompact } from './directive/extended/form';
 
 import { FormatMagicHandlerCompact } from './magic/extended/format';
 
-GetOrCreateGlobal();
+WaitForGlobal().then(() => {
+    IntersectionDirectiveHandlerCompact();
+    TickDirectiveHandlerCompact();
+    FormDirectiveHandlerCompact();
 
-IntersectionDirectiveHandlerCompact();
-TickDirectiveHandlerCompact();
-
-FormatMagicHandlerCompact();
+    FormatMagicHandlerCompact();
+});

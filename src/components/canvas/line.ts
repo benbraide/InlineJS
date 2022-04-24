@@ -1,4 +1,4 @@
-import { GetOrCreateGlobal } from "../../global/create";
+import { GetGlobal } from "../../global/get";
 import { ICanvasCoreState, ICanvasElement } from "../../types/canvas";
 import { CanvasChild } from "./child";
 
@@ -22,5 +22,5 @@ export class CanvasLine extends CanvasChild<ICanvasCoreState>{
 }
 
 export function CanvasLineCompact(){
-    customElements.define(GetOrCreateGlobal().GetConfig().GetDirectiveName('canvas-line'), CanvasLine);
+    customElements.define(GetGlobal().GetConfig().GetDirectiveName('canvas-line'), CanvasLine);
 }

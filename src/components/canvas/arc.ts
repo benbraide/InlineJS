@@ -1,4 +1,4 @@
-import { GetOrCreateGlobal } from "../../global/create";
+import { GetGlobal } from "../../global/get";
 import { ICanvasArcState, ICanvasElement } from "../../types/canvas";
 import { CanvasChild } from "./child";
 
@@ -29,5 +29,5 @@ export class CanvasArc extends CanvasChild<ICanvasArcState>{
 }
 
 export function CanvasArcCompact(){
-    customElements.define(GetOrCreateGlobal().GetConfig().GetDirectiveName('canvas-arc'), CanvasArc);
+    customElements.define(GetGlobal().GetConfig().GetDirectiveName('canvas-arc'), CanvasArc);
 }

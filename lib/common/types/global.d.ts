@@ -4,6 +4,8 @@ import { IDirectiveManager } from "./directives";
 import { IMagicManager } from "./magics";
 import { IMutationObserver } from "./mutation";
 import { IProxy } from "./proxy";
+import { IResourceConcept } from "./resource";
+import { IRouterConcept } from "./router";
 export interface IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
@@ -21,5 +23,9 @@ export interface IGlobal {
     GetDirectiveManager(): IDirectiveManager;
     GetMagicManager(): IMagicManager;
     GetMutationObserver(): IMutationObserver;
+    SetRouterConcept(concept: IRouterConcept): void;
+    GetRouterConcept(): IRouterConcept | null;
+    SetResourceConcept(concept: IResourceConcept): void;
+    GetResourceConcept(): IResourceConcept | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

@@ -1,4 +1,4 @@
-import { GetOrCreateGlobal } from "../../global/create";
+import { GetGlobal } from "../../global/get";
 import { ICanvasElement, ICanvasShapeState } from "../../types/canvas";
 import { CanvasShape } from "./shape";
 
@@ -26,5 +26,5 @@ export class CanvasRect extends CanvasShape{
 }
 
 export function CanvasRectCompact(){
-    customElements.define(GetOrCreateGlobal().GetConfig().GetDirectiveName('canvas-rect'), CanvasRect);
+    customElements.define(GetGlobal().GetConfig().GetDirectiveName('canvas-rect'), CanvasRect);
 }
