@@ -17,8 +17,8 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
         event: argKey,
         defaultEvent: DefaultRouterEvent,
         eventWhitelist: RouterEvents,
-        options: argOptions,
-        optionBlacklist: ['outside'],
+        options: [...argOptions, 'window'],
+        optionBlacklist: ['document', 'outside'],
     })){
         return;
     }

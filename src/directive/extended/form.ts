@@ -14,7 +14,7 @@ import { ToString } from "../../utilities/to-string";
 import { BindEvent } from "../event";
 import { ResolveOptions } from "../options";
 
-const FormDirectiveName = 'intersection';
+const FormDirectiveName = 'form';
 
 interface IFormMiddlewareDataInfo{
     data: any;
@@ -223,7 +223,7 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
             }
 
             JournalTry(() => {
-                if ('failed' in response){
+                if (response.hasOwnProperty('failed')){
                     let failed = response['failed'];
                     Object.entries(IsObject(failed) ? failed : {}).forEach(([key, value]) => {
                         state.errors[key] = value;
@@ -238,11 +238,8 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
                     });
                 }
 
-                if (!options.silent && 'report' in response){
-                    // Region.GetAlertHandler().Alert(response['report']);
-                }
-                else if (!options.silent && 'alert' in response){
-                    // Region.GetAlertHandler().Alert(response['alert']);
+                if (!options.silent && (response.hasOwnProperty('alert') || response.hasOwnProperty('report'))){
+                    GetGlobal().GetAlertConcept()?.Notify(response['alert'] || response['report']);
                 }
 
                 afterHandledEvent((response['ok'] !== false), response['data']);

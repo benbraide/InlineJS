@@ -34,6 +34,8 @@ import { LocalsMagicHandlerCompact } from './magic/core/data/locals';
 import { RefsMagicHandlerCompact } from './magic/core/data/refs';
 import { ScopeMagicHandlerCompact } from './magic/core/data/scope';
 import { ProxyMagicHandlerCompact } from './magic/core/data/proxy';
+import { WaitMagicHandlerCompact } from './magic/core/data/wait';
+import { StreamMagicHandlerCompact } from './magic/core/data/stream';
 
 import { StaticMagicHandlerCompact } from './magic/core/reactive/static';
 import { UnoptimizedMagicHandlerCompact } from './magic/core/reactive/unoptimized';
@@ -99,6 +101,8 @@ LocalsMagicHandlerCompact();
 RefsMagicHandlerCompact();
 ScopeMagicHandlerCompact();
 ProxyMagicHandlerCompact();
+WaitMagicHandlerCompact();
+StreamMagicHandlerCompact();
 
 StaticMagicHandlerCompact();
 UnoptimizedMagicHandlerCompact();

@@ -23,6 +23,7 @@ export function InitControl({ componentId, component, contextElement, expression
 
     let evaluate = EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true });
     return {
+        checkpoint: 0,
         parent: contextElement.parentElement!,
         blueprint: (contextElement.content.firstElementChild as HTMLElement),
         effect: (handler: (value: any) => void) => UseEffect({ componentId, contextElement,

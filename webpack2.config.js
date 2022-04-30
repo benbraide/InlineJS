@@ -6,6 +6,7 @@ module.exports = {
        "inlinejs-router.min": "./src/inlinejs-router.ts",
        "inlinejs-stripe.min": "./src/inlinejs-stripe.ts",
        "inlinejs-quill.min": "./src/inlinejs-quill.ts",
+       "inlinejs-swal.min": "./src/inlinejs-swal.ts",
        "inlinejs-canvas.min": "./src/inlinejs-canvas.ts",
     //    "inlinejs-animated.min": "./src/inlinejs-animated.ts",
     //    "inlinejs-custom.min": "./src/inlinejs-custom.ts"

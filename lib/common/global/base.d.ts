@@ -1,6 +1,7 @@
 import { DirectiveManager } from "../directives/manager";
 import { MagicManager } from "../magics/manager";
 import { MutationObserver } from "../observers/mutation/base";
+import { IAlertConcept } from "../types/alert";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IGlobal } from "../types/global";
@@ -16,6 +17,7 @@ export declare class BaseGlobal implements IGlobal {
     private mutationObserver_;
     private routerConcept_;
     private resourceConcept_;
+    private alertConcept_;
     constructor(configOptions?: IConfigOptions, idOffset?: number);
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
@@ -37,5 +39,7 @@ export declare class BaseGlobal implements IGlobal {
     GetRouterConcept(): IRouterConcept | null;
     SetResourceConcept(concept: IResourceConcept): void;
     GetResourceConcept(): IResourceConcept | null;
+    SetAlertConcept(concept: IAlertConcept): void;
+    GetAlertConcept(): IAlertConcept | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

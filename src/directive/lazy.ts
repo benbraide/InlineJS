@@ -1,6 +1,6 @@
 import { FindComponentById } from "../component/find";
 import { EvaluateLater } from "../evaluator/evaluate-later";
-import { GetData } from "../evaluator/get-data";
+import { WaitPromise } from "../evaluator/wait-promise";
 import { UseEffect } from "../reactive/effect";
 import { IDirectiveHandlerParams } from "../types/directives";
 import { ResolveOptions } from "./options";
@@ -29,7 +29,7 @@ export function LazyCheck({ componentId, component, contextElement, expression, 
         defaultNumber: ((defaultOptionValue === 0) ? 0 : (defaultOptionValue || -1)),
     });
 
-    let doEvaluation = () => evaluate((data) => GetData(data, callback)), effect = () => ((useEffect === false) ? doEvaluation() : UseEffect({ componentId, contextElement,
+    let doEvaluation = () => evaluate(data => WaitPromise(data, callback)), effect = () => ((useEffect === false) ? doEvaluation() : UseEffect({ componentId, contextElement,
         callback: doEvaluation,
     }));
 

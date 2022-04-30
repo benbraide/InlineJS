@@ -1,11 +1,11 @@
 import { FindComponentById } from "../../component/find";
-import { WaitPromise } from "../../evaluator/wait-promise";
+import { StreamData } from "../../evaluator/stream-data";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { CreateReadonlyProxy } from "../../proxy/create";
 import { InitJITProxy } from "../../proxy/jit";
+import { IsObject } from "../../utilities/is-object";
 import { ToString } from "../../utilities/to-string";
-import { Loop } from "../../values/loop";
 import { Nothing } from "../../values/nothing";
 
 export const FormatMagicHandler = CreateMagicHandlerCallback('format', ({ componentId, component, contextElement }) => {
@@ -14,38 +14,9 @@ export const FormatMagicHandler = CreateMagicHandlerCallback('format', ({ compon
         return proxy;
     }
 
-    let wait = (target: any, callback: (data: any) => void) => WaitPromise(target, callback, true);
-    let stream = (data: any, callback: (data: string) => any) => {
-        if (data instanceof Loop){
-            return new Loop((doWhile, doFinal) => {
-                data.While((data) => {//For each iteration, wait if applicable, then do while
-                    wait(data, (data) => {
-                        wait(callback(ToString(data)), (value) => doWhile(ToString(value)));
-                    });
-                });
-
-                data.Final((data) => {//For each iteration, wait if applicable, then do final
-                    wait(data, (data) => {
-                        wait(callback(ToString(data)), (value) => doFinal(ToString(value)));
-                    });
-                });
-            });
-        }
-
-        if (data instanceof Promise){
-            return new Promise<string>((resolve) => {
-                wait(data, (data) => {
-                    wait(callback(ToString(data)), (value) => resolve(ToString(value)));
-                });
-            });
-        }
-
-        return callback(ToString(data));
-    };
-
     let affix = (data: any, value: any, callback: (data: string, value: string) => string) => {
-        return stream(data, (data) => {
-            return stream(value, value => callback(data, value));
+        return StreamData(data, (data) => {
+            return StreamData(value, value => callback(data, value));
         });
     };
 
@@ -61,16 +32,38 @@ export const FormatMagicHandler = CreateMagicHandlerCallback('format', ({ compon
                 }
             }));
         },
-        comma: (data: any) => stream(data, (data) => {
-            let [beforePoint, afterPoint = ''] = data.split('.');
+        comma: (data: any) => StreamData(data, (data) => {
+            let [beforePoint, afterPoint = ''] = ToString(data).split('.');
             beforePoint = beforePoint.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             return (afterPoint ? `${beforePoint}.${afterPoint}` : beforePoint);
         }),
         prefix: (data: any, value: any) => affix(data, value, (data, value) => (value + data)),
         suffix: (data: any, value: any) => affix(data, value, (data, value) => (data + value)),
-        round: (data: any, dp?: number) => stream(data, (data) => {
-            let parsed = parseFloat(data);
+        round: (data: any, dp?: number) => StreamData(data, (data) => {
+            let parsed = parseFloat(ToString(data));
             return (((parsed || parsed === 0) ? (Math.round(parsed * 100) / 100).toFixed(dp || 0).toString() : parsed));
+        }),
+        map: (data: any, keys: string | number | Array<string | number>) => StreamData(data, (data) => {
+            if (Array.isArray(data)){
+                return (Array.isArray(keys) ? data.filter((v, index) => keys.includes(index)) : data.at((typeof keys === 'string') ? parseInt(keys) : keys));
+            }
+
+            if (IsObject(data)){
+                if (!Array.isArray(keys)){
+                    return data[keys.toString()];
+                }
+
+                let mapped = {};
+                Object.entries(data).forEach(([key, value]) => {
+                    if (keys.includes(key)){
+                        mapped[key] = value;
+                    }
+                });
+
+                return mapped;
+            }
+
+            return data;
         }),
     };
     

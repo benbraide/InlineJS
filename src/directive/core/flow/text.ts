@@ -1,6 +1,6 @@
 import { AddDirectiveHandler } from "../../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../../directives/callback";
-import { WaitWhile } from "../../../evaluator/wait-while";
+import { StreamData } from "../../../evaluator/stream-data";
 import { ToString } from "../../../utilities/to-string";
 import { LazyCheck } from "../../lazy";
 
@@ -9,7 +9,7 @@ export const TextDirectiveHandler = CreateDirectiveHandlerCallback('text', ({ co
     LazyCheck({ contextElement, ...rest,
         callback: (value) => {
             let myCheckpoint = ++checkpoint;
-            WaitWhile(value, (value) => {
+            StreamData(value, (value) => {
                 if (myCheckpoint == checkpoint){
                     contextElement.textContent = ToString(value);
                 }

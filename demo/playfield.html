@@ -81,7 +81,7 @@
     <section class="h-96"></section>
 
     <section class="mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
-        x-intersection:visible="console.log('visible')" x-intersection:hidden="console.log('hidden')">
+        x-intersection:visible="$alert.notify({text: 'visible', toast: true})" x-intersection:hidden="$alert.notify({text: 'hidden', toast: true})">
         <p>
             <span>Intersected:</span>
             <span x-text="$intersection.intersected"></span>
@@ -97,6 +97,7 @@
     </section>
     <script src="../dist/inlinejs-canvas.js"></script>
     <script src="../dist/inlinejs-router.js"></script>
+    <script src="../dist/inlinejs-swal.js"></script>
     <script src="../dist/inlinejs-extended.js"></script>
     <script src="../dist/inlinejs.js"></script>
 </body>

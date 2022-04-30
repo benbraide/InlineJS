@@ -1,5 +1,6 @@
 import { FindComponentById } from "../../../component/find";
 import { CreateDirectiveHandlerCallback } from "../../../directives/callback";
+import { StreamData } from "../../../evaluator/stream-data";
 import { JournalError } from "../../../journal/error";
 import { ISelectionScope } from "../../../types/selection";
 import { TransitionCheck } from "../../transition";
@@ -86,6 +87,13 @@ export function CreateSelectionDirectiveHandler(isElse: boolean){
             }
         }
 
-        init!.effect(effect);
+        init!.effect((value) => {
+            let checkpoint = ++init!.checkpoint;
+            StreamData(value, (value) => {
+                if (checkpoint == init?.checkpoint){
+                    effect(value);
+                }
+            });
+        });
     });
 }

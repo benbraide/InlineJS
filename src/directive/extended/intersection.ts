@@ -17,12 +17,12 @@ interface IIntersectionState{
     ratio: number;
 }
 
-const intersectionDirectiveName = 'intersection';
+const IntersectionDirectiveName = 'intersection';
 
-export const IntersectionDirectiveHandler = CreateDirectiveHandlerCallback(intersectionDirectiveName, ({ componentId, component, contextElement, expression, argKey, argOptions }) => {
+export const IntersectionDirectiveHandler = CreateDirectiveHandlerCallback(IntersectionDirectiveName, ({ componentId, component, contextElement, expression, argKey, argOptions }) => {
     if (BindEvent({ contextElement, expression,
         component: (component || componentId),
-        key: intersectionDirectiveName,
+        key: IntersectionDirectiveName,
         event: argKey,
         defaultEvent: 'intersected',
         eventWhitelist: ['in', 'out', 'visibility', 'visible', 'hidden'],
@@ -70,7 +70,7 @@ export const IntersectionDirectiveHandler = CreateDirectiveHandlerCallback(inter
         ratio: 0,
     };
 
-    let getEventName = (name: string) => `${intersectionDirectiveName}.${name}`, eventDispatchers = {
+    let getEventName = (name: string) => `${IntersectionDirectiveName}.${name}`, eventDispatchers = {
         intersected: (value: boolean) => {
             contextElement.dispatchEvent(new CustomEvent(getEventName('intersected'), {
                 detail: { value },
@@ -157,7 +157,7 @@ export const IntersectionDirectiveHandler = CreateDirectiveHandlerCallback(inter
         }
     }, lookup: [...Object.keys(state)], alert: { componentId, id } }));
 
-    resolvedComponent.FindElementScope(contextElement)?.SetLocal(`\$${intersectionDirectiveName}`, local);
+    resolvedComponent.FindElementScope(contextElement)?.SetLocal(`\$${IntersectionDirectiveName}`, local);
 });
 
 export function IntersectionDirectiveHandlerCompact(){

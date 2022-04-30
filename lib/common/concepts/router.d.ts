@@ -32,10 +32,11 @@ export declare class RouterConcept implements IRouterConcept {
     FindPage(page: string | IRouterPageName): IRouterPage | null;
     FindMatchingPage(path: string): IRouterPage | null;
     Mount(load?: boolean): void;
-    Goto(path: string | ISplitPath | IRouterPageName, shouldReload?: boolean): void;
+    Goto(path: string | ISplitPath | IRouterPageName, shouldReload?: boolean, data?: any): void;
     Reload(): void;
     GetCurrentPath(): string;
     GetActivePage(): IRouterPage | null;
+    GetActivePageData(key?: string): any;
     private Load_;
     private DoLoad_;
     private SetActiveState_;

@@ -3,7 +3,7 @@ import { AddDirectiveHandler } from "../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { EvaluateLater } from "../../evaluator/evaluate-later";
 import { AddChanges } from "../../proxy/add-changes";
-import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../proxy/create";
+import { BuildProxyOptions, CreateInplaceProxy } from "../../proxy/create";
 import { CreateLoop, ILoopCallbackInfo } from "../../utilities/loop";
 import { ResolveOptions } from "../options";
 
@@ -19,11 +19,13 @@ export const TickDirectiveHandler = CreateDirectiveHandlerCallback('tick', ({ co
         defaultNumber: -1,
     });
 
-    let getDelay = () => ((options.delay <= 0) ? 1000 : options.delay);
-    if (options.duration > 0){//Compute steps
-        options.steps = Math.ceil(options.duration / getDelay());
-    }
+    let getDelay = () => ((options.delay < 0) ? 1000 : options.delay), checkDuration = () => {
+        if (options.duration > 0){//Compute steps
+            options.steps = Math.ceil(options.duration / getDelay());
+        }
+    };
 
+    checkDuration();
     let resolvedComponent = (component || FindComponentById(componentId)), id = resolvedComponent?.GenerateUniqueId('tick_proxy_'), state = {
         steps: 0,
         running: !options.stopped,
@@ -105,7 +107,7 @@ export const TickDirectiveHandler = CreateDirectiveHandlerCallback('tick', ({ co
         state.steps = 0;
     });
 
-    let local = CreateInplaceProxy(BuildGetterProxyOptions({ getter: (prop) => {
+    let local = CreateInplaceProxy(BuildProxyOptions({ getter: (prop) => {
         if (prop && methods.hasOwnProperty(prop)){
             return methods[prop];
         }
@@ -114,7 +116,24 @@ export const TickDirectiveHandler = CreateDirectiveHandlerCallback('tick', ({ co
             FindComponentById(componentId)?.GetBackend().changes.AddGetAccess(`${id}.${prop}`);
             return state[prop];
         }
-    }, lookup: [...Object.keys(methods), 'steps', 'running'] }));
+
+        if (prop && options.hasOwnProperty(prop)){
+            return options[prop];
+        }
+    }, setter: (prop, value) => {
+        if (prop === 'duration'){
+            options.duration = ((typeof value === 'number') ? value : 0);
+            checkDuration();
+        }
+        else if (prop === 'delay'){
+            options.delay = ((typeof value === 'number') ? value : 0);
+        }
+        else if (prop === 'steps'){
+            options.steps = ((typeof value === 'number') ? value : 0);
+        }
+
+        return true;
+    }, lookup: [...Object.keys(methods), 'steps', 'running', ...Object.keys(options)] }));
 
     elementScope?.SetLocal('$tick', local);
     if (state.running){

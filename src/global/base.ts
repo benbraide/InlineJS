@@ -5,6 +5,7 @@ import { MagicManager } from "../magics/manager";
 import { MutationObserver } from "../observers/mutation/base";
 import { ChildProxy } from "../proxy/child";
 import { Stack } from "../stack";
+import { IAlertConcept } from "../types/alert";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IGlobal } from "../types/global";
@@ -30,6 +31,7 @@ export class BaseGlobal implements IGlobal{
 
     private routerConcept_: IRouterConcept | null = null;
     private resourceConcept_: IResourceConcept | null = null;
+    private alertConcept_: IAlertConcept | null = null;
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
         this.config_ = new Config(configOptions || {});
@@ -123,6 +125,14 @@ export class BaseGlobal implements IGlobal{
 
     public GetResourceConcept(){
         return this.resourceConcept_;
+    }
+
+    public SetAlertConcept(concept: IAlertConcept){
+        this.alertConcept_ = concept;
+    }
+
+    public GetAlertConcept(){
+        return this.alertConcept_;
     }
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{

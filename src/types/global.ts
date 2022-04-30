@@ -1,3 +1,4 @@
+import { IAlertConcept } from "./alert";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directives";
@@ -37,6 +38,9 @@ export interface IGlobal{
 
     SetResourceConcept(concept: IResourceConcept): void;
     GetResourceConcept(): IResourceConcept | null;
+
+    SetAlertConcept(concept: IAlertConcept): void;
+    GetAlertConcept(): IAlertConcept | null;
 
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

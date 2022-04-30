@@ -2,6 +2,7 @@ import { FindComponentById } from "../../../component/find";
 import { AddDirectiveHandler } from "../../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../../directives/callback";
 import { EvaluateLater } from "../../../evaluator/evaluate-later";
+import { StreamData } from "../../../evaluator/stream-data";
 import { JournalTry } from "../../../journal/try";
 import { AddChanges } from "../../../proxy/add-changes";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../../proxy/create";
@@ -209,18 +210,24 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
 
     let firstEntry = true;
     init.effect((value) => {//Prevent adding 'get access' entries
-        let component = (firstEntry ? FindComponentById(componentId) : null); component?.GetBackend().changes.PushGetAccessStorageSnapshot();
-        JournalTry(() => {
-            if (Array.isArray(value)){
-                generateArrayItems(value);
+        let checkpoint = ++init!.checkpoint, component = (firstEntry ? FindComponentById(componentId) : null); component?.GetBackend().changes.PushGetAccessStorageSnapshot();
+        StreamData(value, (value) => {
+            if (checkpoint != init?.checkpoint){
+                return;
             }
-            else if (typeof value === 'number'){
-                generateArrayItems((value < 0) ? Array.from(Array(-value).keys()).map(item => -(item + 1)) : Array.from(Array(value).keys()));
-            }
-            else if (IsObject(value)){
-                generateMapItems(value);
-            }
-        }), 'InlineJS.EachDirectiveHandler.Effect', contextElement;
+
+            JournalTry(() => {
+                if (Array.isArray(value)){
+                    generateArrayItems(value);
+                }
+                else if (typeof value === 'number'){
+                    generateArrayItems((value < 0) ? Array.from(Array(-value).keys()).map(item => -(item + 1)) : Array.from(Array(value).keys()));
+                }
+                else if (IsObject(value)){
+                    generateMapItems(value);
+                }
+            }), 'InlineJS.EachDirectiveHandler.Effect', contextElement;
+        });
 
         component?.GetBackend().changes.PopGetAccessStorageSnapshot(false);
         firstEntry = false;
