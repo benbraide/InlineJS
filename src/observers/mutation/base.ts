@@ -1,4 +1,5 @@
 import { GetElementScopeId } from "../../component/element-scope-id";
+import { InferComponent } from "../../component/infer";
 import { JournalTry } from "../../journal/try";
 import { IMutationObserver, IMutationObserverAttributeInfo, IMutationType, MutationObserverHandlerType } from "../../types/mutation";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../../utilities/unique-markers";
@@ -34,7 +35,7 @@ export class MutationObserver implements IMutationObserver{
                     };
 
                     entries.forEach((entry) => {
-                        let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(entry.target) : '');
+                        let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
                         if (!key){//Invalid target
                             return;
                         }

@@ -60,10 +60,10 @@ export class BaseComponent implements IComponent{
 
             let checklist = new Array<HTMLElement>(), dirRegex = GetGlobal().GetConfig().GetDirectiveRegex();
             attributes?.filter(attr => (attr.target instanceof HTMLElement)).forEach((attr) => {
-                if (!(attr.target as HTMLElement).hasAttribute(attr.name) || !dirRegex.test(attr.name)){
+                if (!dirRegex.test(attr.name)){
                     component?.FindElementScope(<HTMLElement>attr.target)?.ExecuteAttributeChangeCallbacks(attr.name);
                 }
-                else if (!checklist.includes(<HTMLElement>attr.target)){
+                else if ((attr.target as HTMLElement).hasAttribute(attr.name) && !checklist.includes(<HTMLElement>attr.target)){
                     checklist.push(<HTMLElement>attr.target);
                 }
             });

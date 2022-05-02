@@ -5,7 +5,7 @@ export function GetElementScopeId(element: HTMLElement | null){
     while (element){//Get closest element with a scope ID
         scopeId = getScopeId(element);
         if (scopeId || element === document.body){
-            return scopeId;
+            return (scopeId || '');
         }
 
         element = element.parentElement;

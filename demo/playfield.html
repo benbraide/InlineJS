@@ -80,7 +80,7 @@
     
     <section class="container mx-auto mt-8" x-component="first" x-data="{email: 'user.yahoo@yahoo.com', name: 'John Doe', state: true, getName(){ return this.name }}">
         <h2 class="mb-4 text-3xl font-bold" x-style:color="color" x-on:click="color = 'red'">First Component</h2>
-        <div>
+        <div x-attr="console.log($changed)" x-attr:age="changed => console.log('special', changed)" x-on:click="this.setAttribute('name', 'ben')">
             <span>Name: </span>
             <strong x-text="$format.affix(name, '[Prefix] ', ' [Suffix]')"></strong>
         </div>
