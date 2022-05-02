@@ -1,1 +1,1 @@
-export declare function WaitWhile(value: any, handler: (value: any) => void, finalHandler?: ((value: any) => void) | false): void;
+export declare function WaitWhile(value: any, handler: (value: any) => void | boolean, finalHandler?: ((value: any) => void) | false): void;

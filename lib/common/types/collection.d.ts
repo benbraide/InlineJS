@@ -1,12 +1,10 @@
-export type CollectionIndexType = string;
-export type CollectionEntryType = Record<string, any>;
-
-export interface ICollectionItem{
+export declare type CollectionIndexType = string;
+export declare type CollectionEntryType = Record<string, any>;
+export interface ICollectionItem {
     quantity: number;
     entry: CollectionEntryType;
 }
-
-export interface ICollectionOptions{
+export interface ICollectionOptions {
     indexName: string;
     indexNamePlural?: string;
     entryName?: string;
@@ -14,14 +12,12 @@ export interface ICollectionOptions{
     props?: Record<string, any>;
     path?: string;
 }
-
-export interface ICollectionImportParams{
+export interface ICollectionImportParams {
     list: Array<ICollectionItem> | Promise<Array<ICollectionItem>>;
     incremental?: boolean;
     alertType?: 'none' | 'item' | 'all';
 }
-
-export interface ICollectionUpdateParams{
+export interface ICollectionUpdateParams {
     index: CollectionIndexType;
     quantity: number;
     entry?: CollectionEntryType;
@@ -29,41 +25,31 @@ export interface ICollectionUpdateParams{
     alertType?: 'none' | 'item' | 'all';
     callback?: (item: ICollectionItem) => void;
 }
-
-export interface ICollectionConcept{
+export interface ICollectionConcept {
     GetName(): string;
-
     SetOptions(options: ICollectionOptions): void;
     SetOption(key: keyof ICollectionOptions, value: any): void;
-
     GetOptions(): ICollectionOptions;
     GetOption(key: keyof ICollectionOptions): any;
-
     GetKeyedProxy(): any;
     GetItems(): Array<CollectionEntryType>;
     GetItemProxies(): Array<CollectionEntryType>;
     GetCount(): number;
-
     GetKeyedItem(index: CollectionIndexType): CollectionEntryType;
     FindItem(index: CollectionIndexType): CollectionEntryType | null;
-
     Import(params: ICollectionImportParams): void;
     Export(): Array<ICollectionItem>;
-
     UpdateItem(params: ICollectionUpdateParams): void;
     AddItem(entry: CollectionEntryType, quantity: number): void;
     RemoveItem(index: CollectionIndexType): void;
     RemoveAll(): void;
 }
-
-export interface ICartOffsetHandlerParams{
+export interface ICartOffsetHandlerParams {
     subTotal: number;
     items: Array<CollectionEntryType>;
 }
-
-export type CartOffsetHandlerType = (params: ICartOffsetHandlerParams) => any;
-
-export interface ICartCollectionConcept{
+export declare type CartOffsetHandlerType = (params: ICartOffsetHandlerParams) => any;
+export interface ICartCollectionConcept {
     AddOffset(key: string, handler: CartOffsetHandlerType, initValue?: any): void;
     RemoveOffset(key: string): void;
     GetOffset(key: string): any;

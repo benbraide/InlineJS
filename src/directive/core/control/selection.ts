@@ -16,7 +16,7 @@ export function CreateSelectionDirectiveHandler(isElse: boolean){
 
         expression = expression.trim();
         
-        let lastValue = false, lastEffectValue: any = null, lastState = !!selectionScopeStackEntry?.scope?.state;
+        let lastValue = false, lastEffectValue: any = null, lastState = (isElse && !!selectionScopeStackEntry?.scope?.state);
         let firstEntry = true, init = InitControl({ componentId, component, contextElement, expression, ...rest });
         if (!init){//Failed to initialize
             return;

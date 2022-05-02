@@ -6,6 +6,7 @@ import { MutationObserver } from "../observers/mutation/base";
 import { ChildProxy } from "../proxy/child";
 import { Stack } from "../stack";
 import { IAlertConcept } from "../types/alert";
+import { ICollectionConcept } from "../types/collection";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IGlobal } from "../types/global";
@@ -32,6 +33,7 @@ export class BaseGlobal implements IGlobal{
     private routerConcept_: IRouterConcept | null = null;
     private resourceConcept_: IResourceConcept | null = null;
     private alertConcept_: IAlertConcept | null = null;
+    private collectionConcepts_: Record<string, ICollectionConcept> = {};
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
         this.config_ = new Config(configOptions || {});
@@ -133,6 +135,14 @@ export class BaseGlobal implements IGlobal{
 
     public GetAlertConcept(){
         return this.alertConcept_;
+    }
+
+    public SetCollectionConcept(concept: ICollectionConcept){
+        this.collectionConcepts_[concept.GetName()] = concept;
+    }
+
+    public GetCollectionConcept(name: string){
+        return (this.collectionConcepts_.hasOwnProperty(name) ? this.collectionConcepts_[name] : null);
     }
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{

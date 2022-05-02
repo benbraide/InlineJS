@@ -1,4 +1,5 @@
 import { IAlertConcept } from "./alert";
+import { ICollectionConcept } from "./collection";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directives";
@@ -41,6 +42,9 @@ export interface IGlobal{
 
     SetAlertConcept(concept: IAlertConcept): void;
     GetAlertConcept(): IAlertConcept | null;
+
+    SetCollectionConcept(concept: ICollectionConcept): void;
+    GetCollectionConcept(name: string): ICollectionConcept | null;
 
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

@@ -52,13 +52,33 @@ export class BaseComponent implements IComponent{
         this.proxies_[this.rootProxy_.GetPath()] = this.rootProxy_;
 
         this.CreateElementScope(this.root_);
-        GetGlobal().GetMutationObserver().Observe(this.root_, ({ added, removed }) => {
+        GetGlobal().GetMutationObserver().Observe(this.root_, ({ added, removed, attributes }) => {
             let component = FindComponentById(id_);
             if (!component){
                 return;
             }
 
-            added?.forEach((node) => {
+            let checklist = new Array<HTMLElement>(), dirRegex = GetGlobal().GetConfig().GetDirectiveRegex();
+            attributes?.filter(attr => (attr.target instanceof HTMLElement)).forEach((attr) => {
+                if (!(attr.target as HTMLElement).hasAttribute(attr.name) || !dirRegex.test(attr.name)){
+                    component?.FindElementScope(<HTMLElement>attr.target)?.ExecuteAttributeChangeCallbacks(attr.name);
+                }
+                else if (!checklist.includes(<HTMLElement>attr.target)){
+                    checklist.push(<HTMLElement>attr.target);
+                }
+            });
+
+            checklist.forEach(element => ProcessDirectives({ element,
+                component: component!, 
+                options: {
+                    checkTemplate: true,
+                    checkDocument: false,
+                    ignoreChildren: false,
+                },
+            }));
+
+            let addedBackup = [...(added || [])];
+            added?.filter(node => !removed?.includes(node)).forEach((node) => {
                 if (node instanceof HTMLElement){
                     ProcessDirectives({
                         component: component!,
@@ -72,12 +92,12 @@ export class BaseComponent implements IComponent{
                 }
             });
 
-            removed?.forEach((node) => {
+            removed?.filter(node => !addedBackup.includes(node)).forEach((node) => {
                 if (node instanceof HTMLElement){
                     component!.FindElementScope(node)?.Destroy();
                 }
             });
-        }, ['add', 'remove']);
+        }, ['add', 'remove', 'attribute']);
     }
     
     public SetReactiveState(state: ReactiveStateType){

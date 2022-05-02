@@ -78,7 +78,7 @@ describe('data binding', () => {
         await waitFor(() => { expect(document.querySelector('span')!.textContent).equal('baz') });
     });
 
-    it('should be optimized by default', async () => {
+    it('should be unoptimized by default', async () => {
         document.body.innerHTML = `
             <div x-data="{ nested: {foo: 'bar'} }">
                 <span x-text="nested.foo"></span>
@@ -106,7 +106,7 @@ describe('data binding', () => {
 
         userEvent.click(document.querySelectorAll('button')[1]);
 
-        await waitFor(() => { expect(document.querySelector('span')!.textContent).equal('baz') });
+        await waitFor(() => { expect(document.querySelectorAll('span')[0].textContent).equal('unoptimized') });
         await waitFor(() => { expect(document.querySelectorAll('span')[1].textContent).equal('{"foo":"unoptimized"}') });
     });
 
@@ -120,7 +120,7 @@ describe('data binding', () => {
             </div>
         `;
         
-        CreateGlobal().GetConfig().SetReactiveState('unoptimized');
+        CreateGlobal().GetConfig().SetReactiveState('optimized');
 
         DataDirectiveHandlerCompact();
         TextDirectiveHandlerCompact();
@@ -138,13 +138,13 @@ describe('data binding', () => {
 
         userEvent.click(document.querySelectorAll('button')[1]);
 
-        await waitFor(() => { expect(document.querySelector('span')!.textContent).equal('unoptimized') });
+        await waitFor(() => { expect(document.querySelectorAll('span')[0].textContent).equal('baz') });
         await waitFor(() => { expect(document.querySelectorAll('span')[1].textContent).equal('{"foo":"unoptimized"}') });
     });
 
     it('should obey per component reactive settings', async () => {
         document.body.innerHTML = `
-            <div x-data="{ nested: {foo: 'bar'}, $config: {reactiveState: 'unoptimized'} }">
+            <div x-data="{ nested: {foo: 'bar'}, $config: {reactiveState: 'optimized'} }">
                 <span x-text="nested.foo"></span>
                 <span x-text="nested"></span>
                 <button x-on:click="nested.foo = 'baz'"></button>
@@ -170,13 +170,13 @@ describe('data binding', () => {
 
         userEvent.click(document.querySelectorAll('button')[1]);
 
-        await waitFor(() => { expect(document.querySelector('span')!.textContent).equal('unoptimized') });
+        await waitFor(() => { expect(document.querySelectorAll('span')[0].textContent).equal('baz') });
         await waitFor(() => { expect(document.querySelectorAll('span')[1].textContent).equal('{"foo":"unoptimized"}') });
     });
 
     it('should obey \'$unoptimized\' global magic property', async () => {
         document.body.innerHTML = `
-            <div x-data="{ nested: {foo: 'bar'} }">
+            <div x-data="{ nested: {foo: 'bar'}, $config: {reactiveState: 'optimized'} }">
                 <span x-text="nested.foo"></span>
                 <span x-text="$unoptimized(nested.foo)"></span>
                 <button x-on:click="nested = {foo: 'unoptimized'}"></button>

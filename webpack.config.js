@@ -4,12 +4,13 @@ module.exports = {
        "inlinejs": "./src/inlinejs.ts",
        "inlinejs-extended": "./src/inlinejs-extended.ts",
        "inlinejs-router": "./src/inlinejs-router.ts",
+       "inlinejs-cart": "./src/inlinejs-cart.ts",
+       "inlinejs-favorites": "./src/inlinejs-favorites.ts",
+       "inlinejs-collection": "./src/inlinejs-collection.ts",
        "inlinejs-stripe": "./src/inlinejs-stripe.ts",
        "inlinejs-quill": "./src/inlinejs-quill.ts",
        "inlinejs-swal": "./src/inlinejs-swal.ts",
-       "inlinejs-canvas": "./src/inlinejs-canvas.ts",
-    //    "inlinejs-animated": "./src/inlinejs-animated.ts",
-    //    "inlinejs-custom": "./src/inlinejs-custom.ts"
+       "inlinejs-canvas": "./src/inlinejs-canvas.ts"
    },
    output: {
        filename: "[name].js",

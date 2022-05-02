@@ -35,7 +35,7 @@
         </x-canvas>
     </section>
 
-    <section x-tick.steps.100.stopped x-data>
+    <section class="container mx-auto mt-8" x-tick.steps.100.stopped x-data>
         <p>
             <span>Running:</span>
             <span x-text="$tick.running"></span>
@@ -54,7 +54,7 @@
         <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tick.reset()">Reset</button>
     </section>
 
-    <section>
+    <section class="container mx-auto mt-8">
         <nav class="flex flex-row justify-start items-center gap-x-4 text-gray-600 font-semibold underline" x-data>
             <a href="/" x-router:link>Home</a>
             <a href="/about" x-router:link>About</a>
@@ -72,15 +72,142 @@
             <h2>Contact Us</h2>
             <label>
                 <span>Name</span>
-                <input type="text">
+                <input type="text" class="px-4 py-2 border rounded-md overflow-hidden">
             </label>
         </template>
         <template x-static="$router.addPage({ path: /^.+$/ })" x-post="$router.mount(false)" x-router:mount x-data></template>
     </section>
     
-    <section class="h-96"></section>
+    <section class="container mx-auto mt-8" x-component="first" x-data="{email: 'user.yahoo@yahoo.com', name: 'John Doe', state: true, getName(){ return this.name }}">
+        <h2 class="mb-4 text-3xl font-bold" x-style:color="color" x-on:click="color = 'red'">First Component</h2>
+        <div>
+            <span>Name: </span>
+            <strong x-text="$format.affix(name, '[Prefix] ', ' [Suffix]')"></strong>
+        </div>
+        <div>
+            <span>Name (by getName): </span>
+            <strong x-text="getName()"></strong>
+        </div>
+        <div>
+            <span>Name (by $component): </span>
+            <strong x-text="$component('first').name"></strong>
+        </div>
+        <div>
+            <span>Email: </span>
+            <strong x-text="email"></strong>
+        </div>
+        <div>
+            <input type="text" class="px-4 py-2 border rounded-md overflow-hidden" x-model="name">
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" x-model="state"> State
+            </label>
+        </div>
+        <div>
+            <span>State: </span>
+            <strong x-text="state"></strong>
+        </div>
+        <template x-if="state">
+            <p x-uninit="console.log('State was changed to false', this)">State is true</p>
+        </template>
+        <template x-if="!state">
+            <p x-uninit="console.log('State was changed to true', this)">State is false</p>
+        </template>
+    </section>
 
-    <section class="mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
+    <section class="container mx-auto mt-8" x-data="{list: ['First', 'Second', 'Third', 'Last']}">
+        <h2 class="mb-4 text-3xl font-bold">Array Loop</h2>
+        <template x-each="list as item" :key="item">
+            <div style="overflow: hidden;">
+                <span>Index: </span><strong x-text="$each.index"></strong> | 
+                <span>Value: </span><strong x-text="$each.value"></strong> | 
+                <span>Value(alt): </span><strong x-text="item"></strong> | 
+                <span>Count: </span><strong x-text="$each.count"></strong>
+            </div>
+        </template>
+        <button class="px-4 py-2 border rounded-md overflow-hidden" x-on:click="list.length < 5 ? list.splice(1, 0, 'Pushed!') : list.splice(1, 1)">Click me</button>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data="{range: 9}">
+        <h2 class="mb-4 text-3xl font-bold">Range Loop</h2>
+        <template x-each="range" :key="$each.value">
+            <div style="overflow: hidden;">
+                <span>Index: </span><strong x-text="$each.index"></strong> | 
+                <span>Value: </span><strong x-text="$each.value"></strong> | 
+                <span>Count: </span><strong x-text="$each.count"></strong>
+            </div>
+        </template>
+        <button class="px-4 py-2 border rounded-md overflow-hidden" x-on:click="range = ((range == 9) ? 18 : 9)">Change Range</button>
+        <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden" x-on:click="$parent.setAttribute('x-static', 'console.log(this, `Executed attribute`)')">Insert Attribute</button>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data="getData()">
+        <h2 class="mb-4 text-3xl font-bold">Map Loop</h2>
+        <template x-each="list as item">
+            <div>
+                <span>Index: </span><strong x-text="$each.index"></strong> | 
+                <span>Value: </span><strong x-text="$each.value.first"></strong> | <strong x-text="$each.value.second"></strong> | 
+                <span>Value(alt): </span><strong x-text="item.first"></strong> | <strong x-text="item.second"></strong> | 
+                <span>Count: </span><strong x-text="$each.count"></strong>
+            </div>
+        </template>
+        <button class="px-4 py-2 border rounded-md overflow-hidden"
+            x-on:click="del ? delete list['new'] : list['new'] = {first: 'World', second:'Order'}; del = !del">Click me</button>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data="{ productId: 0 }">
+        <template x-static="$cart.setOption('entryName', 'product')"></template>
+        <template x-static="$cart.addOffset('deliveryCharge', ({ subTotal }) => (($rel.gt(subTotal, 0) && $rel.lt(subTotal, 50)) ? 3.69 : 0), 0)"></template>
+        <template x-cart:update="console.log($event.type, $event.detail)"></template>
+        <template x-cart:item="console.log($event.type, $event.detail)"></template>
+        <h2 class="mb-4 text-3xl font-bold">Cart Collection (<span x-text="$cart.count"></span>)</h2>
+        <div>
+            <p>
+                <span>Items: </span><strong x-text="$cart.items.length"></strong>
+                <span>(</span><strong x-text="$cart.count"></strong><span> units)</span>
+            </p>
+            <p>
+                <span>Sub-total: </span><strong x-text="$format.prefix($format.round($cart.subTotal, 2), '$')"></strong>
+            </p>
+            <p>
+                <span>Delivery Charge: </span><strong x-text="$format.prefix($format.round($cart.deliveryCharge, 2), '$')"></strong>
+            </p>
+            <p>
+                <span>Total: </span><strong x-text="$format.prefix($format.round($cart.total, 2), '$')"></strong>
+            </p>
+        </div>
+        <hr class="mt-2 mb-4">
+        <div>
+            <input type="text" placeholder="Product name" class="px-4 py-2 border rounded-md overflow-hidden" x-model="productName">
+            <input type="text" placeholder="Product price" class="px-4 py-2 border rounded-md overflow-hidden" x-model.number="price">
+            <input type="text" placeholder="Product quantity" class="px-4 py-2 border rounded-md overflow-hidden" x-model.number="quantity">
+        </div>
+        <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden"
+            x-on:click="$cart.addItem({ id: productId++, name: productName, price }, quantity); productName = price = quantity = ''">Add to cart</button>
+        <hr class="mt-2 mb-4">
+        <template x-each="$cart.items as item">
+            <div>
+                <p>
+                    <span>ID: </span><strong x-text="item.product.id"></strong>
+                </p>
+                <p>
+                    <span>Name: </span><strong x-text="item.product.name"></strong>
+                </p>
+                <p>
+                    <span>Price: </span><strong x-text="$format.prefix($format.round(item.product.price, 2), '$')"></strong>
+                </p>
+                <div class="flex flex-row justify-start items-center">
+                    <button class="px-2 py-1 border rounded-md overflow-hidden" x-on:click="item.quantity -= 1">-</button>
+                    <p class="ml-2 font-bold" x-text="item.quantity"></p>
+                    <button class="ml-2 px-2 py-1 border rounded-md overflow-hidden" x-on:click="item.quantity += 1">+</button>
+                </div>
+                <hr class="mt-2 mb-2">
+            </div>
+        </template>
+    </section>
+
+    <section class="container mx-auto mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
         x-intersection:visible="$alert.notify({text: 'visible', toast: true})" x-intersection:hidden="$alert.notify({text: 'hidden', toast: true})">
         <p>
             <span>Intersected:</span>
@@ -95,8 +222,33 @@
             <span x-text="$intersection.ratio"></span>
         </p>
     </section>
+    <script>
+        function getData(){
+            return {
+                list: {
+                    name: {
+                        first: 'Anon Legion',
+                        second:'Anon Legion2',
+                    },
+                    email: {
+                        first:'anon.legion@crypt.co',
+                        second:'a@b.c',
+                    },
+                    age: {
+                        first:27,
+                        second:45,
+                    },
+                    sex: {
+                        first:'MALE',
+                        second:'FEMALE',
+                    }
+                }
+            };
+        }
+    </script>
     <script src="../dist/inlinejs-canvas.js"></script>
     <script src="../dist/inlinejs-router.js"></script>
+    <script src="../dist/inlinejs-collection.js"></script>
     <script src="../dist/inlinejs-swal.js"></script>
     <script src="../dist/inlinejs-extended.js"></script>
     <script src="../dist/inlinejs.js"></script>

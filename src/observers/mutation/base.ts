@@ -1,6 +1,6 @@
 import { GetElementScopeId } from "../../component/element-scope-id";
 import { JournalTry } from "../../journal/try";
-import { IMutationObserver, IMutationType, MutationObserverHandlerType } from "../../types/mutation";
+import { IMutationObserver, IMutationObserverAttributeInfo, IMutationType, MutationObserverHandlerType } from "../../types/mutation";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../../utilities/unique-markers";
 
 interface IMutationObserverHandlerInfo{
@@ -9,15 +9,10 @@ interface IMutationObserverHandlerInfo{
     whitelist?: Array<IMutationType>;
 }
 
-interface IMutationAttributeInfo{
-    name: string;
-    target: Node;
-}
-
 interface IMutatedInfo{
     added: Array<Node>;
     removed: Array<Node>;
-    attributes: Array<IMutationAttributeInfo>;
+    attributes: Array<IMutationObserverAttributeInfo>;
 }
 
 export class MutationObserver implements IMutationObserver{
@@ -34,7 +29,7 @@ export class MutationObserver implements IMutationObserver{
                         return (mutations[key] = mutations[key] || {
                             added: new Array<Node>(),
                             removed: new Array<Node>(),
-                            attributes: new Array<IMutationAttributeInfo>(),
+                            attributes: new Array<IMutationObserverAttributeInfo>(),
                         });
                     };
 
@@ -75,9 +70,7 @@ export class MutationObserver implements IMutationObserver{
                         let attributes = getList('attribute', info, mutations[key].attributes);
 
                         if (added || removed || attributes){
-                            JournalTry(() => info.handler({ id, added, removed,
-                                attributes: attributes?.map(attr => attr.name),
-                            }), 'InlineJS.MutationObserver');
+                            JournalTry(() => info.handler({ id, added, removed, attributes }), 'InlineJS.MutationObserver');
                         }
                     });
                 });

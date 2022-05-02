@@ -222,11 +222,11 @@ describe('component', () => {
     it('should not be affected by optimized settings in other components', async () => {
         let key = randomString.generate(18);
         document.body.innerHTML = `
-            <div x-data="{ $config: { reactiveState: 'unoptimized' }, nested: {foo: 'bar'} }" x-component="${key}">
+            <div x-data="{ nested: {foo: 'bar'} }" x-component="${key}">
                 <span x-text="nested.foo"></span>
                 <button x-on:click="nested = {foo: 'unoptimized'}"></button>
             </div>
-            <div x-data>
+            <div x-data="{ $config: { reactiveState: 'optimized' } }">
                 <span x-text="$component('${key}').nested.foo"></span>
             </div>
         `;

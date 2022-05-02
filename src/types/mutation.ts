@@ -1,8 +1,13 @@
+export interface IMutationObserverAttributeInfo{
+    name: string;
+    target: Node;
+}
+
 export interface IMutationObserverHandlerParams{
     id: string;
     added?: Array<Node>;
     removed?: Array<Node>;
-    attributes?: Array<string>;
+    attributes?: Array<IMutationObserverAttributeInfo>;
 }
 
 export type MutationObserverHandlerType = (params: IMutationObserverHandlerParams) => void;

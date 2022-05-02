@@ -71,6 +71,8 @@ describe('proxy', () => {
     it('should alert accesses on get operations', () => {
         let global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
 
+        global.GetConfig().SetReactiveState('optimized');
+        
         root.GetNative()['state'] = true;
         root.GetNative()['quantity'] = 72;
         root.GetNative()['list'] = [1, 2, 3, 4, 5];

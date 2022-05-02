@@ -8,6 +8,7 @@ import { AddChanges } from "../../../proxy/add-changes";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../../proxy/create";
 import { IComponent } from "../../../types/component";
 import { GetTarget } from "../../../utilities/get-target";
+import { IsEqual } from "../../../utilities/is-equal";
 import { IsObject } from "../../../utilities/is-object";
 import { ToString } from "../../../utilities/to-string";
 import { Future } from "../../../values/future";
@@ -84,14 +85,15 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
         return {
             proxy: CreateInplaceProxy(BuildGetterProxyOptions({ getter: (prop) => {
                 if (prop && state.hasOwnProperty(prop)){
+                    FindComponentById(componentId)?.GetBackend().changes.AddGetAccess(`${id}.${prop}`);
                     return state[prop];
                 }
             }, lookup: [...Object.keys(state)], alert: { componentId, id } })),
             refresh: (entries: Record<string, any>) => {
                 Object.entries(entries).forEach(([key, value]) => {
-                    if (state.hasOwnProperty(key)){
+                    if (state.hasOwnProperty(key) && !IsEqual(state[key], value)){
                         state[key] = value;
-                        AddChanges('set', `${id}.${key}`, key, component.GetBackend().changes);
+                        AddChanges('set', `${id}.${key}`, key, FindComponentById(componentId)?.GetBackend().changes);
                     }
                 });
             },
@@ -100,7 +102,11 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
     
     let list: ListType<HTMLElement> | null = null, proxies: ListType<IProxyInfo> | null = null;
     let insert = (data: ListType<any>, item: any, index: number | string, newList: ListType<HTMLElement>, key: string | null) => {
-        let clone: HTMLElement | null = null;
+        let clone: HTMLElement | null = null, component = FindComponentById(componentId);
+        if (!component){
+            return;
+        }
+        
         InsertControlClone({ componentId, contextElement,
             parent: init!.parent,
             clone: (clone = init!.clone()),
@@ -158,17 +164,21 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
         proxies = (Array.isArray(data) ? new Array<IProxyInfo>() : {});
         
         callback((item, index) => {
-            let elementWithKey: HTMLElement | null = null, key: string | null = null;
+            let elementWithKey: HTMLElement | null = null, key: string | null = null, elementWithKeyIndex: number | string | null = null;
             if (Array.isArray(data)){
                 key = ToString(getKey(<number>index, data));
-                elementWithKey = ((<Array<HTMLElement>>list || []).find(el => (el.getAttribute('key') === key)) || null);
+                elementWithKeyIndex = (<Array<HTMLElement>>list || []).findIndex(el => (el.getAttribute('key') === key));
+                if (elementWithKeyIndex != -1){
+                    elementWithKey = list![elementWithKeyIndex];
+                }
             }
-            else{
-                elementWithKey = ((list && index in list) ? list[index] : null);
+            else if (list && list.hasOwnProperty(index)){
+                elementWithKeyIndex = index;
+                elementWithKey = list[index];
             }
             
             if (elementWithKey){//Reuse element
-                let proxy = oldProxies![index];
+                let proxy = oldProxies![elementWithKeyIndex!];
                 if (Array.isArray(newList)){
                     newList.push(elementWithKey);
                     (proxies as Array<IProxyInfo>).push(proxy);
@@ -179,7 +189,7 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
                 }
 
                 elementWithKey.parentElement!.insertBefore(elementWithKey, contextElement);//Move to update position
-                proxy.refresh({ data, item, index, count: data.length });
+                proxy.refresh({ collection: data, value: item, index, count: getCount(data) });
             }
             else{//Create new
                 insert(data, item, index, newList, key);

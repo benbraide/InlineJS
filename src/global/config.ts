@@ -27,7 +27,7 @@ export class Config implements IConfig{
         'nomodule', 'novalidate', 'open', 'playsinline', 'readonly', 'required', 'reversed', 'selected',
     );
     
-    public constructor({ appName = '', reactiveState = 'optimized', directivePrefix = 'x', directiveRegex, directiveNameBuilder }: IConfigOptions = {}){
+    public constructor({ appName = '', reactiveState = 'unoptimized', directivePrefix = 'x', directiveRegex, directiveNameBuilder }: IConfigOptions = {}){
         this.appName_ = appName;
         this.reactiveState_ = reactiveState;
         this.directiveRegex_ = (directiveRegex || new RegExp(`^(data-)?${directivePrefix || 'x'}-(.+)$`));
