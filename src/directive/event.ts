@@ -25,7 +25,7 @@ const defaultEventList = ['bind', 'event', 'on'];
 
 export function BindEvent({ component, contextElement, key, event, expression, options, defaultEvent, eventWhitelist = [], optionBlacklist }: IBindEventParams){
     let filterOptions = () => (optionBlacklist ? options?.filter(opt => !optionBlacklist.includes(opt)) : options), getEventName = (name: string) => {
-        return (key ? `${key}-${event}.join` : event);
+        return (key ? `${key}-${name}.join` : name);
     };
 
     if (eventWhitelist.includes(event)){

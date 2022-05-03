@@ -18,7 +18,7 @@ export declare class RouterConcept implements IRouterConcept {
     RemoveMiddleware(middleware: IRouterMiddleware | string): void;
     AddFetcher(fetcher: IRouterFetcher): void;
     RemoveFetcher(fetcher: IRouterFetcher): void;
-    AddProtocolHandler(handler: RouterProtocolHandlerType): void;
+    AddProtocolHandler(protocol: string | RegExp, handler: RouterProtocolHandlerType): void;
     RemoveProtocolHandler(handler: RouterProtocolHandlerType): void;
     AddPage({ path, ...rest }: IRouterPageOptions): string;
     RemovePage(page: string | IRouterPageName): {
@@ -37,6 +37,7 @@ export declare class RouterConcept implements IRouterConcept {
     GetCurrentPath(): string;
     GetActivePage(): IRouterPage | null;
     GetActivePageData(key?: string): any;
+    private FindProtocolHandler_;
     private Load_;
     private DoLoad_;
     private SetActiveState_;

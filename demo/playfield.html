@@ -59,23 +59,34 @@
             <a href="/" x-router:link>Home</a>
             <a href="/about" x-router:link>About</a>
             <a href="/contact" x-router:link>Contact</a>
+            <a href="modal://about" x-router:link>About (MOD)</a>
+            <a href="modal://contact" x-router:link>Contact (MOD)</a>
         </nav>
         <template x-router:fetch="'/'" x-data>
-            <h2>Home Page</h2>
+            <h4 class="mb-2 text-lg font-bold">Home Page</h4>
             <p>Hello world! My fellow peeps</p>
         </template>
         <template x-router:fetch="'/about'" x-data>
-            <h2>About Us</h2>
+            <h4 class="mb-2 text-lg font-bold">About Us</h4>
             <p>This should describe us</p>
         </template>
         <template x-router:fetch="'/contact'" x-data>
-            <h2>Contact Us</h2>
+            <h4 class="mb-2 text-lg font-bold">Contact Us</h4>
             <label>
                 <span>Name</span>
                 <input type="text" class="px-4 py-2 border rounded-md overflow-hidden">
             </label>
         </template>
+        
+        <hr class="mt-4">
+        <h3 class="text-xl font-bold">Main Router Mount</h3>
+        <hr class="mb-2">
         <template x-static="$router.addPage({ path: /^.+$/ })" x-post="$router.mount(false)" x-router:mount x-data></template>
+        
+        <hr class="mt-4">
+        <h3 class="text-xl font-bold">Protocol Router Mount</h3>
+        <hr class="mb-2">
+        <template x-router:mount.protocol="'modal'" x-router:mount-entered="window.alert('Data engaged')" x-data></template>
     </section>
     
     <section class="container mx-auto mt-8" x-component="first" x-data="{email: 'user.yahoo@yahoo.com', name: 'John Doe', state: true, getName(){ return this.name }}">

@@ -1,5 +1,6 @@
 import { BootstrapAndAttach } from "../../bootstrap/attach";
 import { FindComponentById } from "../../component/find";
+import { InsertHtml } from "../../component/insert-html";
 import { RouterFetcher } from "../../concepts/fetcher";
 import { DefaultRouterEvent, RouterConceptName, RouterEvents } from "../../concepts/names";
 import { AddDirectiveHandler } from "../../directives/add";
@@ -7,7 +8,8 @@ import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { EvaluateLater } from "../../evaluator/evaluate-later";
 import { GetGlobal } from "../../global/get";
 import { JournalError } from "../../journal/error";
-import { BindEvent } from "../event";
+import { IRouterProtocolHandlerParams } from "../../types/router";
+import { BindEvent, ForwardEvent } from "../event";
 import { ResolveOptions } from "../options";
 
 export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConceptName, ({ componentId, component, contextElement, expression, argKey, argOptions }) => {
@@ -30,7 +32,12 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
 
         EvaluateLater({ componentId, contextElement, expression })((value) => {
             if (value && (typeof value === 'string' || value instanceof RegExp)){
-                GetGlobal().GetRouterConcept()?.AddFetcher(new RouterFetcher(value, () => Promise.resolve(contextElement.innerHTML)));
+                let concept = GetGlobal().GetRouterConcept();
+                if (concept){
+                    let fetcher = new RouterFetcher(value, () => Promise.resolve(contextElement.innerHTML));
+                    concept.AddFetcher(fetcher);
+                    FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => concept?.RemoveFetcher(fetcher));
+                }
             }
             else{
                 JournalError('Target path is invalid.', `${RouterConceptName}:${argKey}`, contextElement);
@@ -38,8 +45,9 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
         });
     }
     else if (argKey === 'mount'){
-        if (!(contextElement instanceof HTMLTemplateElement)){
-            return JournalError('Target is not a template element.', `${RouterConceptName}:${argKey}`, contextElement);
+        let concept = GetGlobal().GetRouterConcept();
+        if (!concept){
+            return JournalError(`${RouterConceptName} concept is not installed.`, `${RouterConceptName}:${argKey}`, contextElement);
         }
 
         if (!contextElement.parentElement){
@@ -47,40 +55,100 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
         }
 
         EvaluateLater({ componentId, contextElement, expression })((value) => {
-            let mountElement: HTMLElement;
-            if (!value || typeof value === 'string'){
-                try{
-                    mountElement = document.createElement(value || 'div');
-                    if (!mountElement){
-                        mountElement = document.createElement('div');
-                    }
+            let options = ResolveOptions({ options: { protocol: false, scroll: false }, list: argOptions });
+            if (options.protocol && (!value || (typeof value !== 'string' && !(value instanceof RegExp)))){
+                return JournalError('Target protocol is invalid.', `${RouterConceptName}:${argKey}`, contextElement);
+            }
+            
+            let getMount = (el: any): HTMLElement | null => {
+                if (!(contextElement instanceof HTMLTemplateElement)){
+                    return contextElement;
                 }
-                catch{
-                    mountElement = document.createElement('div');
+                
+                if (!el || typeof el === 'string'){
+                    try{
+                        mountElement = document.createElement(el || 'div');
+                        return (mountElement || document.createElement('div'));
+                    }
+                    catch{}
+
+                    return document.createElement('div');
+                }
+                
+                if (el instanceof HTMLElement){
+                    let root = FindComponentById(componentId)?.GetRoot();
+                    return ((root === el || root?.contains(el)) ? el : null);
                 }
 
-                contextElement.parentElement!.insertBefore(mountElement, contextElement);
-            }
-            else if (value instanceof HTMLElement){
-                mountElement = value;
-            }
-            else{
+                return null;
+            };
+
+            let mountElement = getMount(options.protocol ? null : value);
+            if (!mountElement){
                 return JournalError('Mount target is invalid.', `${RouterConceptName}:${argKey}`, contextElement);
             }
 
-            let options = ResolveOptions({ options: { scroll: false }, list: argOptions }), event = `${RouterConceptName}.data`, onEvent = (e: Event) => {
+            let onUninit: (() => void) | null = null;
+            if (!mountElement.parentElement){//Add to DOM
+                contextElement.parentElement!.insertBefore(mountElement, contextElement);
+                onUninit = () => mountElement!.remove();
+            }
+
+            let handleData = (data: string) => {
                 if (options.scroll){
                     window.scrollTo({ top: 0, left: 0 });
                 }
                 
-                Array.from(mountElement.attributes).forEach(attr => mountElement.removeAttribute(attr.name));
-                mountElement.innerHTML = (e as CustomEvent).detail.data;
-                BootstrapAndAttach(mountElement);
+                Array.from(mountElement!.attributes).forEach(attr => mountElement!.removeAttribute(attr.name));
+                InsertHtml({
+                    element: mountElement!,
+                    html: data,
+                    component: componentId,
+                    processDirectives: false,
+                });
+                BootstrapAndAttach(mountElement!);
             };
 
-            window.addEventListener(event, onEvent);
-            FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => window.removeEventListener(event, onEvent));
+            let savedPath: string | null = null, checkpoint = 0, event = `${RouterConceptName}.data`, onEvent = (e: Event) => handleData((e as CustomEvent).detail.data);
+            let protocolHandler = ({ path }: IRouterProtocolHandlerParams) => {
+                contextElement.dispatchEvent(new CustomEvent(`${RouterConceptName}.mount.entered`));
+                if (path === savedPath){//Skip
+                    contextElement.dispatchEvent(new CustomEvent(`${RouterConceptName}.mount.reload`));
+                    return true;
+                }
+                
+                savedPath = path;
+                let myCheckpoint = ++checkpoint;
+                
+                return (data: string) => {
+                    if (myCheckpoint == checkpoint){
+                        handleData(data);
+                        contextElement.dispatchEvent(new CustomEvent(`${RouterConceptName}.mount.load`));
+                    }
+                }
+            };
+
+            if (options.protocol){
+                concept!.AddProtocolHandler(value, protocolHandler);
+            }
+            else{
+                window.addEventListener(event, onEvent);
+            }
+
+            FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => {
+                if (options.protocol){
+                    concept?.RemoveProtocolHandler(protocolHandler);
+                }
+                else{
+                    window.removeEventListener(event, onEvent);
+                }
+
+                onUninit && onUninit();
+            });
         });
+    }
+    else if (argKey === 'mount-load' || argKey === 'mount-reload' || argKey === 'mount-entered'){
+        ForwardEvent(componentId, contextElement, `${RouterConceptName}-${argKey}.join`, expression, argOptions);
     }
     else if (argKey === 'link'){
         if (!(contextElement instanceof HTMLAnchorElement) && !(contextElement instanceof HTMLFormElement)){

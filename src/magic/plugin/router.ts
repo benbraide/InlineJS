@@ -13,7 +13,7 @@ function CreateRouterProxy(){
         removeMiddleware: (middleware: IRouterMiddleware | string) => GetGlobal().GetRouterConcept()?.RemoveMiddleware(middleware),
         addFetcher: (fetcher: IRouterFetcher) => GetGlobal().GetRouterConcept()?.AddFetcher(fetcher),
         removeFetcher: (fetcher: IRouterFetcher) => GetGlobal().GetRouterConcept()?.RemoveFetcher(fetcher),
-        addProtocolHandler: (handler: RouterProtocolHandlerType) => GetGlobal().GetRouterConcept()?.AddProtocolHandler(handler),
+        addProtocolHandler: (protocol: string | RegExp, handler: RouterProtocolHandlerType) => GetGlobal().GetRouterConcept()?.AddProtocolHandler(protocol, handler),
         removeProtocolHandler: (handler: RouterProtocolHandlerType) => GetGlobal().GetRouterConcept()?.RemoveProtocolHandler(handler),
         addPage: (page: IRouterPageOptions) => GetGlobal().GetRouterConcept()?.AddPage(page),
         removePage: (page: string | IRouterPageName) => GetGlobal().GetRouterConcept()?.RemovePage(page),

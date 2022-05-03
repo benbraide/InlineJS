@@ -1,13 +1,18 @@
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { ISplitPath } from "../types/path";
-import { IRouterPageName, IRouterConcept, IRouterMiddleware, IRouterPage, IRouterPageOptions, IRouterFetcher, RouterProtocolHandlerType } from "../types/router";
+import { IRouterPageName, IRouterConcept, IRouterMiddleware, IRouterPage, IRouterPageOptions, IRouterFetcher, RouterProtocolHandlerType, RouterProtocolDataHandlerType } from "../types/router";
 import { IUniqueMarkers } from "../types/unique-markers";
 import { DeepCopy } from "../utilities/deep-copy";
 import { IsObject } from "../utilities/is-object";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { RouterConceptName } from "./names";
 import { JoinPath, PathToRelative, SplitPath, TidyPath } from "./path";
+
+interface IRouterProtocolHandlerInfo{
+    protocol: string | RegExp;
+    handler: RouterProtocolHandlerType;
+}
 
 export class RouterConcept implements IRouterConcept{
     private markers_: IUniqueMarkers = GetDefaultUniqueMarkers();
@@ -18,7 +23,7 @@ export class RouterConcept implements IRouterConcept{
     
     private middlewares_: Record<string, IRouterMiddleware> = {};
     private fetchers_ = new Array<IRouterFetcher>();
-    private protocolHandlers_ = new Array<RouterProtocolHandlerType>();
+    private protocolHandlers_ = new Array<IRouterProtocolHandlerInfo>();
     private pages_: Record<string, IRouterPage> = {};
 
     private current_ = {
@@ -64,12 +69,12 @@ export class RouterConcept implements IRouterConcept{
         this.fetchers_ = this.fetchers_.filter(f => (f !== fetcher));
     }
 
-    public AddProtocolHandler(handler: RouterProtocolHandlerType){
-        this.protocolHandlers_.push(handler);
+    public AddProtocolHandler(protocol: string | RegExp, handler: RouterProtocolHandlerType){
+        this.protocolHandlers_.push({ protocol, handler });
     }
 
     public RemoveProtocolHandler(handler: RouterProtocolHandlerType){
-        this.protocolHandlers_ = this.protocolHandlers_.filter(f => (f !== handler));
+        this.protocolHandlers_ = this.protocolHandlers_.filter(info => (info.handler !== handler));
     }
     
     public AddPage({ path, ...rest }: IRouterPageOptions){
@@ -151,37 +156,51 @@ export class RouterConcept implements IRouterConcept{
         return this.current_.data;
     }
 
+    private FindProtocolHandler_(protocol: string){
+        let info = this.protocolHandlers_.find(info => ((typeof info.protocol === 'string') ? (info.protocol === protocol) : info.protocol.test(protocol)));
+        return (info ? info.handler : null);
+    }
+
     private Load_(path: ISplitPath, pushHistory?: boolean, shouldReload?: boolean, data?: any){
-        let joined = JoinPath(path), protocolMatch = path.base.match(/^([a-zA-Z0-9_]+):\/\//);
-        if (protocolMatch && this.protocolHandlers_.findIndex(handler => !!handler(protocolMatch![1], joined))){
+        let protocolMatch = path.base.match(/^([a-zA-Z0-9_]+):\/\//), protocolHandler = (protocolMatch ? this.FindProtocolHandler_(protocolMatch[1]) : null);
+        if (protocolHandler){//Truncate protocol
+            path.base = path.base.substring(protocolMatch![1].length + 2);
+        }
+        
+        let joined = JoinPath(path), protocolHandlerResponse = (protocolHandler ? protocolHandler({ protocol: protocolMatch![1], path: joined }) : null);
+        if (protocolHandlerResponse === true){
             return;//Protocol handled
         }
         
-        let samePath = (this.current_.path === joined);
-        if (samePath && !shouldReload){
-            return;
-        }
-        
-        let page = this.FindMatchingPage(path.base);
-        if (!page){//Not found
-            return window.dispatchEvent(new CustomEvent(`${RouterConceptName}.404`, { detail: { path: JoinPath(path) } }));
-        }
+        let page: IRouterPage | null = null;
+        if (!protocolHandlerResponse){
+            let samePath = (this.current_.path === joined);
+            if (samePath && !shouldReload){
+                return;
+            }
+            
+            page = this.FindMatchingPage(path.base);
+            if (!page){//Not found
+                return window.dispatchEvent(new CustomEvent(`${RouterConceptName}.404`, { detail: { path: JoinPath(path) } }));
+            }
 
-        if (data){
-            this.current_.initialData = DeepCopy(data);
-            this.current_.data = data;
-        }
-        else if (samePath){//Use initial if any
-            this.current_.data = (DeepCopy(this.current_.initialData) || data);
-        }
-        else{//Reset
-            this.current_.initialData = this.current_.data = null;
+            if (data){
+                this.current_.initialData = DeepCopy(data);
+                this.current_.data = data;
+            }
+            else if (samePath){//Use initial if any
+                this.current_.data = (DeepCopy(this.current_.initialData) || data);
+            }
+            else{//Reset
+                this.current_.initialData = this.current_.data = null;
+            }
         }
 
         this.SetActiveState_(true);
         window.dispatchEvent(new CustomEvent(`${RouterConceptName}.entered`, { detail: { page: { ...page } } }));
 
-        let checkpoint = ++this.checkpoint_, checkMiddlewares = async () => {
+        let doLoad = () => this.DoLoad_(checkpoint, page!, path, joined, pushHistory, ((typeof protocolHandlerResponse === 'function') ? protocolHandlerResponse : undefined));
+        let checkpoint = (protocolHandlerResponse ? this.checkpoint_ : ++this.checkpoint_), checkMiddlewares = async () => {
             for (let middleware of ((typeof page!.middleware === 'string') ? [page!.middleware] : page!.middleware)!){
                 if (checkpoint != this.checkpoint_ || (this.middlewares_.hasOwnProperty(middleware) && !await this.middlewares_[middleware].Handle(joined))){
                     if (checkpoint == this.checkpoint_){//Blocked
@@ -191,38 +210,40 @@ export class RouterConcept implements IRouterConcept{
                 }
             }
 
-            this.DoLoad_(checkpoint, page!, path, joined, pushHistory);
+            doLoad();
         };
 
-        if (page!.middleware){
+        if (!protocolHandlerResponse && page!.middleware){
             checkMiddlewares();
         }
         else{//No middlewares to check
-            this.DoLoad_(checkpoint, page!, path, joined, pushHistory);
+            doLoad();
         }
     }
 
-    private DoLoad_(checkpoint: number, page: IRouterPage, path: ISplitPath, joined: string, pushHistory?: boolean){
+    private DoLoad_(checkpoint: number, page: IRouterPage, path: ISplitPath, joined: string, pushHistory?: boolean, dataHandler?: RouterProtocolDataHandlerType){
         if (checkpoint != this.checkpoint_){
             return;
         }
 
-        if (page.id !== this.current_.page?.id){//New page
-            document.title = (page.title || 'Untitled');
-            
-            this.current_.page = page;
-            this.current_.path = joined;
-            
-            window.dispatchEvent(new CustomEvent(`${RouterConceptName}.page`, { detail: { page: { ...page } } }));
-            window.dispatchEvent(new CustomEvent(`${RouterConceptName}.path`, { detail: { path: { ...path } } }));
-        }
-        else if (this.current_.path !== joined){
-            this.current_.path = joined;
-            window.dispatchEvent(new CustomEvent(`${RouterConceptName}.path`, { detail: { path: { ...path } } }));
-        }
-
-        if (pushHistory){
-            window.history.pushState(path, (page.title || 'Untitled'), joined);
+        if (!dataHandler){
+            if (page.id !== this.current_.page?.id){//New page
+                document.title = (page.title || 'Untitled');
+                
+                this.current_.page = page;
+                this.current_.path = joined;
+                
+                window.dispatchEvent(new CustomEvent(`${RouterConceptName}.page`, { detail: { page: { ...page } } }));
+                window.dispatchEvent(new CustomEvent(`${RouterConceptName}.path`, { detail: { path: { ...path } } }));
+            }
+            else if (this.current_.path !== joined){
+                this.current_.path = joined;
+                window.dispatchEvent(new CustomEvent(`${RouterConceptName}.path`, { detail: { path: { ...path } } }));
+            }
+    
+            if (pushHistory){
+                window.history.pushState(path, (page.title || 'Untitled'), joined);
+            }
         }
 
         let fetcher = this.fetchers_.find((fetcher) => {
@@ -232,8 +253,13 @@ export class RouterConcept implements IRouterConcept{
 
         let handleData = (data: string) => {
             if (checkpoint == this.checkpoint_){
-                window.dispatchEvent(new CustomEvent(`${RouterConceptName}.data`, { detail: { data, path } }));
-                window.dispatchEvent(new CustomEvent(`${RouterConceptName}.load`));
+                if (!dataHandler){
+                    window.dispatchEvent(new CustomEvent(`${RouterConceptName}.data`, { detail: { data, path } }));
+                    window.dispatchEvent(new CustomEvent(`${RouterConceptName}.load`));
+                }
+                else{//Pass to handler
+                    dataHandler(data);
+                }
             }
             
             this.SetActiveState_(false);
@@ -247,7 +273,7 @@ export class RouterConcept implements IRouterConcept{
 
         if (!fetcher){//Network fetch
             let reolvedPath = (this.prefix_ ? PathToRelative(joined, this.origin_, this.prefix_) : joined);
-            if (!page.cache || !GetGlobal().GetResourceConcept()){
+            if (dataHandler || !page.cache || !GetGlobal().GetResourceConcept()){
                 fetch(reolvedPath, {
                     method: 'GET',
                     credentials: 'same-origin',

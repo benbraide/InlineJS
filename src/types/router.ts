@@ -26,7 +26,14 @@ export interface IRouterFetcher{
     Handle(path: string): Promise<string>;
 }
 
-export type RouterProtocolHandlerType = (protocol: string, path: string) => void | boolean;
+export interface IRouterProtocolHandlerParams{
+    protocol: string;
+    path: string;
+}
+
+export type RouterProtocolDataHandlerType = (data: string) => void;
+export type RouterProtocolHandlerResponseType = void | boolean | RouterProtocolDataHandlerType;
+export type RouterProtocolHandlerType = (params: IRouterProtocolHandlerParams) => RouterProtocolHandlerResponseType;
 
 export interface IRouterConcept{
     SetPrefix(prefix: string): void;
@@ -37,7 +44,7 @@ export interface IRouterConcept{
     AddFetcher(fetcher: IRouterFetcher): void;
     RemoveFetcher(fetcher: IRouterFetcher): void;
 
-    AddProtocolHandler(handler: RouterProtocolHandlerType): void;
+    AddProtocolHandler(protocol: string | RegExp, handler: RouterProtocolHandlerType): void;
     RemoveProtocolHandler(handler: RouterProtocolHandlerType): void;
     
     AddPage(options: IRouterPageOptions): string;
