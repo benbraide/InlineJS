@@ -233,9 +233,10 @@
                 x-mouse:inside="inside">
                 <p x-text="inside ? 'Mouse Inside' : 'Mouse Outside'"></p>
             </div>
-            <div class="ml-4 w-56 h-56 flex flex-row justify-center items-center bg-green-700 text-white font-semibold rounded-md"
-                x-mouse:repeat="++repeat">
+            <div class="ml-4 w-56 h-56 flex flex-col justify-center items-center bg-green-700 text-white font-semibold rounded-md"
+                x-mouse:repeat="++repeat; streak = $streak">
                 <p x-text="repeat ? `Mouse Down: ${repeat}` : 'Mouse Up'"></p>
+                <p x-text="`Mouse Down Streak: ${streak || 0}`"></p>
             </div>
             <div class="ml-4 w-56 h-56 pl-8 flex flex-col justify-center items-start bg-blue-700 text-white font-semibold"
                 x-mouse:move="position">
@@ -249,8 +250,10 @@
     <section class="container mx-auto mt-8" x-data>
         <h2 class="mb-4 text-3xl font-bold">Keyboard Monitor</h2>
         <div class="flex flex-row justify-start items-center">
-            <div class="w-56 h-56 flex flex-col justify-center items-center bg-red-700 text-white font-semibold rounded-md" x-keyboard:inside="inside">
+            <div class="w-56 h-56 flex flex-col justify-center items-center bg-red-700 text-white font-semibold rounded-md" x-keyboard:inside="inside"
+                x-keyboard:type="typing">
                 <p x-text="inside ? 'Focus Inside' : 'Focus Outside'"></p>
+                <p x-text="typing ? 'User is typing...' : 'Idle user'"></p>
                 <input type="text" placeholder="Input place" class="mt-2 w-32 px-4 py-2 text-black border rounded-md overflow-hidden">
             </div>
         </div>
