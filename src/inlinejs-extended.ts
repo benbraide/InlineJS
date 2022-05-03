@@ -5,6 +5,8 @@ import { IntersectionDirectiveHandlerCompact } from './directive/extended/inters
 import { TickDirectiveHandlerCompact } from './directive/extended/tick';
 import { FormDirectiveHandlerCompact } from './directive/extended/form';
 import { OverlayDirectiveHandlerCompact } from './directive/extended/overlay';
+import { MouseDirectiveHandlerCompact } from './directive/extended/mouse';
+import { KeyboardDirectiveHandlerCompact } from './directive/extended/keyboard';
 
 import { FormatMagicHandlerCompact } from './magic/extended/format';
 import { FetchMagicHandlerCompact } from './magic/extended/fetch';
@@ -16,6 +18,8 @@ WaitForGlobal().then(() => {
     TickDirectiveHandlerCompact();
     FormDirectiveHandlerCompact();
     OverlayDirectiveHandlerCompact();
+    MouseDirectiveHandlerCompact();
+    KeyboardDirectiveHandlerCompact();
 
     FormatMagicHandlerCompact();
     FetchMagicHandlerCompact();

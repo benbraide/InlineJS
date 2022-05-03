@@ -111,7 +111,7 @@
         <template x-if="state">
             <p x-uninit="console.log('State was changed to false', this)">State is true</p>
         </template>
-        <template x-if="!state">
+        <template x-else>
             <p x-uninit="console.log('State was changed to true', this)">State is false</p>
         </template>
     </section>
@@ -156,7 +156,7 @@
             x-on:click="del ? delete list['new'] : list['new'] = {first: 'World', second:'Order'}; del = !del">Click me</button>
     </section>
 
-    <section class="container mx-auto mt-8" x-data="{ productId: 0 }">
+    <section class="container mx-auto mt-8" x-data="{ productId: 2349 }">
         <template x-static="$cart.setOption('entryName', 'product')"></template>
         <template x-static="$cart.addOffset('deliveryCharge', ({ subTotal }) => (($rel.gt(subTotal, 0) && $rel.lt(subTotal, 50)) ? 3.69 : 0), 0)"></template>
         <template x-cart:update="console.log($event.type, $event.detail)"></template>
@@ -183,10 +183,18 @@
             <input type="text" placeholder="Product price" class="px-4 py-2 border rounded-md overflow-hidden" x-model.number="price">
             <input type="text" placeholder="Product quantity" class="px-4 py-2 border rounded-md overflow-hidden" x-model.number="quantity">
         </div>
-        <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden"
-            x-on:click="$cart.addItem({ id: productId++, name: productName, price }, quantity); productName = price = quantity = ''">Add to cart</button>
+        <div class="mt-2 flex flex-row justify-start items-center">
+            <template x-static="names = ['White', 'Plain', 'Bread', 'Butter', 'Peanut', 'Banana', 'Fried', 'Biscuits', 'Muffin', 'Chicken', 'Waffles']"></template>
+            <template x-static="generateIndex = count => Math.floor(Math.random() * count)"></template>
+            <template x-static="generateName = () => Array.from({ length: (generateIndex(3) + 1) }).map(() => names[generateIndex(names.length)]).join(' ')"></template>
+            <template x-static="generatePrice = () => $format.round((Math.random() * 45), 2)"></template>
+            <button class="px-4 py-2 border rounded-md overflow-hidden"
+                x-on:click="$cart.addItem({ id: productId++, name: productName, price }, quantity); productName = price = quantity = ''">Add to cart</button>
+            <button class="ml-4 px-4 py-2 border rounded-md overflow-hidden"
+                x-on:click="productName = generateName(); price = generatePrice(); quantity = (generateIndex(9) + 1)">Generate product</button>
+        </div>
         <hr class="mt-2 mb-4">
-        <template x-each="$cart.items as item">
+        <template x-each="$cart.items as item" :key="item.product.id">
             <div>
                 <p>
                     <span>ID: </span><strong x-text="item.product.id"></strong>
@@ -200,11 +208,41 @@
                 <div class="flex flex-row justify-start items-center">
                     <button class="px-2 py-1 border rounded-md overflow-hidden" x-on:click="item.quantity -= 1">-</button>
                     <p class="ml-2 font-bold" x-text="item.quantity"></p>
-                    <button class="ml-2 px-2 py-1 border rounded-md overflow-hidden" x-on:click="item.quantity += 1">+</button>
+                    <button class="ml-2 px-2 py-1 border rounded-md overflow-hidden" x-mouse:repeat="item.quantity += 1">+</button>
                 </div>
                 <hr class="mt-2 mb-2">
             </div>
         </template>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data="{ repeat: 0 }">
+        <h2 class="mb-4 text-3xl font-bold">Mouse Monitor</h2>
+        <div class="flex flex-row justify-start items-center">
+            <div class="w-56 h-56 flex flex-row justify-center items-center bg-red-700 text-white font-semibold rounded-md"
+                x-mouse:inside="inside">
+                <p x-text="inside ? 'Mouse Inside' : 'Mouse Outside'"></p>
+            </div>
+            <div class="ml-4 w-56 h-56 flex flex-row justify-center items-center bg-green-700 text-white font-semibold rounded-md"
+                x-mouse:repeat="++repeat">
+                <p x-text="repeat ? `Mouse Down: ${repeat}` : 'Mouse Up'"></p>
+            </div>
+            <div class="ml-4 w-56 h-56 pl-8 flex flex-col justify-center items-start bg-blue-700 text-white font-semibold"
+                x-mouse:move="position">
+                <p x-text="`Client: x = ${position ? position.client.x : -1}, y = ${position ? position.client.y : -1}`"></p>
+                <p x-text="`Offset: x = ${position ? position.offset.x : -1}, y = ${position ? position.offset.y : -1}`"></p>
+                <p x-text="`Screen: x = ${position ? position.screen.x : -1}, y = ${position ? position.screen.y : -1}`"></p>
+            </div>
+        </div>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data>
+        <h2 class="mb-4 text-3xl font-bold">Keyboard Monitor</h2>
+        <div class="flex flex-row justify-start items-center">
+            <div class="w-56 h-56 flex flex-col justify-center items-center bg-red-700 text-white font-semibold rounded-md" x-keyboard:inside="inside">
+                <p x-text="inside ? 'Focus Inside' : 'Focus Outside'"></p>
+                <input type="text" placeholder="Input place" class="mt-2 w-32 px-4 py-2 text-black border rounded-md overflow-hidden">
+            </div>
+        </div>
     </section>
 
     <section class="container mx-auto mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
