@@ -27,7 +27,7 @@ export interface IGlobal {
     GetDirectiveManager(): IDirectiveManager;
     GetMagicManager(): IMagicManager;
     GetMutationObserver(): IMutationObserver;
-    SetFetchConcept(concept: IFetchConcept): void;
+    SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;
     SetRouterConcept(concept: IRouterConcept): void;
     GetRouterConcept(): IRouterConcept | null;

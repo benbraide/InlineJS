@@ -1,6 +1,6 @@
 import { BaseComponent } from "../component/base";
 import { GetElementScopeId } from "../component/element-scope-id";
-import { NativeFetchConcept } from "../concepts/fetch";
+import { NativeFetchConcept } from "../concepts/fetch/native";
 import { DirectiveManager } from "../directives/manager";
 import { MagicManager } from "../magics/manager";
 import { MutationObserver } from "../observers/mutation/base";
@@ -120,7 +120,7 @@ export class BaseGlobal implements IGlobal{
         return this.mutationObserver_;
     }
 
-    public SetFetchConcept(concept: IFetchConcept){
+    public SetFetchConcept(concept: IFetchConcept | null){
         this.fetchConcept_ = concept;
     }
 

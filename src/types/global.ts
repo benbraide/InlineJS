@@ -36,7 +36,7 @@ export interface IGlobal{
 
     GetMutationObserver(): IMutationObserver;
 
-    SetFetchConcept(concept: IFetchConcept): void;
+    SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;
 
     SetRouterConcept(concept: IRouterConcept): void;

@@ -1,4 +1,4 @@
-import { IFetchConcept } from "../types/fetch";
+import { IFetchConcept } from "../../types/fetch";
 
 export class NativeFetchConcept implements IFetchConcept{
     public Get(input: RequestInfo, init?: RequestInit){

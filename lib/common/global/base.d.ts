@@ -42,7 +42,7 @@ export declare class BaseGlobal implements IGlobal {
     GetDirectiveManager(): DirectiveManager;
     GetMagicManager(): MagicManager;
     GetMutationObserver(): MutationObserver;
-    SetFetchConcept(concept: IFetchConcept): void;
+    SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;
     SetRouterConcept(concept: IRouterConcept): void;
     GetRouterConcept(): IRouterConcept | null;

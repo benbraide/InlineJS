@@ -61,22 +61,33 @@
             <a href="/contact" x-router:link>Contact</a>
             <a href="modal://about" x-router:link>About (MOD)</a>
             <a href="modal://contact" x-router:link>Contact (MOD)</a>
+            <a href="/mock" x-router:link>Mocked</a>
+            <a href="/mock-d" x-router:link>Mocked D</a>
         </nav>
-        <template x-router:fetch="'/'" x-data>
-            <h4 class="mb-2 text-lg font-bold">Home Page</h4>
-            <p>Hello world! My fellow peeps</p>
-        </template>
-        <template x-router:fetch="'/about'" x-data>
-            <h4 class="mb-2 text-lg font-bold">About Us</h4>
-            <p>This should describe us</p>
-        </template>
-        <template x-router:fetch="'/contact'" x-data>
-            <h4 class="mb-2 text-lg font-bold">Contact Us</h4>
-            <label>
-                <span>Name</span>
-                <input type="text" class="px-4 py-2 border rounded-md overflow-hidden">
-            </label>
-        </template>
+
+        <div x-static="$fetch.install()" x-data>
+            <template x-static="$fetch.addPathHandler('/mock', () => $fetch.mockResponse({ response: 'Mocked data returned' }))"></template>
+            <template x-static="$fetch.addPathHandler('/mock-d', () => $fetch.mockResponse({ response: 'Mocked data returned after delay', delay: 3000 }))"></template>
+        </div>
+
+        <div x-data>
+            <template x-router:fetch="'/'">
+                <h4 class="mb-2 text-lg font-bold">Home Page</h4>
+                <p>Hello world! My fellow peeps</p>
+            </template>
+            <template x-router:fetch="'/about'">
+                <h4 class="mb-2 text-lg font-bold">About Us</h4>
+                <p>This should describe us</p>
+                <p x-text="$get('/mock-d')" x-data>Loading data...</p>
+            </template>
+            <template x-router:fetch="'/contact'">
+                <h4 class="mb-2 text-lg font-bold">Contact Us</h4>
+                <label>
+                    <span>Name</span>
+                    <input type="text" class="px-4 py-2 border rounded-md overflow-hidden">
+                </label>
+            </template>
+        </div>
         
         <hr class="mt-4">
         <h3 class="text-xl font-bold">Main Router Mount</h3>
