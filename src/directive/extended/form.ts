@@ -11,6 +11,7 @@ import { UseEffect } from "../../reactive/effect";
 import { IComponent } from "../../types/component";
 import { IsObject } from "../../utilities/is-object";
 import { ToString } from "../../utilities/to-string";
+import { Nothing } from "../../values/nothing";
 import { BindEvent } from "../event";
 import { ResolveOptions } from "../options";
 
@@ -27,6 +28,9 @@ export interface IFormMiddleware{
 }
 
 let FormMiddlewares: Record<string, IFormMiddleware> = {};
+
+const FormMethodVerbs = ['put', 'patch', 'delete'];
+const FormTokenName = '_FormPostToken_';
 
 export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirectiveName, ({ componentId, component, contextElement, expression, argKey, argOptions }) => {
     if (BindEvent({ contextElement, expression,
@@ -47,6 +51,17 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
     }
 
     let localKey = `\$${FormDirectiveName}`;
+    if (argKey === 'field'){
+        return EvaluateLater({ componentId, contextElement, expression })((value) => {
+            if (IsObject(value)){
+                let proxy = FindComponentById(componentId)?.FindElementLocalValue(contextElement, localKey, true);
+                if (proxy && !(proxy instanceof Nothing)){
+                    Object.entries(value).forEach(([key, value]) => proxy.addField(key, value));
+                }
+            }
+        });
+    }
+    
     if (argKey in FormMiddlewares){//Bind data
         let evaluate = EvaluateLater({ componentId, contextElement, expression });
         UseEffect({ componentId, contextElement,
@@ -87,49 +102,60 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
         },
     });
 
-    let form: HTMLFormElement | null = null, getAction: () => string, getMethod: () => string;
+    let form: HTMLFormElement | null = null, getAction: () => string, getMethod: () => string, appendFields = (url: string, fields: Array<[string, string]>) => {
+        let query = fields.reduce((prev, [key, value]) => (prev ? `${prev}&${key}=${value}` : `${key}=${value}`), '');
+        return (query ? (url.includes('?') ? `${url}&${query}` : `${url}?${query}`) : url);
+    };
+
+    let computeMethod = () => {
+        let method = getMethod();
+        if (FormMethodVerbs.includes(method)){
+            fields['_method'] = method;
+            method = 'post';
+        }
+
+        return method;
+    };
+
+    let buildUrl: (info: RequestInit) => string, eventName: string, eventHandler: ((e?: Event) => boolean) | null = null, fields: Record<string, string> = {};
     if (contextElement instanceof HTMLFormElement){
         getAction = () => contextElement.action;
         getMethod = () => (contextElement.method || 'get').toLowerCase();
+        
         form = contextElement;
-    }
-    else if (contextElement instanceof HTMLAnchorElement){
-        getAction = () => contextElement.href;
-        getMethod = () => 'get';
-    }
-    else{
-        getAction = () => (contextElement.getAttribute('data-action') || '');
-        getMethod = () => (contextElement.getAttribute('data-method') || 'get').toLowerCase();
-    }
-
-    let buildUrl: (info?: RequestInit) => string, eventName: string;
-    if (contextElement instanceof HTMLFormElement){
         eventName = 'submit';
-        if (getMethod() !== 'post'){
-            buildUrl = () => {
-                let query = '';
-                (new FormData(contextElement)).forEach((value, key) => {
-                    query = (query ? `${query}&${key}=${value.toString()}` : `${key}=${value.toString()}`);
-                });
 
-                let url = getAction();
-                if (!query){
-                    return url;
-                }
-
-                return (url.includes('?') ? `${url}&${query}` : `${url}?${query}`);
-            };
-        }
-        else{//Post
+        let method = getMethod();
+        if (method !== 'get' && method !== 'head'){
             buildUrl = (info) => {
-                if (info){
-                    info.body = new FormData(contextElement);
-                }
+                info.body = new FormData(contextElement);
                 return getAction();
             };
         }
+        else{//Get | Head
+            buildUrl = () => appendFields(getAction(), Array.from((new FormData(contextElement)).entries()).map(([key, value]) => [key, value.toString()]));
+        }
     }
-    else{//Not a form
+    else if (contextElement instanceof HTMLInputElement || contextElement instanceof HTMLTextAreaElement || contextElement instanceof HTMLSelectElement){
+        getAction = () => (contextElement.getAttribute('data-action') || '');
+        getMethod = () => (contextElement.getAttribute('data-method') || 'get').toLowerCase();
+
+        if (!(contextElement instanceof HTMLSelectElement)){
+            eventName = 'keydown';
+            eventHandler = e => (!e || (e as KeyboardEvent).key.toLowerCase() === 'enter');
+        }
+        else{//Select
+            eventName = 'change';
+        }
+        
+        buildUrl = () => (fields[contextElement.getAttribute('name') || 'value'] = contextElement.value);
+    }
+    else{//Unknown
+        let isAnchor = (contextElement instanceof HTMLAnchorElement);
+
+        getAction = () => (isAnchor ? (contextElement as HTMLAnchorElement).href : (contextElement.getAttribute('data-action') || ''));
+        getMethod = () => (contextElement.getAttribute('data-method') || 'get').toLowerCase();
+
         eventName = 'click';
         buildUrl = getAction;
     }
@@ -191,8 +217,8 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
         }
     };
 
-    let handleEvent = () => {
-        if (state.active){
+    let handleEvent = (e?: Event) => {
+        if (state.active || (eventHandler && !eventHandler(e))){
             return;
         }
         
@@ -203,14 +229,27 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
         }
         
         let info: RequestInit = {
-            method: getMethod(),
+            method: computeMethod(),
             credentials: 'same-origin',
         };
 
         updateState('active', true);
         updateState('submitted', true);
 
-        fetch(buildUrl(info), info).then(res => res.json()).then((response) => {
+        let url = buildUrl(info);
+        if (info.method === 'post'){//Append applicable fields
+            (info.body = (info.body || new FormData));
+            if (FormTokenName in globalThis){
+                (info.body as FormData).append('_token', globalThis[FormTokenName]);
+            }
+
+            Object.entries(fields).forEach(([key, value]) => (info.body as FormData).append(key, value));
+        }
+        else{//Get | Head
+            appendFields(url, Object.entries(fields));
+        }
+
+        fetch(url, info).then(res => res.json()).then((response) => {
             updateState('active', false);
             updateState('errors', {});
 
@@ -313,6 +352,10 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
                     }
                 };
             }
+
+            if (prop === 'reset'){
+                return () => form?.reset();
+            }
     
             if (prop === 'bindMiddlewareData'){
                 return (middleware: string, data: any, source?: HTMLElement) => {
@@ -334,8 +377,16 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
                     }
                 };
             }
+
+            if (prop === 'addField'){
+                return (name: string, value: string) => (fields[name] = value);
+            }
+
+            if (prop === 'removeField'){
+                return (name: string) => (delete fields[name]);
+            }
         },
-        lookup: [...Object.keys(state), 'element', 'submit', 'bindMiddlewareData', 'unbindMiddlewareData'],
+        lookup: [...Object.keys(state), 'element', 'submit', 'reset', 'bindMiddlewareData', 'unbindMiddlewareData', 'addField', 'removeField'],
     })));
 
     let onEvent = (e: Event) => {

@@ -1,0 +1,2 @@
+
+const StateDirectiveName = 'state';
