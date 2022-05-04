@@ -3,6 +3,7 @@ import { ICollectionConcept } from "./collection";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directives";
+import { IFetchConcept } from "./fetch";
 import { IMagicManager } from "./magics";
 import { IMutationObserver } from "./mutation";
 import { IProxy } from "./proxy";
@@ -34,6 +35,9 @@ export interface IGlobal{
     GetMagicManager(): IMagicManager;
 
     GetMutationObserver(): IMutationObserver;
+
+    SetFetchConcept(concept: IFetchConcept): void;
+    GetFetchConcept(): IFetchConcept;
 
     SetRouterConcept(concept: IRouterConcept): void;
     GetRouterConcept(): IRouterConcept | null;

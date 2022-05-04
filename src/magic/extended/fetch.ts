@@ -1,4 +1,5 @@
 import { FindComponentById } from "../../component/find";
+import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { IComponent } from "../../types/component";
@@ -42,7 +43,7 @@ export const FetchMagicHandler = CreateMagicHandlerCallback('fetch', ({ componen
         }
 
         return new Promise((resolve, reject) => {
-            fetch(path, {
+            GetGlobal().GetFetchConcept().Get(path, {
                 method: 'GET',
                 credentials: 'same-origin',
             }).then(response => (json ? response.json() : response.text())).then((response) => {

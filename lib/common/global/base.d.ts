@@ -5,6 +5,7 @@ import { IAlertConcept } from "../types/alert";
 import { ICollectionConcept } from "../types/collection";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
+import { IFetchConcept } from "../types/fetch";
 import { IGlobal } from "../types/global";
 import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
@@ -17,6 +18,8 @@ export declare class BaseGlobal implements IGlobal {
     private managers_;
     private uniqueMarkers_;
     private mutationObserver_;
+    private nativeFetch_;
+    private fetchConcept_;
     private routerConcept_;
     private resourceConcept_;
     private alertConcept_;
@@ -39,6 +42,8 @@ export declare class BaseGlobal implements IGlobal {
     GetDirectiveManager(): DirectiveManager;
     GetMagicManager(): MagicManager;
     GetMutationObserver(): MutationObserver;
+    SetFetchConcept(concept: IFetchConcept): void;
+    GetFetchConcept(): IFetchConcept;
     SetRouterConcept(concept: IRouterConcept): void;
     GetRouterConcept(): IRouterConcept | null;
     SetResourceConcept(concept: IResourceConcept): void;

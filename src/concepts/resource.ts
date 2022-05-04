@@ -1,3 +1,4 @@
+import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IResourceConcept, IResourceGetParams, IResourceOptions } from "../types/resource";
 import { PathToRelative } from "./path";
@@ -84,7 +85,7 @@ export class Resource implements IResourceConcept{
                 
                 return new Promise<any>((resolve, reject) => {
                     if (info.type === 'data'){
-                        fetch(path, {
+                        GetGlobal().GetFetchConcept().Get(path, {
                             method: 'GET',
                             credentials: 'same-origin',
                         }).then(response => ((info.attribute === 'json') ? response.json() : response.text())).then((response) => {

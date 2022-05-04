@@ -1,5 +1,6 @@
 import { BaseComponent } from "../component/base";
 import { GetElementScopeId } from "../component/element-scope-id";
+import { NativeFetchConcept } from "../concepts/fetch";
 import { DirectiveManager } from "../directives/manager";
 import { MagicManager } from "../magics/manager";
 import { MutationObserver } from "../observers/mutation/base";
@@ -9,6 +10,7 @@ import { IAlertConcept } from "../types/alert";
 import { ICollectionConcept } from "../types/collection";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
+import { IFetchConcept } from "../types/fetch";
 import { IGlobal } from "../types/global";
 import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
@@ -30,6 +32,9 @@ export class BaseGlobal implements IGlobal{
     
     private uniqueMarkers_ = GetDefaultUniqueMarkers();
     private mutationObserver_ = new MutationObserver();
+
+    private nativeFetch_ = new NativeFetchConcept();
+    private fetchConcept_: IFetchConcept | null = null;
 
     private routerConcept_: IRouterConcept | null = null;
     private resourceConcept_: IResourceConcept | null = null;
@@ -113,6 +118,14 @@ export class BaseGlobal implements IGlobal{
 
     public GetMutationObserver(){
         return this.mutationObserver_;
+    }
+
+    public SetFetchConcept(concept: IFetchConcept){
+        this.fetchConcept_ = concept;
+    }
+
+    public GetFetchConcept(): IFetchConcept{
+        return (this.fetchConcept_ || this.nativeFetch_);
     }
 
     public SetRouterConcept(concept: IRouterConcept){

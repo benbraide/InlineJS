@@ -274,7 +274,7 @@ export class RouterConcept implements IRouterConcept{
         if (!fetcher){//Network fetch
             let reolvedPath = (this.prefix_ ? PathToRelative(joined, this.origin_, this.prefix_) : joined);
             if (dataHandler || !page.cache || !GetGlobal().GetResourceConcept()){
-                fetch(reolvedPath, {
+                GetGlobal().GetFetchConcept().Get(reolvedPath, {
                     method: 'GET',
                     credentials: 'same-origin',
                 }).then(res => res.text()).then(handleData).catch(handleError);

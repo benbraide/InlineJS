@@ -249,7 +249,7 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
             appendFields(url, Object.entries(fields));
         }
 
-        fetch(url, info).then(res => res.json()).then((response) => {
+        GetGlobal().GetFetchConcept().Get(url, info).then(res => res.json()).then((response) => {
             updateState('active', false);
             updateState('errors', {});
 
