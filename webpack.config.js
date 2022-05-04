@@ -7,6 +7,7 @@ module.exports = {
        "inlinejs-cart": "./src/inlinejs-cart.ts",
        "inlinejs-favorites": "./src/inlinejs-favorites.ts",
        "inlinejs-collection": "./src/inlinejs-collection.ts",
+       "inlinejs-screen": "./src/inlinejs-screen.ts",
        "inlinejs-stripe": "./src/inlinejs-stripe.ts",
        "inlinejs-quill": "./src/inlinejs-quill.ts",
        "inlinejs-swal": "./src/inlinejs-swal.ts",

@@ -13,6 +13,7 @@ import { IGlobal } from "../types/global";
 import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
+import { IScreenConcept } from "../types/screen";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Config } from "./config";
 
@@ -34,6 +35,7 @@ export class BaseGlobal implements IGlobal{
     private resourceConcept_: IResourceConcept | null = null;
     private alertConcept_: IAlertConcept | null = null;
     private collectionConcepts_: Record<string, ICollectionConcept> = {};
+    private screenConcept_: IScreenConcept | null = null;
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
         this.config_ = new Config(configOptions || {});
@@ -143,6 +145,14 @@ export class BaseGlobal implements IGlobal{
 
     public GetCollectionConcept(name: string){
         return (this.collectionConcepts_.hasOwnProperty(name) ? this.collectionConcepts_[name] : null);
+    }
+
+    public SetScreenConcept(concept: IScreenConcept){
+        this.screenConcept_ = concept;
+    }
+
+    public GetScreenConcept(){
+        return this.screenConcept_;
     }
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{

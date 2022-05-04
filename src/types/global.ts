@@ -8,6 +8,7 @@ import { IMutationObserver } from "./mutation";
 import { IProxy } from "./proxy";
 import { IResourceConcept } from "./resource";
 import { IRouterConcept } from "./router";
+import { IScreenConcept } from "./screen";
 
 export interface IGlobal{
     SwapConfig(config: IConfig): void;
@@ -45,6 +46,9 @@ export interface IGlobal{
 
     SetCollectionConcept(concept: ICollectionConcept): void;
     GetCollectionConcept(name: string): ICollectionConcept | null;
+
+    SetScreenConcept(concept: IScreenConcept): void;
+    GetScreenConcept(): IScreenConcept | null;
 
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

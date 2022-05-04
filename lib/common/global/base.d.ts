@@ -9,6 +9,7 @@ import { IGlobal } from "../types/global";
 import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
+import { IScreenConcept } from "../types/screen";
 export declare class BaseGlobal implements IGlobal {
     private config_;
     private components_;
@@ -20,6 +21,7 @@ export declare class BaseGlobal implements IGlobal {
     private resourceConcept_;
     private alertConcept_;
     private collectionConcepts_;
+    private screenConcept_;
     constructor(configOptions?: IConfigOptions, idOffset?: number);
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
@@ -45,5 +47,7 @@ export declare class BaseGlobal implements IGlobal {
     GetAlertConcept(): IAlertConcept | null;
     SetCollectionConcept(concept: ICollectionConcept): void;
     GetCollectionConcept(name: string): ICollectionConcept | null;
+    SetScreenConcept(concept: IScreenConcept): void;
+    GetScreenConcept(): IScreenConcept | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

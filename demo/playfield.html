@@ -274,6 +274,32 @@
             <span x-text="$intersection.ratio"></span>
         </p>
     </section>
+
+    <div class="fixed bottom-4 right-4 flex flex-row justify-start items-center" x-data>
+        <div class="w-64 h-64 pl-8 flex flex-col justify-center items-start bg-red-700 text-white font-semibold rounded-md">
+            <p>
+                <span>Size:</span>
+                <span x-text="`w = ${$screen.size.width}, h = ${$screen.size.height}`"></span>
+            </p>
+            <p x-effect="marks = $screen.sizeMarks">
+                <span>Size Marks:</span>
+                <span x-text="`b = ${marks[0]}, c = ${marks[1]}`"></span>
+            </p>
+            <p x-effect="offset = $screen.scrollOffset">
+                <span>Scroll Offset:</span>
+                <span x-text="`x = ${offset.x}, y = ${offset.y}`"></span>
+            </p>
+            <p x-effect="trend = $screen.scrollTrend; trendH = trend.horizontal; trendV = trend.vertical">
+                <span>Scroll Trend:</span>
+                <span x-text="`h = ${((trendH <= 0) ? ((trendH == 0) ? 'nil' : 'left') : 'right')}, v = ${((trendV <= 0) ? ((trendV == 0) ? 'nil' : 'up') : 'down')}`"></span>
+            </p>
+            <p x-effect="streak = $screen.scrollStreak">
+                <span>Scroll Streak:</span>
+                <span x-text="`h = ${streak.horizontal}, v = ${streak.vertical}`"></span>
+            </p>
+        </div>
+    </div>
+    
     <script>
         function getData(){
             return {
@@ -300,6 +326,7 @@
     </script>
     <script src="../dist/inlinejs-canvas.js"></script>
     <script src="../dist/inlinejs-router.js"></script>
+    <script src="../dist/inlinejs-screen.js"></script>
     <script src="../dist/inlinejs-collection.js"></script>
     <script src="../dist/inlinejs-swal.js"></script>
     <script src="../dist/inlinejs-extended.js"></script>

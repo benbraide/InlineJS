@@ -24,7 +24,7 @@ export class CollectionConcept implements ICollectionConcept{
     protected keyedProxy_: any;
     
     public constructor(protected name_: string, protected component_?: IComponent, options?: ICollectionOptions){
-        this.id_ = (this.component_?.GenerateUniqueId('form_proxy_') || '');
+        this.id_ = (this.component_?.GenerateUniqueId(`${name_}_proxy_`) || '');
         if (options){
             Object.entries(options).forEach(([key, value]) => (this.options_[key] = value));
         }
