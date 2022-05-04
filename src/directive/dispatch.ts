@@ -22,6 +22,14 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
     }
     
     handler = (handler || GetGlobal().GetDirectiveManager().FindHandler(directive.meta.name.joined));
+    if (!handler){//Try user defined handler
+        let camelCaseName = directive.meta.name.parts.reduce((prev, part) => (prev ? `${prev}${part.substring(0, 1).toUpperCase()}${part.substring(1)}` : part), '');
+        let key = `${camelCaseName}DirectiveHandler`;
+        if (key in globalThis && typeof globalThis[key] === 'function'){
+            handler = globalThis[key];
+        }
+    }
+    
     if (!handler){
         JournalWarn(`No handler found '${directive.meta.view.original}'`, 'InlineJS.DispatchDirective', element);
         return false;

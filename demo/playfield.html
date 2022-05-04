@@ -259,6 +259,10 @@
         </div>
     </section>
 
+    <section class="container mx-auto mt-8" x-data>
+        <p x-custom></p>
+    </section>
+
     <section class="container mx-auto mt-96 w-72 h-56 flex flex-col justify-center items-center bg-gray-700 text-white" x-intersection x-data
         x-intersection:visible="$alert.notify({text: 'visible', toast: true})" x-intersection:hidden="$alert.notify({text: 'hidden', toast: true})">
         <p>
@@ -272,6 +276,10 @@
         <p>
             <span>Ratio:</span>
             <span x-text="$intersection.ratio"></span>
+        </p>
+        <p>
+            <span>Ratio (Ext):</span>
+            <span x-text="$$intersection($root).ratio"></span>
         </p>
     </section>
 
@@ -322,6 +330,11 @@
                     }
                 }
             };
+        }
+
+        function customDirectiveHandler({ component, componentId, contextElement, ...rest }){
+            contextElement.textContent = 'Custom Directive Handled';
+            console.log(component, componentId, contextElement, rest);
         }
     </script>
     <script src="../dist/inlinejs-canvas.js"></script>
