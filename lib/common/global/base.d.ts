@@ -11,6 +11,7 @@ import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
 import { IScreenConcept } from "../types/screen";
+import { ITimeDifferenceConcept } from "../types/time-diff";
 export declare class BaseGlobal implements IGlobal {
     private config_;
     private components_;
@@ -25,6 +26,8 @@ export declare class BaseGlobal implements IGlobal {
     private alertConcept_;
     private collectionConcepts_;
     private screenConcept_;
+    private timeDifferenceConcept_;
+    private concepts_;
     constructor(configOptions?: IConfigOptions, idOffset?: number);
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
@@ -54,5 +57,9 @@ export declare class BaseGlobal implements IGlobal {
     GetCollectionConcept(name: string): ICollectionConcept | null;
     SetScreenConcept(concept: IScreenConcept): void;
     GetScreenConcept(): IScreenConcept | null;
+    SetTimeDifferenceConcept(concept: ITimeDifferenceConcept): void;
+    GetTimeDifferenceConcept(): ITimeDifferenceConcept | null;
+    SetConcept<T>(name: string, concept: T): void;
+    GetConcept<T>(name: string): T | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }

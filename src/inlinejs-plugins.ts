@@ -1,4 +1,5 @@
 require('./inlinejs-screen')
+require('./inlinejs-tdiff')
 require('./inlinejs-collection')
 require('./inlinejs-router')
 require('./inlinejs-quill')

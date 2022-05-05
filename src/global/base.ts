@@ -16,6 +16,7 @@ import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
 import { IScreenConcept } from "../types/screen";
+import { ITimeDifferenceConcept } from "../types/time-diff";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Config } from "./config";
 
@@ -41,6 +42,8 @@ export class BaseGlobal implements IGlobal{
     private alertConcept_: IAlertConcept | null = null;
     private collectionConcepts_: Record<string, ICollectionConcept> = {};
     private screenConcept_: IScreenConcept | null = null;
+    private timeDifferenceConcept_: ITimeDifferenceConcept | null = null;
+    private concepts_: Record<string, any> = {};
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
         this.config_ = new Config(configOptions || {});
@@ -166,6 +169,22 @@ export class BaseGlobal implements IGlobal{
 
     public GetScreenConcept(){
         return this.screenConcept_;
+    }
+
+    public SetTimeDifferenceConcept(concept: ITimeDifferenceConcept){
+        this.timeDifferenceConcept_ = concept;
+    }
+
+    public GetTimeDifferenceConcept(){
+        return this.timeDifferenceConcept_;
+    }
+
+    public SetConcept<T>(name: string, concept: T){
+        this.concepts_[name] = concept;
+    }
+
+    public GetConcept<T>(name: string){
+        return (this.concepts_.hasOwnProperty(name) ? <T>this.concepts_[name] : null);
     }
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{

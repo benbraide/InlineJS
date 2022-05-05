@@ -297,6 +297,26 @@
     </section>
 
     <section class="container mx-auto mt-8" x-data>
+        <h2 class="mb-4 text-3xl font-bold">Time Difference</h2>
+        <input type="datetime-local" class="mt-2 w-32 px-4 py-2 text-black border rounded-md overflow-hidden" x-model="adate">
+        <button class="px-4 py-2 border rounded-md overflow-hidden" x-on:click="date = adate">Create Diff</button>
+        <template x-if="date">
+            <div x-tdiff="date">
+                <p>
+                    <span>Stopped:</span>
+                    <span x-text="$tdiff.stopped"></span>
+                </p>
+                <p>
+                    <span>Difference:</span>
+                    <span x-text="$tdiff.label"></span>
+                </p>
+                <button class="px-4 py-2 border rounded-md overflow-hidden" x-on:click="$tdiff.stopped = !$tdiff.stopped"
+                    x-text="$tdiff.stopped ? 'Resume' : 'Stop'"></button>
+            </div>
+        </template>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data>
         <p x-custom></p>
     </section>
 

@@ -10,6 +10,7 @@ import { IProxy } from "./proxy";
 import { IResourceConcept } from "./resource";
 import { IRouterConcept } from "./router";
 import { IScreenConcept } from "./screen";
+import { ITimeDifferenceConcept } from "./time-diff";
 export interface IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
@@ -39,5 +40,9 @@ export interface IGlobal {
     GetCollectionConcept(name: string): ICollectionConcept | null;
     SetScreenConcept(concept: IScreenConcept): void;
     GetScreenConcept(): IScreenConcept | null;
+    SetTimeDifferenceConcept(concept: ITimeDifferenceConcept): void;
+    GetTimeDifferenceConcept(): ITimeDifferenceConcept | null;
+    SetConcept<T>(name: string, concept: T): void;
+    GetConcept<T>(name: string): T | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 }
