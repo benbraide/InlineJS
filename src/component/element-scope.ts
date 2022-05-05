@@ -3,7 +3,7 @@ import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
 import { IDirectiveManager } from "../types/directives";
-import { IElementScope } from "../types/element-scope";
+import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
 import { Nothing } from "../values/nothing";
 import { PeekCurrentScope } from "./current-scope";
 import { ElementScopeKey } from "./element-scope-id";
@@ -29,6 +29,7 @@ export class ElementScope implements IElementScope{
     private callbacks_ = {
         post: new Array<() => void>(),
         uninit: new Array<() => void>(),
+        treeChange: new Array<TreeChangeCallbackType>(),
         attributeChange: new Array<AttributeChangeCallbackInfo>(),
     };
 
@@ -79,6 +80,10 @@ export class ElementScope implements IElementScope{
         delete this.locals_[key];
     }
 
+    public HasLocal(key: string){
+        return (key in this.locals_);
+    }
+
     public GetLocal(key: string){
         return ((key in this.locals_) ? this.locals_[key] : new Nothing);
     }
@@ -111,6 +116,18 @@ export class ElementScope implements IElementScope{
         if (!this.state_.isMarked){
             this.callbacks_.uninit.push(callback);
         }
+    }
+
+    public AddTreeChangeCallback(callback: TreeChangeCallbackType){
+        this.callbacks_.treeChange.push(callback);
+    }
+
+    public RemoveTreeChangeCallback(callback: TreeChangeCallbackType){
+        this.callbacks_.treeChange = this.callbacks_.treeChange.filter(c => (c !== callback));
+    }
+    
+    public ExecuteTreeChangeCallbacks(added: Array<Node>, removed: Array<Node>){
+        this.callbacks_.treeChange.forEach(callback => JournalTry(() => callback({ added, removed })));
     }
 
     public AddAttributeChangeCallback(callback: (name?: string) => void, whitelist?: string | Array<string>){
@@ -181,6 +198,7 @@ export class ElementScope implements IElementScope{
         });
 
         this.callbacks_.post.splice(0);
+        this.callbacks_.treeChange.splice(0);
         this.callbacks_.attributeChange.splice(0);
 
         this.data_ = {};

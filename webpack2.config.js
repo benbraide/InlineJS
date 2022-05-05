@@ -11,7 +11,9 @@ module.exports = {
        "inlinejs-stripe.min": "./src/inlinejs-stripe.ts",
        "inlinejs-quill.min": "./src/inlinejs-quill.ts",
        "inlinejs-swal.min": "./src/inlinejs-swal.ts",
-       "inlinejs-canvas.min": "./src/inlinejs-canvas.ts"
+       "inlinejs-canvas.min": "./src/inlinejs-canvas.ts",
+       "inlinejs-pack.min": "./src/inlinejs-pack.ts",
+       "inlinejs-plugins.min": "./src/inlinejs-plugins.ts",
    },
    output: {
        filename: "[name].js",

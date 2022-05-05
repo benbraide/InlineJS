@@ -1,5 +1,5 @@
 import { IDirectiveManager } from "../types/directives";
-import { IElementScope } from "../types/element-scope";
+import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
 export declare class ElementScope implements IElementScope {
     private componentId_;
     private id_;
@@ -22,6 +22,7 @@ export declare class ElementScope implements IElementScope {
     IsRoot(): boolean;
     SetLocal(key: string, value: any): void;
     DeleteLocal(key: string): void;
+    HasLocal(key: string): boolean;
     GetLocal(key: string): any;
     GetLocals(): Record<string, any>;
     SetData(key: string, value: any): void;
@@ -29,6 +30,9 @@ export declare class ElementScope implements IElementScope {
     AddPostProcessCallback(callback: () => void): void;
     ExecutePostProcessCallbacks(): void;
     AddUninitCallback(callback: () => void): void;
+    AddTreeChangeCallback(callback: TreeChangeCallbackType): void;
+    RemoveTreeChangeCallback(callback: TreeChangeCallbackType): void;
+    ExecuteTreeChangeCallbacks(added: Array<Node>, removed: Array<Node>): void;
     AddAttributeChangeCallback(callback: (name?: string) => void, whitelist?: string | Array<string>): void;
     RemoveAttributeChangeCallback(callback: (name?: string) => void, whitelist?: string | Array<string>): void;
     ExecuteAttributeChangeCallbacks(name: string): void;

@@ -89,6 +89,13 @@ export class BaseComponent implements IComponent{
                             ignoreChildren: false,
                         },
                     });
+
+                    for (let parent = node.parentElement; parent; parent = parent.parentElement){
+                        component?.FindElementScope(parent)?.ExecuteTreeChangeCallbacks([node], []);
+                        if (parent === this.root_){
+                            break;
+                        }
+                    }
                 }
             });
 

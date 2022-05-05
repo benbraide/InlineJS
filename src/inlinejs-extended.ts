@@ -4,6 +4,7 @@ import { AttrDirectiveHandlerCompact } from './directive/extended/attr';
 import { IntersectionDirectiveHandlerCompact } from './directive/extended/intersection';
 import { TickDirectiveHandlerCompact } from './directive/extended/tick';
 import { FormDirectiveHandlerCompact } from './directive/extended/form';
+import { StateDirectiveHandlerCompact } from './directive/extended/state';
 import { OverlayDirectiveHandlerCompact } from './directive/extended/overlay';
 import { MouseDirectiveHandlerCompact } from './directive/extended/mouse';
 import { KeyboardDirectiveHandlerCompact } from './directive/extended/keyboard';
@@ -18,6 +19,7 @@ WaitForGlobal().then(() => {
     IntersectionDirectiveHandlerCompact();
     TickDirectiveHandlerCompact();
     FormDirectiveHandlerCompact();
+    StateDirectiveHandlerCompact();
     OverlayDirectiveHandlerCompact();
     MouseDirectiveHandlerCompact();
     KeyboardDirectiveHandlerCompact();

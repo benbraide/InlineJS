@@ -11,7 +11,9 @@ module.exports = {
        "inlinejs-stripe": "./src/inlinejs-stripe.ts",
        "inlinejs-quill": "./src/inlinejs-quill.ts",
        "inlinejs-swal": "./src/inlinejs-swal.ts",
-       "inlinejs-canvas": "./src/inlinejs-canvas.ts"
+       "inlinejs-canvas": "./src/inlinejs-canvas.ts",
+       "inlinejs-pack": "./src/inlinejs-pack.ts",
+       "inlinejs-plugins": "./src/inlinejs-plugins.ts",
    },
    output: {
        filename: "[name].js",

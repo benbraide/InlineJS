@@ -265,9 +265,35 @@
                 x-keyboard:type="typing">
                 <p x-text="inside ? 'Focus Inside' : 'Focus Outside'"></p>
                 <p x-text="typing ? 'User is typing...' : 'Idle user'"></p>
-                <input type="text" placeholder="Input place" class="mt-2 w-32 px-4 py-2 text-black border rounded-md overflow-hidden">
+                <input type="text" placeholder="Type something" class="mt-2 w-32 px-4 py-2 text-black border rounded-md overflow-hidden">
             </div>
         </div>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data>
+        <h2 class="mb-4 text-3xl font-bold">Group State</h2>
+        <form class="w-96 h-96 flex flex-col justify-center items-center bg-red-700 text-white font-semibold rounded-md" x-state>
+            <p>
+                <span>Invalid:</span>
+                <span x-text="$state.invalid"></span>
+            </p>
+            <p>
+                <span>Dirty:</span>
+                <span x-text="$state.dirty"></span>
+            </p>
+            <p>
+                <span>Changed:</span>
+                <span x-text="$state.changed"></span>
+            </p>
+            <p>
+                <span>Errors:</span>
+                <span x-text="$state.message"></span>
+            </p>
+            <input type="text" placeholder="Name" class="mt-2 w-56 px-4 py-2 text-black border rounded-md overflow-hidden" required>
+            <input type="email" placeholder="Email" class="mt-2 w-56 px-4 py-2 text-black border rounded-md overflow-hidden">
+            <input type="text" placeholder="Postal Code" class="mt-2 w-56 px-4 py-2 text-black border rounded-md overflow-hidden"
+                pattern="^[a-zA-Z][0-9][a-zA-Z][ ]*[0-9][a-zA-Z][0-9]$">
+        </form>
     </section>
 
     <section class="container mx-auto mt-8" x-data>
@@ -349,11 +375,8 @@
         }
     </script>
     <script src="../dist/inlinejs-canvas.js"></script>
-    <script src="../dist/inlinejs-router.js"></script>
-    <script src="../dist/inlinejs-screen.js"></script>
-    <script src="../dist/inlinejs-collection.js"></script>
     <script src="../dist/inlinejs-swal.js"></script>
-    <script src="../dist/inlinejs-extended.js"></script>
-    <script src="../dist/inlinejs.js"></script>
+    <script src="../dist/inlinejs-plugins.js"></script>
+    <script src="../dist/inlinejs-pack.js"></script>
 </body>
 </html>
