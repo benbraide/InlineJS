@@ -3,6 +3,7 @@ import { Loop } from "../values/loop";
 export interface ILoopCallbackInfo{
     passes: number;
     ellapsed: number;
+    duration?: number;
     abort?: () => void;
 }
 
@@ -20,7 +21,7 @@ export function CreateLoop(duration?: number, delay = 1000){
 
         let ellapsed = (timestamp - startTimestamp);
         if (duration && ellapsed >= duration){
-            return doFinal({ passes, ellapsed });
+            return doFinal({ passes, ellapsed, duration });
         }
 
         if (lastTimestamp == -1){
@@ -30,7 +31,7 @@ export function CreateLoop(duration?: number, delay = 1000){
         let wait = (timestamp - lastTimestamp);
         if (wait >= delay){
             lastTimestamp = (timestamp - (wait - delay));
-            doWhile({ passes: ++passes, ellapsed, abort: () => (aborted = true) });
+            doWhile({ passes: ++passes, ellapsed, duration, abort: () => (aborted = true) });
         }
 
         requestAnimationFrame(pass.bind(null, doWhile, doFinal));

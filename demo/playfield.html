@@ -219,7 +219,7 @@
         <template x-each="$cart.items as item" :key="item.product.id">
             <div>
                 <p>
-                    <span>ID: </span><strong x-text="item.product.id"></strong>
+                    <span>ID: </span><strong>{{ item.product.id }}</strong>
                 </p>
                 <p>
                     <span>Name: </span><strong x-text="item.product.name"></strong>
@@ -235,6 +235,35 @@
                 <hr class="mt-2 mb-2">
             </div>
         </template>
+        <div class="mt-4">
+            {% for (let item of $cart.items){ %}
+            <div>
+                <p>
+                    <span>ID: </span><strong>{{ item.product.id }}</strong>
+                </p>
+                <p>
+                    <span>Name: </span><strong>{{ item.product.name }}</strong>
+                </p>
+                <p>
+                    <span>Price: </span><strong>${{ item.product.price }}</strong>
+                </p>
+                <div class="flex flex-row justify-start items-center">
+                    <button class="px-2 py-1 border rounded-md overflow-hidden"
+                        x-on:click="$cart.updateItem({ index: {{ item.product.id }}, quantity: -1, incremental: true })">-</button>
+                    <p class="ml-2 font-bold">{{ item.quantity }}</p>
+                    <button class="ml-2 px-2 py-1 border rounded-md overflow-hidden"
+                        x-mouse:repeat="$cart.updateItem({ index: {{ item.product.id }}, quantity: 1, incremental: true })">+</button>
+                </div>
+                <hr class="mt-2 mb-2">
+            </div>
+            {% } %}
+        </div>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data="{ a: 2, b: 7 }">
+        <p>{{ (a == 2 && b == 7) ? 'Balanced' : 'Inbalanced' }}</p>
+        <button class="mt-4 px-4 py-2 text-gray-700 font-semibold border rounded overflow-hidden"
+            x-on:click="b = (b == 7) ? 0 : 7">Change B</button>
     </section>
 
     <section class="container mx-auto mt-8" x-data="{ repeat: 0 }">

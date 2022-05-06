@@ -6,4 +6,11 @@ export interface ISubscribeDetails {
 }
 export declare type SubscriptionsCallbackType = (list: Record<string, Array<string>>) => void;
 export declare type SubscribeCallbackType = (details?: ISubscribeDetails) => void | boolean;
-export declare function SubscribeToChanges(componentId: string, changes: IChanges, callback: SubscribeCallbackType, subscriptionsCallback?: SubscriptionsCallbackType): (() => void) | null;
+export interface ISubscribeToChangesParams {
+    componentId: string;
+    changes: IChanges;
+    callback: SubscribeCallbackType;
+    subscriptionsCallback?: SubscriptionsCallbackType;
+    contextElement?: HTMLElement;
+}
+export declare function SubscribeToChanges({ componentId, changes, callback, subscriptionsCallback, contextElement }: ISubscribeToChangesParams): (() => void) | null;

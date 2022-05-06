@@ -7,6 +7,7 @@ import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
 import { IGlobal } from "../types/global";
+import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
@@ -16,6 +17,8 @@ export declare class BaseGlobal implements IGlobal {
     private config_;
     private components_;
     private currentComponent_;
+    private attributeProcessors_;
+    private textContentProcessors_;
     private managers_;
     private uniqueMarkers_;
     private mutationObserver_;
@@ -44,6 +47,10 @@ export declare class BaseGlobal implements IGlobal {
     InferComponentFrom(element: HTMLElement | null): IComponent | null;
     GetDirectiveManager(): DirectiveManager;
     GetMagicManager(): MagicManager;
+    AddAttributeProcessor(processor: AttributeProcessorType): void;
+    DispatchAttributeProcessing(params: IAttributeProcessorParams): void;
+    AddTextContentProcessor(processor: TextContentProcessorType): void;
+    DispatchTextContentProcessing(params: ITextContentProcessorParams): void;
     GetMutationObserver(): MutationObserver;
     SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;

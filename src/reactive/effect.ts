@@ -1,6 +1,5 @@
 import { FindComponentById } from "../component/find";
 import { JournalError } from "../journal/error";
-import { IBubbledChange, IChange } from "../types/change";
 import { SubscribeCallbackType, SubscribeToChanges, SubscriptionsCallbackType } from "./subscribe";
 
 export interface IUseEffectOptions{
@@ -45,10 +44,7 @@ export function UseEffect({ componentId, callback, contextElement, options, subs
             return;
         }
 
-        let unsubscribeAll = SubscribeToChanges(componentId, changes, callback, subscriptionsCallback);
-        if (unsubscribeAll){
-            elScope?.AddUninitCallback(unsubscribeAll);
-        }
+        SubscribeToChanges({ componentId, changes, callback, subscriptionsCallback, contextElement: element });
     };
 
     if (options?.nextTick){

@@ -2,6 +2,7 @@ import { BaseComponent } from "../component/base";
 import { GetElementScopeId } from "../component/element-scope-id";
 import { NativeFetchConcept } from "../concepts/fetch/native";
 import { DirectiveManager } from "../directives/manager";
+import { JournalTry } from "../journal/try";
 import { MagicManager } from "../magics/manager";
 import { MutationObserver } from "../observers/mutation/base";
 import { ChildProxy } from "../proxy/child";
@@ -12,6 +13,7 @@ import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
 import { IGlobal } from "../types/global";
+import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
 import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
@@ -25,6 +27,9 @@ export class BaseGlobal implements IGlobal{
     
     private components_: Record<string, IComponent> = {};
     private currentComponent_ = new Stack<string>();
+
+    private attributeProcessors_ = new Array<AttributeProcessorType>();
+    private textContentProcessors_ = new Array<TextContentProcessorType>();
 
     private managers_ = {
         directive: new DirectiveManager(),
@@ -117,6 +122,22 @@ export class BaseGlobal implements IGlobal{
 
     public GetMagicManager(){
         return this.managers_.magic;
+    }
+
+    public AddAttributeProcessor(processor: AttributeProcessorType){
+        this.attributeProcessors_.push(processor);
+    }
+
+    public DispatchAttributeProcessing(params: IAttributeProcessorParams){
+        this.attributeProcessors_.forEach(processor => JournalTry(() => processor(params), 'InlineJS.Global.DispatchAttribute', params.contextElement));
+    }
+
+    public AddTextContentProcessor(processor: TextContentProcessorType){
+        this.textContentProcessors_.push(processor);
+    }
+
+    public DispatchTextContentProcessing(params: ITextContentProcessorParams){
+        this.textContentProcessors_.forEach(processor => JournalTry(() => processor(params), 'InlineJS.Global.DispatchTextContent', params.contextElement));
     }
 
     public GetMutationObserver(){

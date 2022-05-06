@@ -11,7 +11,15 @@ export interface ISubscribeDetails{
 export type SubscriptionsCallbackType = (list: Record<string, Array<string>>) => void;
 export type SubscribeCallbackType = (details?: ISubscribeDetails) => void | boolean;
 
-export function SubscribeToChanges(componentId: string, changes: IChanges, callback: SubscribeCallbackType, subscriptionsCallback?: SubscriptionsCallbackType){
+export interface ISubscribeToChangesParams{
+    componentId: string;
+    changes: IChanges;
+    callback: SubscribeCallbackType;
+    subscriptionsCallback?: SubscriptionsCallbackType;
+    contextElement?: HTMLElement;
+}
+
+export function SubscribeToChanges({ componentId, changes, callback, subscriptionsCallback, contextElement }: ISubscribeToChangesParams){
     changes.PopAllGetAccessStorageSnapshots(false);//Remove all outstanding checkpoints
     changes.RestoreOptimizedGetAccessStorage();//Restore previously swapped optimized storage
 
@@ -69,6 +77,13 @@ export function SubscribeToChanges(componentId: string, changes: IChanges, callb
             (subscriptionIds[component!.GetId()] = (subscriptionIds[component!.GetId()] || [])).push(component!.GetBackend().changes.Subscribe(path, onChange));
         });
     });
+
+    if (contextElement){
+        FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => {
+            cancel();
+            unsubscribeAll();
+        });
+    }
 
     if (subscriptionsCallback){//Alert all subscriptions
         subscriptionsCallback(subscriptionIds);

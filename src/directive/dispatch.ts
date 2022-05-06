@@ -35,7 +35,7 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
         return false;
     }
 
-    if (repeats == 0){//Initialize element scope
+    if (repeats == 0 && !elementScope){//Initialize element scope
         resolvedComponent.CreateElementScope(element);
     }
     

@@ -1,6 +1,8 @@
 import { GetOrCreateGlobal } from './global/create';
 import { BootstrapAndAttach } from './bootstrap/attach';
 
+import { AttributeInterpolator, TextContentInterpolator } from './global/interpolation';
+
 import { DataDirectiveHandlerCompact } from './directive/core/data/data';
 import { ComponentDirectiveHandlerCompact } from './directive/core/data/component';
 import { LocalsDirectiveHandlerCompact } from './directive/core/data/locals';
@@ -54,6 +56,7 @@ import { NextTickMagicHandlerCompact } from './magic/core/nexttick';
 import { PickMagicHandlerCompact } from './magic/core/pick';
 import { ClassMagicHandlerCompact } from './magic/core/class';
 import { EvaluateMagicHandlerCompact } from './magic/core/evaluate';
+import { GetGlobal } from './global/get';
 
 GetOrCreateGlobal();
 
@@ -67,6 +70,9 @@ queueMicrotask(() => {//Bootstrap
         BootstrapAndAttach();
     }
 });
+
+GetGlobal().AddAttributeProcessor(AttributeInterpolator);
+GetGlobal().AddTextContentProcessor(TextContentInterpolator);
 
 DataDirectiveHandlerCompact();
 ComponentDirectiveHandlerCompact();

@@ -6,6 +6,7 @@ import { IDirectiveManager } from "./directives";
 import { IFetchConcept } from "./fetch";
 import { IMagicManager } from "./magics";
 import { IMutationObserver } from "./mutation";
+import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
 import { IResourceConcept } from "./resource";
 import { IRouterConcept } from "./router";
@@ -34,6 +35,12 @@ export interface IGlobal{
 
     GetDirectiveManager(): IDirectiveManager;
     GetMagicManager(): IMagicManager;
+
+    AddAttributeProcessor(processor: AttributeProcessorType): void;
+    DispatchAttributeProcessing(params: IAttributeProcessorParams): void;
+
+    AddTextContentProcessor(processor: TextContentProcessorType): void;
+    DispatchTextContentProcessing(params: ITextContentProcessorParams): void;
 
     GetMutationObserver(): IMutationObserver;
 

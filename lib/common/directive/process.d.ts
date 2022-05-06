@@ -9,4 +9,4 @@ export interface IProcessDetails {
     element: Element;
     options?: IProcessOptions;
 }
-export declare function ProcessDirectives({ component, element, options }: IProcessDetails): void;
+export declare function ProcessDirectives({ component, element, options }: IProcessDetails): false | undefined;
