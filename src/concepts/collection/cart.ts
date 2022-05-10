@@ -1,11 +1,10 @@
+import { GetGlobal } from "../../global/get";
 import { JournalTry } from "../../journal/try";
 import { AddChanges } from "../../proxy/add-changes";
 import { CartOffsetHandlerType, ICartCollectionConcept, ICollectionOptions } from "../../types/collection";
 import { IComponent } from "../../types/component";
 import { DeepCopy } from "../../utilities/deep-copy";
 import { IsEqual } from "../../utilities/is-equal";
-import { Future } from "../../values/future";
-import { Nothing } from "../../values/nothing";
 import { CollectionConcept } from "./base";
 
 export class CartCollectionConcept extends CollectionConcept implements ICartCollectionConcept{
@@ -18,9 +17,9 @@ export class CartCollectionConcept extends CollectionConcept implements ICartCol
         this.offsets_['subTotal'] = 0;
     }
 
-    public AddOffset(key: string, handler: CartOffsetHandlerType, initValue: any = new Nothing()){
+    public AddOffset(key: string, handler: CartOffsetHandlerType, initValue: any = GetGlobal().CreateNothing()){
         this.offsetHandlers_[key] = handler;
-        if (!(initValue instanceof Nothing)){
+        if (!GetGlobal().IsNothing(initValue)){
             this.offsets_[key] = initValue;
         }
     }
@@ -35,11 +34,11 @@ export class CartCollectionConcept extends CollectionConcept implements ICartCol
             if (key === 'total'){
                 return (Object.values(this.offsets_).filter(value => (typeof value === 'number')).reduce((prev, value) => (prev + value), 0) || 0);
             }
-            return new Nothing();
+            return GetGlobal().CreateNothing();
         }
 
         let value = this.offsets_[key];
-        return ((value instanceof Future) ? value.Get() : value);
+        return (GetGlobal().IsFuture(value) ? value.Get() : value);
     }
 
     protected AlertUpdate_(){

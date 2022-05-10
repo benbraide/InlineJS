@@ -1,3 +1,5 @@
+import { Future } from "../values/future";
+import { Nothing } from "../values/nothing";
 import { IAlertConcept } from "./alert";
 import { ICollectionConcept } from "./collection";
 import { IComponent } from "./component";
@@ -50,4 +52,8 @@ export interface IGlobal {
     SetConcept<T>(name: string, concept: T): void;
     GetConcept<T>(name: string): T | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
+    CreateFuture(callback: () => any): Future;
+    IsFuture(value: any): boolean;
+    CreateNothing(): Nothing;
+    IsNothing(value: any): boolean;
 }

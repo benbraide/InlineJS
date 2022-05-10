@@ -1,6 +1,6 @@
+import { GetGlobal } from "../global/get";
 import { IComponent } from "../types/component";
 import { IElementScope } from "../types/element-scope";
-import { Nothing } from "../values/nothing";
 import { FindComponentById } from "./find";
 
 export function GetLocal(element: HTMLElement | IElementScope, name: string, component?: IComponent | string | null, defaultValue = {}){
@@ -17,7 +17,7 @@ export function GetLocal(element: HTMLElement | IElementScope, name: string, com
     }
 
     let value = elementScope.GetLocal(name);
-    if (value instanceof Nothing){//Create key
+    if (GetGlobal().IsNothing(value)){//Create key
         elementScope.SetLocal(name, (value = defaultValue));
     }
 

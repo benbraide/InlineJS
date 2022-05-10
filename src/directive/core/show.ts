@@ -4,12 +4,12 @@ import { LazyCheck } from "../lazy";
 import { TransitionCheck } from "../transition";
 
 export const ShowDirectiveHandler = CreateDirectiveHandlerCallback('show', ({ componentId, contextElement, ...rest }) => {
-    let firstEntry = true, lastValue = false, apply = (value: any) => {
+    let firstEntry = true, lastValue = false, transitionCancel: (() => void) | null = null, apply = (value: any) => {
         if (!firstEntry && !!value === lastValue){
             return;
         }
 
-        let show = () => {
+        let checkpoint = 0, show = () => {
             if (contextElement.style.length === 1 && contextElement.style.display === 'none') {
                 contextElement.removeAttribute('style');
             }
@@ -19,8 +19,18 @@ export const ShowDirectiveHandler = CreateDirectiveHandlerCallback('show', ({ co
         };
 
         if (!firstEntry || value){//Apply applicable transitions if not first entry or value is truthy
-            TransitionCheck({ componentId, contextElement,
-                callback: () => (value ? show() : (contextElement.style.display = 'none')),
+            let myCheckpoint = ++checkpoint;
+
+            transitionCancel && transitionCancel();
+            !!value && show();
+            
+            transitionCancel = TransitionCheck({ componentId, contextElement,
+                callback: () => {
+                    if (myCheckpoint == checkpoint){
+                        transitionCancel = null;
+                        !value && (contextElement.style.display = 'none');
+                    }
+                },
                 reverse: !value,
             });
         }

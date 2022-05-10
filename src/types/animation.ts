@@ -49,3 +49,15 @@ export interface IAnimationActorCollection{
     Remove(name: string): void;
     Find(name: string): AnimationActorCallbackType | null;
 }
+
+export interface IAnimationConcept{
+    GetEaseCollection(): IAnimationEaseCollection;
+    GetActorCollection(): IAnimationActorCollection;
+}
+
+export interface IAnimationTransition{
+    ease: IAnimationEase | AnimationEaseCallbackType | null;
+    actor: IAnimationActor | AnimationActorCallbackType | null;
+    duration: number;
+    allowed?: 'normal' | 'reversed' | 'both';
+}

@@ -1,7 +1,7 @@
 import { Loop } from "../values/loop";
 export interface ILoopCallbackInfo {
     passes: number;
-    ellapsed: number;
+    elapsed: number;
     duration?: number;
     abort?: () => void;
 }

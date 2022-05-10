@@ -1,12 +1,12 @@
 import { FindComponentById } from "../../component/find";
 import { StreamData } from "../../evaluator/stream-data";
+import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { CreateReadonlyProxy } from "../../proxy/create";
 import { InitJITProxy } from "../../proxy/jit";
 import { IsObject } from "../../utilities/is-object";
 import { ToString } from "../../utilities/to-string";
-import { Nothing } from "../../values/nothing";
 
 export const FormatMagicHandler = CreateMagicHandlerCallback('format', ({ componentId, component, contextElement }) => {
     let [elementKey, proxy, scope] = InitJITProxy('format', (component || FindComponentById(componentId)), contextElement);
@@ -25,10 +25,10 @@ export const FormatMagicHandler = CreateMagicHandlerCallback('format', ({ compon
             let checkpoint = ++queueCheckpoint;
             return new Promise((resolve) => FindComponentById(componentId)?.GetBackend().changes.AddNextTickHandler(() => {
                 if (data instanceof Promise){
-                    data.then((value) => resolve((checkpoint === queueCheckpoint) ? value : new Nothing));
+                    data.then((value) => resolve((checkpoint === queueCheckpoint) ? value : GetGlobal().CreateNothing()));
                 }
                 else{//Resolve
-                    resolve((checkpoint === queueCheckpoint) ? data : new Nothing);
+                    resolve((checkpoint === queueCheckpoint) ? data : GetGlobal().CreateNothing());
                 }
             }));
         },

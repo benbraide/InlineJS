@@ -14,7 +14,6 @@ import { IScope } from "../types/scope";
 import { ISelectionStackEntry } from "../types/selection";
 import { ContextKeys } from "../utilities/context-keys";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
-import { Nothing } from "../values/nothing";
 import { Changes } from "./changes";
 import { Context } from "./context";
 import { ElementScope } from "./element-scope";
@@ -260,8 +259,8 @@ export class BaseComponent implements IComponent{
     }
 
     public FindElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string, shouldBubble?: boolean){
-        let elementScope = this.FindElementScope(element), value = (elementScope ? elementScope.GetLocal(key) : new Nothing);
-        if (!(value instanceof Nothing) || !shouldBubble || (!elementScope && typeof element === 'string')){
+        let elementScope = this.FindElementScope(element), value = (elementScope ? elementScope.GetLocal(key) : GetGlobal().CreateNothing());
+        if (!GetGlobal().IsNothing(value) || !shouldBubble || (!elementScope && typeof element === 'string')){
             return value;
         }
 

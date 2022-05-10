@@ -1,8 +1,7 @@
 import { FindComponentById } from "../component/find";
+import { GetGlobal } from "../global/get";
 import { IComponent } from "../types/component";
 import { ProxyKeys } from "../utilities/proxy-keys";
-import { Future } from "../values/future";
-import { Nothing } from "../values/nothing";
 import { CreateChildProxy } from "./create-child";
 
 export function GetProxyProp(componentId: string, target: any, path: string, prop: string, noResultHandler?: (component?: IComponent, prop?: string) => any){
@@ -29,8 +28,8 @@ export function GetProxyProp(componentId: string, target: any, path: string, pro
     let exists = (prop in target);
     if (!exists && noResultHandler){
         let value = noResultHandler((FindComponentById(componentId) || undefined), prop);
-        if (!(value instanceof Nothing)){
-            return ((value instanceof Future) ? value.Get() : value);
+        if (!GetGlobal().IsNothing(value)){
+            return (GetGlobal().IsFuture(value) ? value.Get() : value);
         }
     }
 
@@ -39,7 +38,7 @@ export function GetProxyProp(componentId: string, target: any, path: string, pro
     }
 
     let value: any = (exists ? target[prop] : null);
-    if (value instanceof Future){//No proxy representation
+    if (GetGlobal().IsFuture(value)){//No proxy representation
         return value.Get();
     }
 

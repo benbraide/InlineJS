@@ -1,10 +1,10 @@
 import { FindComponentById } from "../../component/find";
 import { AddDirectiveHandler } from "../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../directives/callback";
+import { GetGlobal } from "../../global/get";
 import { AddChanges } from "../../proxy/add-changes";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../proxy/create";
 import { IComponent } from "../../types/component";
-import { Nothing } from "../../values/nothing";
 
 const StateDirectiveName = 'state';
 
@@ -32,7 +32,7 @@ function BindState(componentId: string, component: IComponent | null, contextEle
         }
     };
 
-    if (parent instanceof Nothing){
+    if (GetGlobal().IsNothing(parent)){
         parent = null;
     }
 
@@ -56,7 +56,7 @@ function BindState(componentId: string, component: IComponent | null, contextEle
 
     let getLocal = (target: HTMLElement) => {
         let local = FindComponentById(componentId)?.FindElementScope(target)?.GetLocal(localKey);
-        return ((local instanceof Nothing) ? null : local);
+        return (GetGlobal().IsNothing(local) ? null : local);
     }
 
     let getArray = (value: string | Array<string>) => ((typeof value === 'string') ? [value] : value), getRoot = () => {

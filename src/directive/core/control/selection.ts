@@ -47,11 +47,22 @@ export function CreateSelectionDirectiveHandler(isElse: boolean){
             }
         };
 
-        let effect = (value: any) => {
+        let checkpoint = 0, transitionCancel: (() => void) | null = null, effect = (value: any) => {
             let pred = (!!value && !lastState);
             if ((firstEntry && pred) || (pred !== lastValue)){//Apply applicable transitions if not first entry or value is truthy
-                TransitionCheck({ componentId, contextElement,
-                    callback: () => (pred ? insert() : remove()),
+                let myCheckpoint = ++checkpoint;
+
+                transitionCancel && transitionCancel();
+                !!pred && insert();
+                
+                transitionCancel = TransitionCheck({ componentId, contextElement,
+                    target: (clone || undefined),
+                    callback: () => {
+                        if (myCheckpoint == checkpoint){
+                            transitionCancel = null;
+                            !pred && remove();
+                        }
+                    },
                     reverse: !pred,
                 });
             }

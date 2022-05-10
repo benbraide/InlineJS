@@ -2,7 +2,7 @@ import { Loop } from "../values/loop";
 
 export interface ILoopCallbackInfo{
     passes: number;
-    ellapsed: number;
+    elapsed: number;
     duration?: number;
     abort?: () => void;
 }
@@ -19,9 +19,9 @@ export function CreateLoop(duration?: number, delay = 1000){
             startTimestamp = timestamp;
         }
 
-        let ellapsed = (timestamp - startTimestamp);
-        if (duration && ellapsed >= duration){
-            return doFinal({ passes, ellapsed, duration });
+        let elapsed = (timestamp - startTimestamp);
+        if (duration && elapsed >= duration){
+            return doFinal({ passes, elapsed, duration });
         }
 
         if (lastTimestamp == -1){
@@ -31,7 +31,7 @@ export function CreateLoop(duration?: number, delay = 1000){
         let wait = (timestamp - lastTimestamp);
         if (wait >= delay){
             lastTimestamp = (timestamp - (wait - delay));
-            doWhile({ passes: ++passes, ellapsed, duration, abort: () => (aborted = true) });
+            doWhile({ passes: ++passes, elapsed, duration, abort: () => (aborted = true) });
         }
 
         requestAnimationFrame(pass.bind(null, doWhile, doFinal));

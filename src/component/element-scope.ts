@@ -4,7 +4,6 @@ import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
 import { IDirectiveManager } from "../types/directives";
 import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
-import { Nothing } from "../values/nothing";
 import { PeekCurrentScope } from "./current-scope";
 import { ElementScopeKey } from "./element-scope-id";
 import { UnbindOutsideEvent } from "./event";
@@ -85,7 +84,7 @@ export class ElementScope implements IElementScope{
     }
 
     public GetLocal(key: string){
-        return ((key in this.locals_) ? this.locals_[key] : new Nothing);
+        return ((key in this.locals_) ? this.locals_[key] : GetGlobal().CreateNothing());
     }
 
     public GetLocals(){
@@ -99,7 +98,7 @@ export class ElementScope implements IElementScope{
     }
 
     public GetData(key: string){
-        return ((key in this.data_) ? this.data_[key] : new Nothing);
+        return ((key in this.data_) ? this.data_[key] : GetGlobal().CreateNothing());
     }
 
     public AddPostProcessCallback(callback: () => void){

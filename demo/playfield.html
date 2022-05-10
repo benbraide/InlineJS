@@ -136,6 +136,13 @@
         <template x-else>
             <p x-uninit="console.log('State was changed to true', this)">State is false</p>
         </template>
+        <div class="mt-4 flex flex-row justify-start items-start">
+            <div class="w-4 h-32 bg-green-700"></div>
+            <div class="ml-2 w-32 h-32 flex flex-row justify-center items-center bg-red-700" x-static="showBlock = true" x-show="showBlock" x-transition>
+                <p class="text-white font-semibold">BLOCK</p>
+            </div>
+        </div>
+        <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">Toggle show</button>
     </section>
 
     <section class="container mx-auto mt-8" x-data="{list: ['First', 'Second', 'Third', 'Last']}">
@@ -153,7 +160,7 @@
 
     <section class="container mx-auto mt-8" x-data="{range: 9}">
         <h2 class="mb-4 text-3xl font-bold">Range Loop</h2>
-        <template x-each="range" :key="$each.value">
+        <template x-each="range" :key="$each.value" x-transition.normal>
             <div style="overflow: hidden;">
                 <span>Index: </span><strong x-text="$each.index"></strong> | 
                 <span>Value: </span><strong x-text="$each.value"></strong> | 
@@ -423,6 +430,7 @@
             console.log(component, componentId, contextElement, rest);
         }
     </script>
+    <script src="../dist/inlinejs-animation.js"></script>
     <script src="../dist/inlinejs-canvas.js"></script>
     <script src="../dist/inlinejs-swal.js"></script>
     <script src="../dist/inlinejs-plugins.js"></script>

@@ -15,6 +15,7 @@ module.exports = {
        "inlinejs-canvas": "./src/inlinejs-canvas.ts",
        "inlinejs-pack": "./src/inlinejs-pack.ts",
        "inlinejs-plugins": "./src/inlinejs-plugins.ts",
+       "inlinejs-animation": "./src/inlinejs-animation.ts",
    },
    output: {
        filename: "[name].js",

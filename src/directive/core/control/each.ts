@@ -3,6 +3,7 @@ import { AddDirectiveHandler } from "../../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../../directives/callback";
 import { EvaluateLater } from "../../../evaluator/evaluate-later";
 import { StreamData } from "../../../evaluator/stream-data";
+import { GetGlobal } from "../../../global/get";
 import { JournalTry } from "../../../journal/try";
 import { AddChanges } from "../../../proxy/add-changes";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../../proxy/create";
@@ -11,9 +12,9 @@ import { GetTarget } from "../../../utilities/get-target";
 import { IsEqual } from "../../../utilities/is-equal";
 import { IsObject } from "../../../utilities/is-object";
 import { ToString } from "../../../utilities/to-string";
-import { Future } from "../../../values/future";
 import { GetDirectiveValue } from "../../get-value";
 import { ProcessDirectives } from "../../process";
+import { TransitionCheck } from "../../transition";
 import { InitControl } from "./init";
 import { InsertControlClone } from "./insert";
 
@@ -24,9 +25,16 @@ interface IProxyInfo{
     refresh: (entries: Record<string, any>) => void;
 }
 
+interface IEntryInfo{
+    item: HTMLElement;
+    proxyInfo: IProxyInfo;
+    transitionCancel: (() => void) | null;
+    checkpoint: number;
+}
+
 export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ componentId, component, contextElement, expression, ...rest }) => {
     expression = expression.trim();// list as value || list as key => value
-    let [_, matchedExpression, keyName, __, valueName] = (expression.match(/^(.+)?\s+as\s+([A-Za-z_$][0-9A-Za-z_$]*)(\s*=>\s*([A-Za-z_$][0-9A-Za-z_$]*))?$/) || []);
+    let [_, matchedExpression, keyName, __, valueName] = (expression.match(/^(.+?)?\s+as\s+([A-Za-z_$][0-9A-Za-z_$]*)(\s*=>\s*([A-Za-z_$][0-9A-Za-z_$]*))?$/) || []);
     matchedExpression = (matchedExpression || expression);//Use expression if no match
     if (!valueName){
         valueName = keyName;
@@ -100,8 +108,8 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
         };
     };
     
-    let list: ListType<HTMLElement> | null = null, proxies: ListType<IProxyInfo> | null = null;
-    let insert = (data: ListType<any>, item: any, index: number | string, newList: ListType<HTMLElement>, key: string | null) => {
+    let list: ListType<IEntryInfo> | null = null;
+    let insert = (data: ListType<any>, item: any, index: number | string, newList: ListType<IEntryInfo>, key: string | null) => {
         let clone: HTMLElement | null = null, component = FindComponentById(componentId);
         if (!component){
             return;
@@ -118,26 +126,24 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
         let elementScope = component!.CreateElementScope(clone);
         let proxyInfo = createProxy(component!, data, item, index, component?.FindElementLocalValue(contextElement, '$each', true));
         
-        if (Array.isArray(newList)){
-            newList.push(clone);
-            (proxies as Array<IProxyInfo>).push(proxyInfo);
-        }
-        else{
-            newList[index] = clone;
-            (proxies as Record<string, IProxyInfo>)[index] = proxyInfo;
-        }
-
+        let entryInfo: IEntryInfo = { proxyInfo,
+            item: clone,
+            transitionCancel: null,
+            checkpoint: 0,
+        };
+        
+        Array.isArray(newList) ? newList.push(entryInfo) : (newList[index] = entryInfo);
         if (key){
             clone.setAttribute('key', key);
         }
         
         elementScope?.SetLocal('$each', proxyInfo.proxy);
         if (keyName){
-            elementScope?.SetLocal(keyName, new Future(() => proxyInfo.proxy['index']));
+            elementScope?.SetLocal(keyName, GetGlobal().CreateFuture(() => proxyInfo.proxy['index']));
         }
 
         if (valueName){
-            elementScope?.SetLocal(valueName, new Future(() => proxyInfo.proxy['value']));
+            elementScope?.SetLocal(valueName, GetGlobal().CreateFuture(() => proxyInfo.proxy['value']));
         }
 
         ProcessDirectives({
@@ -148,58 +154,69 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
                 checkTemplate: true,
             },
         });
+
+        entryInfo.checkpoint += 1;
+        entryInfo.transitionCancel && entryInfo.transitionCancel();
+
+        let myCheckpoint = ++entryInfo.checkpoint;
+        entryInfo.transitionCancel = TransitionCheck({ componentId, contextElement,
+            target: clone,
+            callback: () => {
+                if (myCheckpoint == entryInfo.checkpoint){
+                    entryInfo.transitionCancel = null;
+                }
+            },
+            reverse: false,
+        });
     };
 
-    let remove = (clone: HTMLElement) => {
-        if (clone.parentElement){//Remove from DOM and destroy scope on next tick
-            clone.remove();
-            FindComponentById(componentId)?.FindElementScope(clone!)?.Destroy();
-        }
+    let remove = (info: IEntryInfo) => {
+        let myCheckpoint = ++info.checkpoint;
+        
+        info.transitionCancel && info.transitionCancel();
+        info.transitionCancel = TransitionCheck({ componentId, contextElement,
+            target: info.item,
+            callback: () => {
+                if (myCheckpoint == info.checkpoint){
+                    info.transitionCancel = null;
+                    if (info.item.parentElement){
+                        info.item.remove();
+                        FindComponentById(componentId)?.FindElementScope(info.item!)?.Destroy();
+                    }
+                }
+            },
+            reverse: true,
+        });
     };
 
     let generateItems = (data: ListType<any>, callback: (inserter: (item: any, index: number | string) => void, cleanup: () => void) => void) => {
-        let newList = (Array.isArray(data) ? new Array<HTMLElement>() : {}), oldProxies = proxies;
+        let newList = (Array.isArray(data) ? new Array<IEntryInfo>() : {}), oldList = list;
 
         list = ((Array.isArray(data) == Array.isArray(list)) ? list : null);
-        proxies = (Array.isArray(data) ? new Array<IProxyInfo>() : {});
-        
         callback((item, index) => {
-            let elementWithKey: HTMLElement | null = null, key: string | null = null, elementWithKeyIndex: number | string | null = null;
+            let infoWithKey: IEntryInfo | null = null, key: string | null = null;
             if (Array.isArray(data)){
                 key = ToString(getKey(<number>index, data));
-                elementWithKeyIndex = (<Array<HTMLElement>>list || []).findIndex(el => (el.getAttribute('key') === key));
-                if (elementWithKeyIndex != -1){
-                    elementWithKey = list![elementWithKeyIndex];
-                }
+                infoWithKey = ((list && key && (list as Array<IEntryInfo>).find(({ item }) => (item.getAttribute('key') === key))) || null);
             }
             else if (list && list.hasOwnProperty(index)){
-                elementWithKeyIndex = index;
-                elementWithKey = list[index];
+                infoWithKey = list[index];
             }
             
-            if (elementWithKey){//Reuse element
-                let proxy = oldProxies![elementWithKeyIndex!];
-                if (Array.isArray(newList)){
-                    newList.push(elementWithKey);
-                    (proxies as Array<IProxyInfo>).push(proxy);
-                }
-                else{
-                    newList[index] = elementWithKey;
-                    (proxies as Record<string, IProxyInfo>)[index] = proxy;
-                }
-
-                elementWithKey.parentElement!.insertBefore(elementWithKey, contextElement);//Move to update position
-                proxy.refresh({ collection: data, value: item, index, count: getCount(data) });
+            if (infoWithKey){//Reuse element
+                Array.isArray(newList) ? newList.push(infoWithKey) : (newList[index] = infoWithKey);
+                infoWithKey.item.parentElement!.insertBefore(infoWithKey.item, contextElement);//Move to update position
+                infoWithKey.proxyInfo.refresh({ collection: data, value: item, index, count: getCount(data) });
             }
             else{//Create new
                 insert(data, item, index, newList, key);
             }
         }, () => {//Sync lists
-            if (list && Array.isArray(list)){
-                (list as Array<HTMLElement>).filter(el => !(newList as Array<HTMLElement>).includes(el)).forEach(remove);
+            if (Array.isArray(oldList)){
+                (oldList as Array<IEntryInfo>).filter(info => !(newList as Array<IEntryInfo>).includes(info)).forEach(remove);
             }
             else if (list){
-                Object.entries(list).filter(([key]) => !(key in newList)).forEach(([key, el]) => remove(el));
+                Object.entries(oldList as Record<string, IEntryInfo>).filter(([key]) => !(key in newList)).forEach(([key, info]) => remove(info));
             }
     
             list = newList;

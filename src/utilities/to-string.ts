@@ -1,14 +1,13 @@
-import { Future } from "../values/future";
-import { Nothing } from "../values/nothing";
+import { GetGlobal } from "../global/get";
 import { GetTarget } from "./get-target";
 
 export function ToString(target: any): string{
     target = GetTarget(target);
-    if (target instanceof Future){
+    if (GetGlobal().IsFuture(target)){
         return ToString(target.Get());
     }
     
-    if ((!target && target !== false && target !== 0) || (target instanceof Nothing)){
+    if ((!target && target !== false && target !== 0) || GetGlobal().IsNothing(target)){
         return '';
     }
 

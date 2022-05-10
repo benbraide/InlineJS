@@ -4,6 +4,7 @@ import { FindComponentById } from "../../../component/find";
 import { AddDirectiveHandler } from "../../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../../directives/callback";
 import { EvaluateLater } from "../../../evaluator/evaluate-later";
+import { GetGlobal } from "../../../global/get";
 import { JournalError } from "../../../journal/error";
 import { JournalTry } from "../../../journal/try";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../../proxy/create";
@@ -11,7 +12,6 @@ import { ReactiveStateType } from "../../../types/config";
 import { ContextKeys } from "../../../utilities/context-keys";
 import { GetTarget } from "../../../utilities/get-target";
 import { IsObject } from "../../../utilities/is-object";
-import { Nothing } from "../../../values/nothing";
 
 interface IDataConfigDetails{
     reactiveState?: ReactiveStateType;
@@ -65,7 +65,7 @@ export const DataDirectiveHandler = CreateDirectiveHandlerCallback('data', ({ co
                 name: () => FindComponentById(componentId)?.FindScopeById(scopeId)?.GetName(),
                 parent: () => {
                     let component = FindComponentById(componentId), parent = component?.FindElementLocalValue((component?.FindAncestor(contextElement) || ''), key, true);
-                    return ((parent && !(parent instanceof Nothing)) ? parent : null);
+                    return ((parent && !GetGlobal().IsNothing(parent)) ? parent : null);
                 },
                 data: () => (FindComponentById(componentId)?.GetRootProxy().GetNative()[scopeId] || {}),
             }, local = CreateInplaceProxy(BuildGetterProxyOptions({

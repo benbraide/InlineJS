@@ -20,9 +20,13 @@ import { IRouterConcept } from "../types/router";
 import { IScreenConcept } from "../types/screen";
 import { ITimeDifferenceConcept } from "../types/time-diff";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
+import { Future } from "../values/future";
+import { Nothing } from "../values/nothing";
 import { Config } from "./config";
 
 export class BaseGlobal implements IGlobal{
+    private nothing_ = new Nothing;
+    
     private config_: IConfig;
     
     private components_: Record<string, IComponent> = {};
@@ -210,5 +214,21 @@ export class BaseGlobal implements IGlobal{
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{
         return new ChildProxy(owner, name, target);
+    }
+
+    public CreateFuture(callback: () => any){
+        return new Future(callback);
+    }
+
+    public IsFuture(value: any){
+        return (value instanceof Future);
+    }
+
+    public CreateNothing(){
+        return this.nothing_;
+    }
+
+    public IsNothing(value: any){
+        return (value instanceof Nothing);
     }
 }

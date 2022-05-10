@@ -13,7 +13,10 @@ import { IResourceConcept } from "../types/resource";
 import { IRouterConcept } from "../types/router";
 import { IScreenConcept } from "../types/screen";
 import { ITimeDifferenceConcept } from "../types/time-diff";
+import { Future } from "../values/future";
+import { Nothing } from "../values/nothing";
 export declare class BaseGlobal implements IGlobal {
+    private nothing_;
     private config_;
     private components_;
     private currentComponent_;
@@ -69,4 +72,8 @@ export declare class BaseGlobal implements IGlobal {
     SetConcept<T>(name: string, concept: T): void;
     GetConcept<T>(name: string): T | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
+    CreateFuture(callback: () => any): Future;
+    IsFuture(value: any): boolean;
+    CreateNothing(): Nothing;
+    IsNothing(value: any): boolean;
 }

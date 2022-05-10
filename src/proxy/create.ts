@@ -1,5 +1,5 @@
 import { FindComponentById } from "../component/find";
-import { Nothing } from "../values/nothing";
+import { GetGlobal } from "../global/get";
 
 export type ProxyLookupType = Array<string> | ((prop: string, target?: any) => boolean);
 
@@ -26,7 +26,7 @@ export function CreateInplaceProxy({ target, getter, setter, deleter, lookup, al
             }
 
             let value = (getter ? getter(prop.toString(), target) : target[prop]);
-            if (!(value instanceof Nothing)){
+            if (!GetGlobal().IsNothing(value)){
                 if (alert && (!alert.list || prop in alert.list)){
                     FindComponentById(alert.componentId)?.GetBackend().changes.AddGetAccess(`${alert.id}.${prop}`);
                 }

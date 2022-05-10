@@ -1,9 +1,9 @@
 import { PopCurrentComponent, PushCurrentComponent } from "../component/current";
 import { FindComponentById } from "../component/find";
+import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { IEvaluateOptions } from "../types/evaluate-options";
 import { ContextKeys } from "../utilities/context-keys";
-import { Future } from "../values/future";
 import { WaitPromise } from "./wait-promise";
 
 const InlineJSContextKey = '__InlineJS_Context__';
@@ -76,7 +76,7 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         
         try{
             let result = target(proxy);
-            if (result instanceof Future){
+            if (GetGlobal().IsFuture(result)){
                 result = result.Get();
             }
             

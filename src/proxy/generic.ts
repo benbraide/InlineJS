@@ -1,8 +1,8 @@
+import { GetGlobal } from "../global/get";
 import { EvaluateMagicProperty } from "../magic/evaluate";
 import { IComponent } from "../types/component";
 import { IProxy } from "../types/proxy";
 import { ContextKeys } from "../utilities/context-keys";
-import { Nothing } from "../values/nothing";
 import { DeleteProxyProp } from "./delete-prop";
 import { GetProxyProp } from "./get-prop";
 import { SetProxyProp } from "./set-prop";
@@ -19,19 +19,19 @@ export class GenericProxy implements IProxy{
         let componentId = this.componentId_, path = this.GetPath(), noResultHandler = (component?: IComponent, prop?: string): any => {
             let { context } = component?.GetBackend()!, isMagic = prop?.startsWith('$');
             if (isMagic){
-                let value = context.Peek(prop!.substring(1), new Nothing);
-                if (!(value instanceof Nothing)){
+                let value = context.Peek(prop!.substring(1), GetGlobal().CreateNothing());
+                if (!GetGlobal().IsNothing(value)){
                     return value;
                 }
             }
 
             let contextElement = context.Peek(ContextKeys.self), localValue = component?.FindElementLocalValue((contextElement || component.GetRoot()), prop!, true);
-            if (!(localValue instanceof Nothing)){
+            if (!GetGlobal().IsNothing(localValue)){
                 return localValue;
             }
             
-            let result = (isMagic ? EvaluateMagicProperty(component!, contextElement, prop!, '$') : new Nothing);
-            if (result instanceof Nothing && prop && prop in globalThis){
+            let result = (isMagic ? EvaluateMagicProperty(component!, contextElement, prop!, '$') : GetGlobal().CreateNothing());
+            if (GetGlobal().IsNothing(result) && prop && prop in globalThis){
                 result = globalThis[prop];
             }
 

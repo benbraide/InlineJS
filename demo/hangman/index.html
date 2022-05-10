@@ -13,36 +13,50 @@
     </style>
 </head>
 <body class="w-screen h-screen flex flex-row justify-center items-start">
-    <main class="mt-16" x-data="{ $config: { reactiveState: 'unoptimized' }, wordList: window['wordList'], word: '', picks: [], wins: 0, losses: 0 }">
+    <main class="mt-16" x-data="{ $config: { reactiveState: 'unoptimized' }, wordList: window['wordList'], word: '', picks: [], wins: 0, losses: 0, checkpoint: 0 }">
         <template x-static="generateWord = () => { let words = wordList[category]; return words[Math.floor(Math.random() * words.length)] }"></template>
         <template x-static="insertChar = (char) => { picks.push(char); wrongPicks = picks.filter(c => !word.includes(c)).length; fate = (winFate() || lossFate()) }"></template>
         <template x-static="winFate = () => ((word.findIndex(c => !picks.includes(c)) == -1) ? 'win' : null)"></template>
         <template x-static="lossFate = () => ((wrongPicks >= 6) ? 'loss' : null)"></template>
         <template x-effect="wins += ((fate === 'win') ? 1 : 0); losses += ((fate === 'loss') ? 1 : 0)"></template>
         <template x-on:keydown.window="if (playing && !fate && $event.key.match(/[a-z]/i) && !picks.includes($event.key)){ insertChar($event.key) }"></template>
+        <template x-effect="if ($log.and(playing, (seconds == 0))){ ++checkpoint; fate = 'loss'; wrongPicks = 6 }"></template>
+        <template x-effect="if (fate){ window.clearInterval(intId); ++checkpoint }"></template>
 
-        <div class="fixed top-4 right-4 flex flex-row justify-start items-center font-semibold">
-            <p class="text-green-700" x-text="(wins == 1) ? '1 win' : `${wins} wins`"></p>
-            <p class="ml-4 text-red-600" x-text="(losses == 1) ? '1 loss' : `${losses} losses`"></p>
-        </div>
+        <section class="fixed top-4 right-4 flex flex-col justify-start items-end">
+            <div class="flex flex-row justify-start items-center font-semibold">
+                <p class="text-green-700" x-text="(wins == 1) ? '1 win' : `${wins} wins`"></p>
+                <p class="ml-4 text-red-600" x-text="(losses == 1) ? '1 loss' : `${losses} losses`"></p>
+            </div>
+            <p class="mt-2 text-xl text-gray-700 font-bold" x-text="seconds" x-show="playing"></p>
+        </section>
 
         <section class="flex flex-col justify-start items-center" x-show="!playing">
-            <select class="px-4 py-2 border rounded-md capitalize" x-model="category">
-                <option value="">Select a category to begin</option>
-                <template x-each="Object.keys(wordList) as cat">
-                    <option x-bind:value="cat" x-text="cat"></option>
-                </template>
-            </select>
+            <div class="flex flex-row justify-start items-center" x-static="categories = Object.keys(wordList)">
+                <select class="px-4 py-2 border rounded-md capitalize" x-model="category">
+                    <option value="">Select a category to begin</option>
+                    <template x-each="categories as cat">
+                        <option x-bind:value="cat" x-text="cat"></option>
+                    </template>
+                </select>
+                <button class="ml-4 px-4 py-2 border rounded-md"
+                    x-on:click="category = categories[Math.floor(Math.random() * categories.length)]; playing = true; wrongPicks = 0; word = generateWord().split(''); picks = word.filter(c => !/[a-z]/.test(c)); seconds = 90; let c = ++checkpoint; intId = window.setInterval(() => { if (c == checkpoint) --seconds }, 1000)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-shuffle" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3v1c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.317 1.918C9.828 10.99 11.204 12 13 12v1c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1 0-1H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.317-1.918C4.172 5.01 2.796 4 1 4H.5a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/>
+                    </svg>
+                </button>
+            </div>
             <button class="mt-8 px-8 py-2 border rounded-md" x-show="category" x-cloak
-                x-on:click="playing = true; picks = []; wrongPicks = 0; word = generateWord().split('')">Play</button>
+                x-on:click="playing = true; wrongPicks = 0; word = generateWord().split(''); picks = word.filter(c => !/[a-z]/.test(c)); seconds = 90; let c = ++checkpoint; intId = window.setInterval(() => { if (c == checkpoint) --seconds }, 1000)">Play</button>
         </section>
         <section class="flex flex-col justify-start items-center" x-show="playing" x-cloak>
             <h2 class="text-xl text-gray-700 font-bold">Now playing: <span class="uppercase" x-text="category"></span></h2>
             <div class="mt-16 flex flex-row justify-start items-start">
                 <div class="flex flex-col justify-start items-center">
                     <div class="flex flex-row justify-start items-center gap-x-4 text-5xl text-gray-600 font-semibold uppercase">
-                        <template class="bg-green-700" x-each="word as letter">
-                            <p class="w-12" x-text="picks.includes(letter) ? letter : '-'"></p>
+                        <template class="bg-green-700 text-red-700" x-each="word as letter">
+                            <p class="w-12" x-class:text-red-700="$log.and(fate, !picks.includes(letter))" x-text="(fate || picks.includes(letter)) ? letter : '-'"></p>
                         </template>
                     </div>
                     <div class="relative mt-16 w-96 flex flex-row justify-start items-center flex-wrap gap-x-4 gap-y-4">
@@ -117,10 +131,14 @@
     <script src="../../dist/inlinejs.js"></script>
     <script>
         window['wordList'] = {
-            animal: ['dog', 'fish', 'elephant', 'cat', 'tiger', 'lion', 'monkey', 'gorilla', 'hipopotamus', 'cheetah', 'hyena', 'bear'],
-            fruit: ['mango', 'orange', 'apple', 'banana', 'pineapple', 'strawberry', 'guava', 'plum', 'pear', 'avocado', 'cantelope'],
-            place: ['rivers', 'lagos', 'abuja', 'usa', 'canada', 'nigeria', 'sweden', 'europe', 'africa', 'spain', 'bedroom', 'kitchen'],
-            food: ['beans', 'rice', 'banga', 'eba', 'yam', 'plantain', 'sausage', 'spaghetti', 'pizza', 'burger', 'salad', 'pancake'],
+            animal: ['dog', 'fish', 'elephant', 'cat', 'tiger', 'lion', 'monkey', 'gorilla', 'hipopotamus', 'cheetah', 'hyena', 'bear', 'panda', 'jaguar', 'whale', 'octopus',
+                'zebra', 'horse', 'leopard', 'porcupine', 'antelope', 'fox', 'wolf', 'flamingo', 'penguin', 'giraffe', 'tortoise', 'shark', 'dolphin', 'crocodile', 'eagle'],
+            fruit: ['mango', 'orange', 'apple', 'banana', 'pineapple', 'strawberry', 'guava', 'plum', 'pear', 'avocado', 'cantelope', 'lemon', 'strawberry', 'pear',
+                'avocado', 'cucumber', 'watermelon', 'guava', 'blackberry', 'paw-paw', 'lime', 'plum', 'sour sop', 'grape'],
+            place: ['rivers', 'lagos', 'abuja', 'usa', 'canada', 'nigeria', 'sweden', 'europe', 'africa', 'spain', 'bedroom', 'kitchen', 'school', 'abuja', 'france', 'england',
+                'scotland', 'russia', 'germany', 'egypt', 'port-harcourt', 'airport', 'bayelsa', 'dubai', 'australia', 'rumuosi', 'ukraine', 'china'],
+            food: ['beans', 'rice', 'banga', 'eba', 'yam', 'plantain', 'sausage', 'spaghetti', 'pizza', 'burger', 'salad', 'pancake', 'cocoyam', 'potato', 'spaghetti',
+                'soup', 'chicken', 'hot dog', 'meat pie', 'biscuits', 'custard', 'bread', 'moi-moi', 'noodles'],
         };
     </script>
 </body>

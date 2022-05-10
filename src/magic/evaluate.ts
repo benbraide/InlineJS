@@ -4,13 +4,12 @@ import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
-import { Nothing } from "../values/nothing";
 
 export function EvaluateMagicProperty(component: IComponent | string, contextElement: HTMLElement, name: string, prefix = '', checkExternal = true){
     let resolvedComponent = ((typeof component === 'string') ? FindComponentById(component) : component);
     if (!resolvedComponent){
         JournalError(`Failed to find component for '$${name}'`, 'InlineJS.EvaluateMagicProperty', contextElement);
-        return new Nothing;
+        return GetGlobal().CreateNothing();
     }
 
     let handler = GetGlobal().GetMagicManager().FindHandler((prefix && name.startsWith(prefix)) ? name.substring(prefix.length) : name, { contextElement,
@@ -28,7 +27,7 @@ export function EvaluateMagicProperty(component: IComponent | string, contextEle
                 }
 
                 let elementScope = component.FindElementScope(target), local = (elementScope && elementScope.GetLocal(name.substring(prefix.length)));
-                if (elementScope && !(local instanceof Nothing)){//Prioritize local value
+                if (elementScope && !GetGlobal().IsNothing(local)){//Prioritize local value
                     return local;
                 }
 
@@ -36,7 +35,7 @@ export function EvaluateMagicProperty(component: IComponent | string, contextEle
             };
         }
 
-        return new Nothing;
+        return GetGlobal().CreateNothing();
     }
 
     return JournalTry(() => {//Catch errors

@@ -11,7 +11,6 @@ import { UseEffect } from "../../reactive/effect";
 import { IComponent } from "../../types/component";
 import { IsObject } from "../../utilities/is-object";
 import { ToString } from "../../utilities/to-string";
-import { Nothing } from "../../values/nothing";
 import { BindEvent } from "../event";
 import { ResolveOptions } from "../options";
 
@@ -55,7 +54,7 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
         return EvaluateLater({ componentId, contextElement, expression })((value) => {
             if (IsObject(value)){
                 let proxy = FindComponentById(componentId)?.FindElementLocalValue(contextElement, localKey, true);
-                if (proxy && !(proxy instanceof Nothing)){
+                if (proxy && !GetGlobal().IsNothing(proxy)){
                     Object.entries(value).forEach(([key, value]) => proxy.addField(key, value));
                 }
             }

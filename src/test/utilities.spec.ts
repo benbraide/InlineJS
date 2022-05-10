@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
+import { GetGlobal } from '../global/get';
 
 import { IUniqueMarkers } from '../types/unique-markers';
 import { BeginsWith } from '../utilities/begins-with';
@@ -8,7 +9,6 @@ import { EndsWith } from '../utilities/ends-with';
 import { IsEqual } from '../utilities/is-equal';
 import { AreObjects, IsObject } from '../utilities/is-object';
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from '../utilities/unique-markers';
-import { Nothing } from '../values/nothing';
 
 describe('is-equal utility', () => {
     it('should compare primitive types', () => {
@@ -56,7 +56,7 @@ describe('is-object|are-objects utility', () => {
         expect(IsObject({})).equal(true);
         expect(IsObject([])).equal(false);
 
-        expect(IsObject(new Nothing)).equal(false);
+        expect(IsObject(GetGlobal().CreateNothing())).equal(false);
         expect(IsObject('')).equal(false);
 
         expect(IsObject(45)).equal(false);
