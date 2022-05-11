@@ -136,10 +136,54 @@
         <template x-else>
             <p x-uninit="console.log('State was changed to true', this)">State is false</p>
         </template>
+        <template x-static="customs = { scale: $animation.scale({ axis: 'y', origin: { x: 'center', y: 'end' }, factor: 1 }) }"></template>
+        <template x-static="customs.translate = $animation.translate({ axis: 'x', factor: -12, unit: 'rem' })"></template>
+        <template x-static="customs.zoomSpin = $animation.collect('zoom', 'spin')"></template>
+        <template x-static="customs.slideSpin = $animation.collect(customs.translate, 'spin')"></template>
         <div class="mt-4 flex flex-row justify-start items-start">
             <div class="w-4 h-32 bg-green-700"></div>
-            <div class="ml-2 w-32 h-32 flex flex-row justify-center items-center bg-red-700" x-static="showBlock = true" x-show="showBlock" x-transition>
-                <p class="text-white font-semibold">BLOCK</p>
+            <div class="ml-2 w-32 h-32">
+                <div class="w-full h-full flex flex-row justify-center items-center bg-red-700" x-static="showBlock = true" x-show="showBlock" x-transition
+                    x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase" x-transition:duration="animationDuration">
+                    <p class="text-white font-semibold">BLOCK</p>
+                </div>
+            </div>
+            <div class="ml-2 flex flex-col justify-start items-start">
+                <select class="px-4 py-2 border rounded-md overflow-hidden" x-model="animationActor">
+                    <option value="">Select actor</option>
+                    <option value="default">Default</option>
+                    <option value="opacity">Opacity</option>
+                    <option value="width">Width</option>
+                    <option value="height">Height</option>
+                    <option value="zoom">Zoom</option>
+                    <option value="slide.down">Slide down</option>
+                    <option value="slide.left">Slide left</option>
+                    <option value="slide.right">Slide right</option>
+                    <option value="slide.up">Slide up</option>
+                    <option value="spin">Spin</option>
+                    <option value="flip">Flip</option>
+                    <option value="toss">Toss</option>
+                    <option value="scale">Scale custom</option>
+                    <option value="translate">Translate custom</option>
+                    <option value="zoomSpin">Zoom & Spin</option>
+                    <option value="slideSpin">Slide & Spin</option>
+                </select>
+                <select class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-model="animationEase">
+                    <option value="">Select ease</option>
+                    <option value="default">Default</option>
+                    <option value="linear">Linear</option>
+                    <option value="back">Back</option>
+                    <option value="bounce">Bounce</option>
+                    <option value="circle">Circle</option>
+                    <option value="cubic">Cubic</option>
+                    <option value="elastic">Elastic</option>
+                    <option value="exponential">Exponential</option>
+                    <option value="quadratic">Quadratic</option>
+                    <option value="quart">Quart</option>
+                    <option value="quint">Quint</option>
+                    <option value="sine">Sine</option>
+                </select>
+                <input type="text" placeholder="Animation duration" class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-model.number="animationDuration">
             </div>
         </div>
         <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">Toggle show</button>

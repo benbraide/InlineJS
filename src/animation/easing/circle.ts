@@ -20,7 +20,7 @@ export function CircleOutAnimationEaseCompact(){
     AddAnimationEase(CircleOutAnimationEase);
 }
 
-export const CircleInOutAnimationEase = CreateAnimationEaseCallback('circle', ({ fraction }) => {
+export const CircleInOutAnimationEase = CreateAnimationEaseCallback('circle.in.out', ({ fraction }) => {
     return (fraction < 0.5) ? ((1 - Math.sqrt(1 - Math.pow((2 * fraction), 2))) / 2) : ((Math.sqrt(1 - Math.pow(((-2 * fraction) + 2), 2)) + 1) / 2);
 });
 

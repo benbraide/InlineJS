@@ -20,7 +20,7 @@ export function SineOutAnimationEaseCompact(){
     AddAnimationEase(SineOutAnimationEase);
 }
 
-export const SineInOutAnimationEase = CreateAnimationEaseCallback('sine', ({ fraction }) => (-(Math.cos(Math.PI * fraction) - 1) / 2));
+export const SineInOutAnimationEase = CreateAnimationEaseCallback('sine.in.out', ({ fraction }) => (-(Math.cos(Math.PI * fraction) - 1) / 2));
 
 export function SineInOutAnimationEaseCompact(){
     AddAnimationEase(SineInOutAnimationEase);

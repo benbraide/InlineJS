@@ -20,7 +20,7 @@ export function QuartOutAnimationEaseCompact(){
     AddAnimationEase(QuartOutAnimationEase);
 }
 
-export const QuartInOutAnimationEase = CreateAnimationEaseCallback('quart', ({ fraction }) => {
+export const QuartInOutAnimationEase = CreateAnimationEaseCallback('quart.in.out', ({ fraction }) => {
     return ((fraction < 0.5) ? (8 * Math.pow(fraction, 4)) : (1 - (Math.pow(((-2 * fraction) + 2), 4) / 2)));
 });
 

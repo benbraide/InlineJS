@@ -4,10 +4,17 @@ export interface IScaleAnimatorActorOrigin {
     x: ScaleAnimatorActorOriginType;
     y: ScaleAnimatorActorOriginType;
 }
-export interface IScaleAnimatorActorInfo {
-    name: string;
+export interface IScaleAnimationCallbackInfo {
     axis: ScaleAnimatorActorAxisType;
     origin: IScaleAnimatorActorOrigin;
     factor?: number;
 }
-export declare function CreateScaleAnimationActor({ name, axis, origin, factor }: IScaleAnimatorActorInfo): import("../../../types/animation").IAnimationActorCallbackDetails;
+export interface IScaleAnimatorActorInfo extends IScaleAnimationCallbackInfo {
+    name: string;
+}
+export declare function CreateScaleAnimationCallback({ axis, origin, factor }: IScaleAnimationCallbackInfo): ({ fraction, target, stage }: {
+    fraction: any;
+    target: any;
+    stage: any;
+}) => void;
+export declare function CreateScaleAnimationActor({ name, ...rest }: IScaleAnimatorActorInfo): import("../../../types/animation").IAnimationActorCallbackDetails;

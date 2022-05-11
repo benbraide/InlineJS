@@ -23,7 +23,7 @@ export const TransitionDirectiveHandler = CreateDirectiveHandlerCallback('transi
     
     let data: IAnimationTransition | Nothing = (component || FindComponentById(componentId))?.FindElementScope(contextElement)?.GetData('transition');
     if (argKey === 'actor' && !GetGlobal().IsNothing(data)){
-        let evaluate = EvaluateLater({ componentId, contextElement, expression }), updateActor = (value: any) => {
+        let evaluate = EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true }), updateActor = (value: any) => {
             if (typeof value === 'string'){
                 (data as IAnimationTransition).actor = (GetGlobal().GetConcept<IAnimationConcept>('animation')?.GetActorCollection().Find(value) || null);
             }
@@ -37,7 +37,7 @@ export const TransitionDirectiveHandler = CreateDirectiveHandlerCallback('transi
         });
     }
     else if (argKey === 'duration' && !GetGlobal().IsNothing(data)){
-        let evaluate = EvaluateLater({ componentId, contextElement, expression }), updateDuration = (value: any) => {
+        let evaluate = EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true }), updateDuration = (value: any) => {
             (data as IAnimationTransition).duration = (((typeof value === 'number') && value) || 300);
         };
 

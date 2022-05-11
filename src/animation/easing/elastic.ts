@@ -24,7 +24,7 @@ export function ElasticOutAnimationEaseCompact(){
     AddAnimationEase(ElasticOutAnimationEase);
 }
 
-export const ElasticInOutAnimationEase = CreateAnimationEaseCallback('elastic', ({ fraction }) => {
+export const ElasticInOutAnimationEase = CreateAnimationEaseCallback('elastic.in.out', ({ fraction }) => {
     if (fraction == 0 || fraction == 1){
         return fraction;
     }

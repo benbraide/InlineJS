@@ -25,7 +25,7 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
     return info;
 }
 
-export function TransitionCheck({ componentId, contextElement, target, callback, reverse }: ITransitionParams): (() => void) | null{
+export function WaitTransition({ componentId, contextElement, target, callback, reverse }: ITransitionParams): (() => void) | null{
     let info = ResolveTransition((FindComponentById(componentId)?.FindElementScope(contextElement)?.GetData('transition') || null), (reverse || false));
     if (!info || !info.actor || !info.ease || typeof info.duration !== 'number' || info.duration <= 0){
         return ((callback() && false) || null);

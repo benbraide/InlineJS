@@ -20,7 +20,7 @@ export function QuintOutAnimationEaseCompact(){
     AddAnimationEase(QuintOutAnimationEase);
 }
 
-export const QuintInOutAnimationEase = CreateAnimationEaseCallback('quint', ({ fraction }) => {
+export const QuintInOutAnimationEase = CreateAnimationEaseCallback('quint.in.out', ({ fraction }) => {
     return ((fraction < 0.5) ? (16 * Math.pow(fraction, 5)) : (1 - (Math.pow(((-2 * fraction) + 2), 5) / 2)));
 });
 

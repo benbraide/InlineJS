@@ -20,7 +20,7 @@ export function CubicOutAnimationEaseCompact(){
     AddAnimationEase(CubicOutAnimationEase);
 }
 
-export const CubicInOutAnimationEase = CreateAnimationEaseCallback('cubic', ({ fraction }) => {
+export const CubicInOutAnimationEase = CreateAnimationEaseCallback('cubic.in.out', ({ fraction }) => {
     return ((fraction < 0.5) ? (4 * Math.pow(fraction, 3)) : (1 - (Math.pow(((-2 * fraction) + 2), 3) / 2)));
 });
 

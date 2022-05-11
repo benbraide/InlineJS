@@ -1,6 +1,6 @@
 import { GetGlobal, WaitForGlobal } from './global/get';
 
-import { IAnimationActorCallbackDetails, IAnimationEaseCallbackDetails } from './types/animation';
+import { AnimationCreatorCallbackType, IAnimationActorCallbackDetails, IAnimationEaseCallbackDetails } from './types/animation';
 
 import { AnimationConcept } from './concepts/animation';
 
@@ -24,13 +24,27 @@ import { WidthAnimationActor } from './animation/actors/scale/width';
 import { HeightAnimationActor } from './animation/actors/scale/height';
 import { ZoomAnimationActor } from './animation/actors/scale/zoom';
 
+import { SlideDownAnimationActor } from './animation/actors/translate/slide-down';
+import { SlideLeftAnimationActor } from './animation/actors/translate/slide-left';
+import { SlideRightAnimationActor } from './animation/actors/translate/slide-right';
+import { SlideUpAnimationActor } from './animation/actors/translate/slide-up';
+
+import { SpinAnimationActor } from './animation/actors/rotate/spin';
+import { FlipAnimationActor } from './animation/actors/rotate/flip';
+import { TossAnimationActor } from './animation/actors/rotate/toss';
+
+import { ScaleAnimationCreator } from './animation/creators/scale';
+import { TranslateAnimationCreator } from './animation/creators/translate';
+
 import { TransitionDirectiveHandlerCompact } from './directive/plugin/animation/transition';
+import { AnimationMagicHandlerCompact } from './magic/plugin/animation';
 
 WaitForGlobal().then(() => {
-    let concept = new AnimationConcept(), easings = concept.GetEaseCollection(), actors = concept.GetActorCollection();
+    let concept = new AnimationConcept(), easings = concept.GetEaseCollection(), actors = concept.GetActorCollection(), creators = concept.GetCreatorCollection();
 
     let addEase = (info: IAnimationEaseCallbackDetails) => easings.Add(info.callback, info.name);
     let addActor = (info: IAnimationActorCallbackDetails) => actors.Add(info.callback, info.name);
+    let addCreator = (name: string, callback: AnimationCreatorCallbackType) => creators.Add(name, callback);
     
     addEase(BackAnimationEase);
     addEase(BackInAnimationEase);
@@ -90,8 +104,21 @@ WaitForGlobal().then(() => {
     addActor(WidthAnimationActor);
     addActor(HeightAnimationActor);
     addActor(ZoomAnimationActor);
+
+    addActor(SlideDownAnimationActor);
+    addActor(SlideLeftAnimationActor);
+    addActor(SlideRightAnimationActor);
+    addActor(SlideUpAnimationActor);
+
+    addActor(SpinAnimationActor);
+    addActor(FlipAnimationActor);
+    addActor(TossAnimationActor);
+
+    addCreator('scale', ScaleAnimationCreator);
+    addCreator('translate', TranslateAnimationCreator);
     
     GetGlobal().SetConcept('animation', concept);
     
     TransitionDirectiveHandlerCompact();
+    AnimationMagicHandlerCompact();
 });

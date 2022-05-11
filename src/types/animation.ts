@@ -50,9 +50,18 @@ export interface IAnimationActorCollection{
     Find(name: string): AnimationActorCallbackType | null;
 }
 
+export type AnimationCreatorCallbackType = (...args: any[]) => AnimationActorCallbackType;
+
+export interface IAnimationCreatorCollection{
+    Add(name: string, creator: AnimationCreatorCallbackType): void;
+    Remove(name: string): void;
+    Find(name: string): AnimationCreatorCallbackType | null;
+}
+
 export interface IAnimationConcept{
     GetEaseCollection(): IAnimationEaseCollection;
     GetActorCollection(): IAnimationActorCollection;
+    GetCreatorCollection(): IAnimationCreatorCollection;
 }
 
 export interface IAnimationTransition{

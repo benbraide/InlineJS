@@ -20,7 +20,7 @@ export function QuadraticOutAnimationEaseCompact(){
     AddAnimationEase(QuadraticOutAnimationEase);
 }
 
-export const QuadraticInOutAnimationEase = CreateAnimationEaseCallback('quadratic', ({ fraction }) => {
+export const QuadraticInOutAnimationEase = CreateAnimationEaseCallback('quadratic.in.out', ({ fraction }) => {
     return ((fraction < 0.5) ? (2 * Math.pow(fraction, 2)) : (1 - (Math.pow(((-2 * fraction) + 2), 2) / 2)));
 });
 

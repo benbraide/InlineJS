@@ -1,23 +1,33 @@
 import { CreateAnimationActorCallback } from "../callback";
 
-export type TranslateAnimatorActorAxisType = 'x' | 'y' | 'both';
+export type TranslateAnimationActorAxisType = 'x' | 'y' | 'both';
 
-export interface ITranslateAnimatorActorInfo{
-    name: string;
-    axis: TranslateAnimatorActorAxisType;
+export interface ITranslateAnimationCallbackInfo{
+    axis: TranslateAnimationActorAxisType;
     factor?: number;
+    unit?: string;
 }
 
-export const DefaultTranslateAnimatorActorFactor = 9999;
+export interface ITranslateAnimationActorInfo extends ITranslateAnimationCallbackInfo{
+    name: string;
+}
 
-export function CreateTranslateAnimationActor({ name, axis, factor }: ITranslateAnimatorActorInfo){
-    let validFactor = (factor ? factor : DefaultTranslateAnimatorActorFactor);
+export const DefaultTranslateAnimationActorFactor = 9999;
+export const DefaultTranslateAnimationActorUnit = 'px';
 
-    return CreateAnimationActorCallback(name, ({ fraction, target }) => {
+export function CreateTranslateAnimationCallback({ axis, factor, unit }: ITranslateAnimationCallbackInfo){
+    let validFactor = (factor ? factor : DefaultTranslateAnimationActorFactor);
+    let validUnit = (unit ? unit : DefaultTranslateAnimationActorUnit);
+
+    return ({ fraction, target }) => {
         let delta = ((validFactor < 0) ? (validFactor + (-validFactor * fraction)) : (validFactor - (validFactor * fraction)));
-        let value = ((axis !== 'x') ? ((axis === 'y') ? `translateY(${delta})` : `translate(${delta}, ${delta})`) : `translateX(${delta})`);
+        let value = ((axis !== 'x') ? ((axis === 'y') ? `translateY(${delta}${validUnit})` : `translate(${delta}${validUnit}, ${delta}${validUnit})`) : `translateX(${delta}${validUnit})`);
 
         target.style.transform = target.style.transform.replace(/[ ]*translate[XY]?\(.+?\)/g, '');
         target.style.transform += ` ${value}`;
-    });
+    };
+}
+
+export function CreateTranslateAnimationActor({ name, ...rest }: ITranslateAnimationActorInfo){
+    return CreateAnimationActorCallback(name, CreateTranslateAnimationCallback(rest));
 }

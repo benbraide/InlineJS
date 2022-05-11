@@ -37,7 +37,7 @@ export function BounceOutAnimationEaseCompact(){
     AddAnimationEase(BounceOutAnimationEase);
 }
 
-export const BounceInOutAnimationEase = CreateAnimationEaseCallback('bounce', ({ fraction, ...rest }) => {
+export const BounceInOutAnimationEase = CreateAnimationEaseCallback('bounce.in.out', ({ fraction, ...rest }) => {
     if (fraction < 0.5){
         return ((1 - BounceInAnimationEase.callback({ fraction: (1 - (2 * fraction)), ...rest },)) / 2);
     }

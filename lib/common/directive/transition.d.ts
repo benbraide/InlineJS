@@ -7,4 +7,4 @@ export interface ITransitionParams {
     reverse?: boolean;
 }
 export declare function ResolveTransition(info: IAnimationTransition | null, reverse: boolean): IAnimationTransition | null;
-export declare function TransitionCheck({ componentId, contextElement, target, callback, reverse }: ITransitionParams): (() => void) | null;
+export declare function WaitTransition({ componentId, contextElement, target, callback, reverse }: ITransitionParams): (() => void) | null;

@@ -1,7 +1,7 @@
 import { AddDirectiveHandler } from "../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { LazyCheck } from "../lazy";
-import { TransitionCheck } from "../transition";
+import { WaitTransition } from "../transition";
 
 export const ShowDirectiveHandler = CreateDirectiveHandlerCallback('show', ({ componentId, contextElement, ...rest }) => {
     let firstEntry = true, lastValue = false, transitionCancel: (() => void) | null = null, apply = (value: any) => {
@@ -24,7 +24,7 @@ export const ShowDirectiveHandler = CreateDirectiveHandlerCallback('show', ({ co
             transitionCancel && transitionCancel();
             !!value && show();
             
-            transitionCancel = TransitionCheck({ componentId, contextElement,
+            transitionCancel = WaitTransition({ componentId, contextElement,
                 callback: () => {
                     if (myCheckpoint == checkpoint){
                         transitionCancel = null;

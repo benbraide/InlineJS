@@ -20,7 +20,7 @@ export function ExponentialOutAnimationEaseCompact(){
     AddAnimationEase(ExponentialOutAnimationEase);
 }
 
-export const ExponentialInOutAnimationEase = CreateAnimationEaseCallback('exponential', ({ fraction }) => ((fraction == 1) ? fraction : (1 - Math.pow(2, (-10 * fraction)))));
+export const ExponentialInOutAnimationEase = CreateAnimationEaseCallback('exponential.in.out', ({ fraction }) => ((fraction == 1) ? fraction : (1 - Math.pow(2, (-10 * fraction)))));
 
 export function ExponentialInOutAnimationEaseCompact(){
     AddAnimationEase(ExponentialInOutAnimationEase);

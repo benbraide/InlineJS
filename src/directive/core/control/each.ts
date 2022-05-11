@@ -14,7 +14,7 @@ import { IsObject } from "../../../utilities/is-object";
 import { ToString } from "../../../utilities/to-string";
 import { GetDirectiveValue } from "../../get-value";
 import { ProcessDirectives } from "../../process";
-import { TransitionCheck } from "../../transition";
+import { WaitTransition } from "../../transition";
 import { InitControl } from "./init";
 import { InsertControlClone } from "./insert";
 
@@ -159,7 +159,7 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
         entryInfo.transitionCancel && entryInfo.transitionCancel();
 
         let myCheckpoint = ++entryInfo.checkpoint;
-        entryInfo.transitionCancel = TransitionCheck({ componentId, contextElement,
+        entryInfo.transitionCancel = WaitTransition({ componentId, contextElement,
             target: clone,
             callback: () => {
                 if (myCheckpoint == entryInfo.checkpoint){
@@ -174,7 +174,7 @@ export const EachDirectiveHandler = CreateDirectiveHandlerCallback('each', ({ co
         let myCheckpoint = ++info.checkpoint;
         
         info.transitionCancel && info.transitionCancel();
-        info.transitionCancel = TransitionCheck({ componentId, contextElement,
+        info.transitionCancel = WaitTransition({ componentId, contextElement,
             target: info.item,
             callback: () => {
                 if (myCheckpoint == info.checkpoint){

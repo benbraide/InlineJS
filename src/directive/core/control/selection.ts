@@ -3,7 +3,7 @@ import { CreateDirectiveHandlerCallback } from "../../../directives/callback";
 import { StreamData } from "../../../evaluator/stream-data";
 import { JournalError } from "../../../journal/error";
 import { ISelectionScope } from "../../../types/selection";
-import { TransitionCheck } from "../../transition";
+import { WaitTransition } from "../../transition";
 import { InitControl } from "./init";
 import { InsertControlClone } from "./insert";
 
@@ -55,7 +55,7 @@ export function CreateSelectionDirectiveHandler(isElse: boolean){
                 transitionCancel && transitionCancel();
                 !!pred && insert();
                 
-                transitionCancel = TransitionCheck({ componentId, contextElement,
+                transitionCancel = WaitTransition({ componentId, contextElement,
                     target: (clone || undefined),
                     callback: () => {
                         if (myCheckpoint == checkpoint){

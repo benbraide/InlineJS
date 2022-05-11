@@ -23,7 +23,7 @@ export function BackOutAnimationEaseCompact(){
     AddAnimationEase(BackOutAnimationEase);
 }
 
-export const BackInOutAnimationEase = CreateAnimationEaseCallback('back', ({ fraction }) => {
+export const BackInOutAnimationEase = CreateAnimationEaseCallback('back.in.out', ({ fraction }) => {
     const c1 = 1.70158;
     const c2 = c1 * 1.525;
 
