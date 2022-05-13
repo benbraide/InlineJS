@@ -33,8 +33,19 @@ import { SpinAnimationActor } from './animation/actors/rotate/spin';
 import { FlipAnimationActor } from './animation/actors/rotate/flip';
 import { TossAnimationActor } from './animation/actors/rotate/toss';
 
+import { PulseAnimationActor } from './animation/actors/scene/pulse';
+import { HeartbeatAnimationActor } from './animation/actors/scene/heartbeat';
+
 import { ScaleAnimationCreator } from './animation/creators/scale';
 import { TranslateAnimationCreator } from './animation/creators/translate';
+import { RotateAnimationCreator } from './animation/creators/rotate';
+
+import { ShakeAnimationCreator } from './animation/creators/shake';
+import { VibrateAnimationCreator } from './animation/creators/vibrate';
+import { RubberbandAnimationCreator } from './animation/creators/rubberband';
+import { JelloAnimationCreator } from './animation/creators/jello';
+import { TadaAnimationCreator } from './animation/creators/tada';
+import { SwingAnimationCreator } from './animation/creators/swing';
 
 import { TransitionDirectiveHandlerCompact } from './directive/plugin/animation/transition';
 import { AnimationMagicHandlerCompact } from './magic/plugin/animation';
@@ -114,8 +125,19 @@ WaitForGlobal().then(() => {
     addActor(FlipAnimationActor);
     addActor(TossAnimationActor);
 
+    addActor(PulseAnimationActor);
+    addActor(HeartbeatAnimationActor);
+
     addCreator('scale', ScaleAnimationCreator);
     addCreator('translate', TranslateAnimationCreator);
+    addCreator('rotate', RotateAnimationCreator);
+
+    addCreator('shake', ShakeAnimationCreator);
+    addCreator('vibrate', VibrateAnimationCreator);
+    addCreator('rubberband', RubberbandAnimationCreator);
+    addCreator('jello', JelloAnimationCreator);
+    addCreator('tada', TadaAnimationCreator);
+    addCreator('swing', SwingAnimationCreator);
     
     GetGlobal().SetConcept('animation', concept);
     

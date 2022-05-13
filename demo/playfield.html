@@ -138,6 +138,12 @@
         </template>
         <template x-static="customs = { scale: $animation.scale({ axis: 'y', origin: { x: 'center', y: 'end' }, factor: 1 }) }"></template>
         <template x-static="customs.translate = $animation.translate({ axis: 'x', factor: -12, unit: 'rem' })"></template>
+        <template x-static="customs.shake = $animation.shake({ displacement: 18, unit: 'px' })"></template>
+        <template x-static="customs.vibrate = $animation.vibrate({ displacement: 9, unit: 'deg' })"></template>
+        <template x-static="customs.rubberband = $animation.rubberband({ factor: 1.3, multiplier: 0.1 })"></template>
+        <template x-static="customs.jello = $animation.jello()"></template>
+        <template x-static="customs.tada = $animation.tada()"></template>
+        <template x-static="customs.swing = $animation.swing()"></template>
         <template x-static="customs.zoomSpin = $animation.collect('zoom', 'spin')"></template>
         <template x-static="customs.slideSpin = $animation.collect(customs.translate, 'spin')"></template>
         <div class="mt-4 flex flex-row justify-start items-start">
@@ -163,6 +169,14 @@
                     <option value="spin">Spin</option>
                     <option value="flip">Flip</option>
                     <option value="toss">Toss</option>
+                    <option value="pulse">Pulse</option>
+                    <option value="heartbeat">Heartbeat</option>
+                    <option value="shake">Shake</option>
+                    <option value="vibrate">Vibrate</option>
+                    <option value="rubberband">Rubberband</option>
+                    <option value="jello">Jello</option>
+                    <option value="tada">Tada</option>
+                    <option value="swing">Swing</option>
                     <option value="scale">Scale custom</option>
                     <option value="translate">Translate custom</option>
                     <option value="zoomSpin">Zoom & Spin</option>
