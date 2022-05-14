@@ -5,4 +5,4 @@ export interface ILoopCallbackInfo {
     duration?: number;
     abort?: () => void;
 }
-export declare function CreateLoop(duration?: number, delay?: number): Loop<ILoopCallbackInfo>;
+export declare function CreateLoop(duration?: number, delay?: number, repeats?: number, repeatDelay?: number): Loop<ILoopCallbackInfo>;

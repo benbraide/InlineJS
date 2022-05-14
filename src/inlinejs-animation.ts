@@ -19,6 +19,8 @@ import { DefaultAnimationEase } from './animation/easing/default';
 import { LinearAnimationEase } from './animation/easing/linear';
 
 import { DefaultAnimationActor } from './animation/actors/default';
+import { NullAnimationActor } from './animation/actors/null';
+import { OpacityAnimationActor } from './animation/actors/opacity';
 
 import { WidthAnimationActor } from './animation/actors/scale/width';
 import { HeightAnimationActor } from './animation/actors/scale/height';
@@ -36,9 +38,12 @@ import { TossAnimationActor } from './animation/actors/rotate/toss';
 import { PulseAnimationActor } from './animation/actors/scene/pulse';
 import { HeartbeatAnimationActor } from './animation/actors/scene/heartbeat';
 
+import { BezierAnimationEaseCreator } from './animation/creators/bezier';
+
 import { ScaleAnimationCreator } from './animation/creators/scale';
 import { TranslateAnimationCreator } from './animation/creators/translate';
 import { RotateAnimationCreator } from './animation/creators/rotate';
+import { SceneAnimationCreator } from './animation/creators/scene';
 
 import { ShakeAnimationCreator } from './animation/creators/shake';
 import { VibrateAnimationCreator } from './animation/creators/vibrate';
@@ -48,6 +53,7 @@ import { TadaAnimationCreator } from './animation/creators/tada';
 import { SwingAnimationCreator } from './animation/creators/swing';
 
 import { TransitionDirectiveHandlerCompact } from './directive/plugin/animation/transition';
+import { AnimateDirectiveHandlerCompact } from './directive/plugin/animation/animate';
 import { AnimationMagicHandlerCompact } from './magic/plugin/animation';
 
 WaitForGlobal().then(() => {
@@ -111,6 +117,8 @@ WaitForGlobal().then(() => {
     addEase(LinearAnimationEase);
 
     addActor(DefaultAnimationActor);
+    addActor(NullAnimationActor);
+    addActor(OpacityAnimationActor);
 
     addActor(WidthAnimationActor);
     addActor(HeightAnimationActor);
@@ -128,9 +136,12 @@ WaitForGlobal().then(() => {
     addActor(PulseAnimationActor);
     addActor(HeartbeatAnimationActor);
 
+    addCreator('bezier', BezierAnimationEaseCreator);
+    
     addCreator('scale', ScaleAnimationCreator);
     addCreator('translate', TranslateAnimationCreator);
     addCreator('rotate', RotateAnimationCreator);
+    addCreator('scene', SceneAnimationCreator);
 
     addCreator('shake', ShakeAnimationCreator);
     addCreator('vibrate', VibrateAnimationCreator);
@@ -142,5 +153,6 @@ WaitForGlobal().then(() => {
     GetGlobal().SetConcept('animation', concept);
     
     TransitionDirectiveHandlerCompact();
+    AnimateDirectiveHandlerCompact();
     AnimationMagicHandlerCompact();
 });

@@ -30,6 +30,7 @@ export declare class ElementScope implements IElementScope {
     AddPostProcessCallback(callback: () => void): void;
     ExecutePostProcessCallbacks(): void;
     AddUninitCallback(callback: () => void): void;
+    RemoveUninitCallback(callback: () => void): void;
     AddTreeChangeCallback(callback: TreeChangeCallbackType): void;
     RemoveTreeChangeCallback(callback: TreeChangeCallbackType): void;
     ExecuteTreeChangeCallbacks(added: Array<Node>, removed: Array<Node>): void;

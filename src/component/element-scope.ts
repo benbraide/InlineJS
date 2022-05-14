@@ -117,6 +117,10 @@ export class ElementScope implements IElementScope{
         }
     }
 
+    public RemoveUninitCallback(callback: () => void){
+        this.callbacks_.uninit = this.callbacks_.uninit.filter(c => (c !== callback));
+    }
+
     public AddTreeChangeCallback(callback: TreeChangeCallbackType){
         this.callbacks_.treeChange.push(callback);
     }

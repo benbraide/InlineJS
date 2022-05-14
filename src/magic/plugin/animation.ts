@@ -1,3 +1,4 @@
+import { ApplyRange, ApplyRangeAndTransform, ApplyTransform, FormatValue } from "../../animation/actors/scene/generic";
 import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
@@ -12,6 +13,10 @@ function CreateAnimationProxy(){
             let validActors = actors.map(actor => ((typeof actor === 'string') ? concept?.GetActorCollection().Find(actor) : actor)).filter(actor => !!actor);
             return (params) => validActors.forEach(actor => callActor(actor!, params));
         },
+        applySceneRange: ApplyRange,
+        applySceneTransform: ApplyTransform,
+        applySceneRangeAndTransform: ApplyRangeAndTransform,
+        formatSceneValue: FormatValue,
     };
 
     return CreateInplaceProxy(BuildGetterProxyOptions({

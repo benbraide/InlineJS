@@ -8,9 +8,14 @@ export interface ITransitionParams{
     componentId: string;
     contextElement: HTMLElement;
     target?: HTMLElement;
-    callback: () => any;
+    callback: (waited: boolean) => any;
     reverse?: boolean;
+    allowRepeats?: boolean;
 }
+
+export const DefaultTransitionDuration = 300;
+export const DefaultTransitionDelay = 0;
+export const DefaultTransitionRepeats = 0;
 
 export function ResolveTransition(info: IAnimationTransition | null, reverse: boolean){
     if (!info || GetGlobal().IsNothing(info) || (info.allowed && info.allowed !== 'both' && (info.allowed !== (reverse ? 'reversed' : 'normal')))){
@@ -20,38 +25,46 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
     let concept = GetGlobal().GetConcept<IAnimationConcept>('animation');
     info.ease = (info.ease || concept?.GetEaseCollection().Find('default') || null);
     info.actor = (info.actor || concept?.GetActorCollection().Find('default') || null);
-    info.duration = (info.duration || 300);
+    info.duration = (info.duration || DefaultTransitionDuration);
+    info.delay = (info.delay || DefaultTransitionDelay);
+    info.repeats = (info.repeats || DefaultTransitionRepeats);
 
     return info;
 }
 
-export function WaitTransition({ componentId, contextElement, target, callback, reverse }: ITransitionParams): (() => void) | null{
+export function WaitTransition({ componentId, contextElement, target, callback, reverse, allowRepeats }: ITransitionParams): (() => void) | null{
     let info = ResolveTransition((FindComponentById(componentId)?.FindElementScope(contextElement)?.GetData('transition') || null), (reverse || false));
     if (!info || !info.actor || !info.ease || typeof info.duration !== 'number' || info.duration <= 0){
-        return ((callback() && false) || null);
+        return ((callback(false) && false) || null);
     }
 
     let callActor = (params: IAnimationActorParams) => ((typeof info?.actor === 'function') ? info?.actor(params) : (info && info.actor?.Handle(params)));
     let callEase = (params: IAnimationEaseParams) => ((typeof info!.ease === 'function') ? info!.ease(params) : ((info && info.ease?.Handle(params)) || 0));
 
-    let aborted = false, abort = () => (aborted = true), steps = 0, getFraction = (fraction: number) => (reverse ? (1 - fraction) : fraction);
-    CreateLoop(info.duration, 0).While(({ elapsed }) => {
-        if (!aborted){
-            if (steps == 0){
-                (target || contextElement).style.transform = '';
-                (target || contextElement).style.transformOrigin = '50% 50%';
-                (target || contextElement).dispatchEvent(new CustomEvent('transition.enter'));
-            }
-            
-            callActor({
-                target: (target || contextElement),
-                stage: ((steps++ == 0) ? 'start' : 'middle'),
-                fraction: callEase({ duration: info!.duration, elapsed, fraction: getFraction(elapsed / info!.duration) }),
-            });
+    let aborted = false, abort = () => (aborted = true), steps = 0, getFraction = (fraction: number) => (reverse ? (1 - fraction) : fraction), onAborted = () => {
+        FindComponentById(componentId)?.FindElementScope(contextElement)?.RemoveUninitCallback(abort);
+        (target || contextElement).dispatchEvent(new CustomEvent('transition.canceled'));
+        return false;
+    };
+
+    FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(abort);
+
+    CreateLoop(info.duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
+        if (aborted){
+            return onAborted();
         }
-        else{
-            (target || contextElement).dispatchEvent(new CustomEvent('transition.canceled'));
+        
+        if (steps == 0){
+            (target || contextElement).style.transform = '';
+            (target || contextElement).style.transformOrigin = '50% 50%';
+            (target || contextElement).dispatchEvent(new CustomEvent('transition.enter'));
         }
+
+        callActor({
+            target: (target || contextElement),
+            stage: ((steps++ == 0) ? 'start' : 'middle'),
+            fraction: callEase({ duration: info!.duration, elapsed, fraction: getFraction(elapsed / info!.duration) }),
+        });
     }).Final(() => {
         if (!aborted){
             callActor({//Final step
@@ -59,11 +72,11 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
                 stage: 'end',
                 fraction: callEase({ duration: info!.duration, elapsed: info!.duration, fraction: getFraction(1) }),
             });
-            JournalTry(callback);
+            JournalTry(() => callback(true));
             (target || contextElement).dispatchEvent(new CustomEvent('transition.leave'));
         }
         else{
-            (target || contextElement).dispatchEvent(new CustomEvent('transition.canceled'));
+            onAborted();
         }
     });
     

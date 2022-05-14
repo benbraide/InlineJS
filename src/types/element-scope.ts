@@ -32,6 +32,7 @@ export interface IElementScope{
     ExecutePostProcessCallbacks(): void;
 
     AddUninitCallback(callback: () => void): void;
+    RemoveUninitCallback(callback: () => void): void;
 
     AddTreeChangeCallback(callback: TreeChangeCallbackType): void;
     RemoveTreeChangeCallback(callback: TreeChangeCallbackType): void;

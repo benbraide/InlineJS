@@ -7,6 +7,30 @@ import { UseEffect } from "../../../reactive/effect";
 import { IAnimationConcept, IAnimationTransition } from "../../../types/animation";
 import { Nothing } from "../../../values/nothing";
 import { BindEvent } from "../../event";
+import { DefaultTransitionDelay, DefaultTransitionDuration, DefaultTransitionRepeats } from "../../transition";
+
+interface INumericHandlerParams{
+    data: IAnimationTransition | Nothing;
+    key: string;
+    defaultValue: number;
+    componentId: string;
+    contextElement: HTMLElement;
+    expression: string;
+}
+
+function HandleNumeric({ data, key, defaultValue, componentId, contextElement, expression }: INumericHandlerParams){
+    if (GetGlobal().IsNothing(data)){
+        return;
+    }
+
+    let evaluate = EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true }), update = (value: any) => {
+        (data as IAnimationTransition)[key] = (((typeof value === 'number') && value) || defaultValue);
+    };
+
+    UseEffect({ componentId, contextElement,
+        callback: () => evaluate(update),
+    });
+}
 
 export const TransitionDirectiveHandler = CreateDirectiveHandlerCallback('transition', ({ componentId, component, contextElement, expression, argKey, argOptions }) => {
     if (BindEvent({ contextElement, expression,
@@ -36,15 +60,6 @@ export const TransitionDirectiveHandler = CreateDirectiveHandlerCallback('transi
             callback: () => evaluate(updateActor),
         });
     }
-    else if (argKey === 'duration' && !GetGlobal().IsNothing(data)){
-        let evaluate = EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true }), updateDuration = (value: any) => {
-            (data as IAnimationTransition).duration = (((typeof value === 'number') && value) || 300);
-        };
-
-        UseEffect({ componentId, contextElement,
-            callback: () => evaluate(updateDuration),
-        });
-    }
     else if (argKey === 'ease' && !GetGlobal().IsNothing(data)){
         let evaluate = EvaluateLater({ componentId, contextElement, expression }), updateEase = (value: any) => {
             if (typeof value === 'string'){
@@ -59,11 +74,19 @@ export const TransitionDirectiveHandler = CreateDirectiveHandlerCallback('transi
             callback: () => evaluate(updateEase),
         });
     }
+    else if (argKey === 'duration'){
+        HandleNumeric({ data, componentId, contextElement, expression, key: argKey, defaultValue: 300 });
+    }
+    else if (argKey === 'repeats' || argKey === 'delay'){
+        HandleNumeric({ data, componentId, contextElement, expression, key: argKey, defaultValue: 0 });
+    }
     else if (!data || GetGlobal().IsNothing(data)){
         (component || FindComponentById(componentId))?.FindElementScope(contextElement)?.SetData('transition', <IAnimationTransition>{
             actor: null,
             ease: null,
-            duration: 300,
+            duration: DefaultTransitionDuration,
+            repeats: DefaultTransitionRepeats,
+            delay: DefaultTransitionDelay,
             allowed: (!argOptions.includes('normal') ? (argOptions.includes('reversed') ? 'reversed' : 'both') : 'normal'),
         });
     }

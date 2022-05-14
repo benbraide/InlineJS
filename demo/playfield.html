@@ -136,6 +136,9 @@
         <template x-else>
             <p x-uninit="console.log('State was changed to true', this)">State is false</p>
         </template>
+    </section>
+
+    <section class="container mx-auto mt-8" x-data>
         <template x-static="customs = { scale: $animation.scale({ axis: 'y', origin: { x: 'center', y: 'end' }, factor: 1 }) }"></template>
         <template x-static="customs.translate = $animation.translate({ axis: 'x', factor: -12, unit: 'rem' })"></template>
         <template x-static="customs.shake = $animation.shake({ displacement: 18, unit: 'px' })"></template>
@@ -150,7 +153,8 @@
             <div class="w-4 h-32 bg-green-700"></div>
             <div class="ml-2 w-32 h-32">
                 <div class="w-full h-full flex flex-row justify-center items-center bg-red-700" x-show="showBlock" x-transition
-                    x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase" x-transition:duration="animationDuration">
+                    x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                    x-transition:duration="animationDuration">
                     <p class="text-white font-semibold">BLOCK</p>
                 </div>
             </div>
@@ -199,10 +203,27 @@
                 </select>
                 <input type="text" placeholder="Animation duration" class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-model.number="animationDuration">
             </div>
+            <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-blue-700 rounded-full overflow-hidden" x-animate="showBlock"
+                x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                x-transition:duration="animationDuration">
+                <p class="text-white font-semibold">ONE</p>
+            </div>
+            <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-gray-700 rounded-full overflow-hidden" x-animate.normal="showBlock"
+                x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                x-transition:duration="animationDuration" x-transition:repeats="-1" x-transition:delay="250">
+                <p class="text-white font-semibold">INFINITE</p>
+            </div>
+            <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-cyan-700 rounded-full overflow-hidden" x-animate:inner.normal="showBlock"
+                x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                x-transition:duration="animationDuration" x-transition:repeats="-1">
+                <span class="w-8 h-8 bg-red-700 rounded-full overflow-hidden"></span>
+                <span class="ml-2 w-8 h-8 bg-red-700 rounded-full overflow-hidden"></span>
+                <span class="ml-2 w-8 h-8 bg-red-700 rounded-full overflow-hidden"></span>
+            </div>
         </div>
         <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">{{ showBlock ? 'Hide' : 'Show' }} block</button>
     </section>
-
+    
     <section class="container mx-auto mt-8" x-data="{list: ['First', 'Second', 'Third', 'Last']}">
         <h2 class="mb-4 text-3xl font-bold">Array Loop</h2>
         <template x-each="list as item" :key="item">

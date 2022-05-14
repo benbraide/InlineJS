@@ -17,7 +17,7 @@ export class Loop<T = any>{
         });
     }
 
-    public While(callback: (value: T) => void){
+    public While(callback: (value: T) => void | boolean){
         this.whileCallbacks_.push(callback);
         return this;
     }

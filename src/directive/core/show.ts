@@ -4,12 +4,12 @@ import { LazyCheck } from "../lazy";
 import { WaitTransition } from "../transition";
 
 export const ShowDirectiveHandler = CreateDirectiveHandlerCallback('show', ({ componentId, contextElement, ...rest }) => {
-    let firstEntry = true, lastValue = false, transitionCancel: (() => void) | null = null, apply = (value: any) => {
+    let checkpoint = 0, firstEntry = true, lastValue = false, transitionCancel: (() => void) | null = null, apply = (value: any) => {
         if (!firstEntry && !!value === lastValue){
             return;
         }
 
-        let checkpoint = 0, show = () => {
+        let show = () => {
             if (contextElement.style.length === 1 && contextElement.style.display === 'none') {
                 contextElement.removeAttribute('style');
             }

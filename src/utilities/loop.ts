@@ -9,7 +9,8 @@ export interface ILoopCallbackInfo{
 
 type CallbackType = (value: ILoopCallbackInfo) => void;
 
-export function CreateLoop(duration?: number, delay = 1000){
+export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0){
+    let activeDelay = delay;
     let startTimestamp = -1, lastTimestamp = -1, aborted = false, passes = 0, pass = (doWhile: CallbackType, doFinal: CallbackType, timestamp: DOMHighResTimeStamp) => {
         if (aborted){
             return;
@@ -21,7 +22,14 @@ export function CreateLoop(duration?: number, delay = 1000){
 
         let elapsed = (timestamp - startTimestamp);
         if (duration && elapsed >= duration){
-            return doFinal({ passes, elapsed, duration });
+            if (!repeats){
+                return doFinal({ passes, elapsed, duration });
+            }
+
+            activeDelay = repeatDelay;
+            lastTimestamp = timestamp;
+            
+            (repeats > 0) && (repeats -= 1);
         }
 
         if (lastTimestamp == -1){
@@ -29,8 +37,9 @@ export function CreateLoop(duration?: number, delay = 1000){
         }
 
         let wait = (timestamp - lastTimestamp);
-        if (wait >= delay){
-            lastTimestamp = (timestamp - (wait - delay));
+        if (wait >= activeDelay){
+            lastTimestamp = (timestamp - (wait - activeDelay));
+            activeDelay = delay;
             doWhile({ passes: ++passes, elapsed, duration, abort: () => (aborted = true) });
         }
 
