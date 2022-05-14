@@ -37,7 +37,12 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
     let aborted = false, abort = () => (aborted = true), steps = 0, getFraction = (fraction: number) => (reverse ? (1 - fraction) : fraction);
     CreateLoop(info.duration, 0).While(({ elapsed }) => {
         if (!aborted){
-            (steps == 0) && (target || contextElement).dispatchEvent(new CustomEvent('transition.enter'));
+            if (steps == 0){
+                (target || contextElement).style.transform = '';
+                (target || contextElement).style.transformOrigin = '50% 50%';
+                (target || contextElement).dispatchEvent(new CustomEvent('transition.enter'));
+            }
+            
             callActor({
                 target: (target || contextElement),
                 stage: ((steps++ == 0) ? 'start' : 'middle'),

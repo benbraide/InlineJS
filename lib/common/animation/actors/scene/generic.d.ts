@@ -1,8 +1,8 @@
 import { AnimationActorCallbackType, IAnimationActor } from "../../../types/animation";
 export declare type SceneAnimatorActorOriginType = 'start' | 'center' | 'end';
 export interface ISceneAnimatorActorOrigin {
-    x: SceneAnimatorActorOriginType;
-    y: SceneAnimatorActorOriginType;
+    x?: SceneAnimatorActorOriginType;
+    y?: SceneAnimatorActorOriginType;
 }
 export interface ISceneAnimationFrame {
     actor: AnimationActorCallbackType | IAnimationActor;
@@ -27,7 +27,7 @@ export interface ISceneAnimationCallbackInfo {
 export interface ISceneAnimationActorInfo extends ISceneAnimationCallbackInfo {
     name: string;
 }
-export declare function CreateSceneAnimationCallback({ frames, origin }: ISceneAnimationCallbackInfo): ({ fraction, target, stage }: {
+export declare function CreateSceneAnimationCallback({ frames, origin: { x, y } }: ISceneAnimationCallbackInfo): ({ fraction, target, stage }: {
     fraction: any;
     target: any;
     stage: any;

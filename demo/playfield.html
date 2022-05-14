@@ -149,7 +149,7 @@
         <div class="mt-4 flex flex-row justify-start items-start">
             <div class="w-4 h-32 bg-green-700"></div>
             <div class="ml-2 w-32 h-32">
-                <div class="w-full h-full flex flex-row justify-center items-center bg-red-700" x-static="showBlock = true" x-show="showBlock" x-transition
+                <div class="w-full h-full flex flex-row justify-center items-center bg-red-700" x-show="showBlock" x-transition
                     x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase" x-transition:duration="animationDuration">
                     <p class="text-white font-semibold">BLOCK</p>
                 </div>
@@ -200,7 +200,7 @@
                 <input type="text" placeholder="Animation duration" class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-model.number="animationDuration">
             </div>
         </div>
-        <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">Toggle show</button>
+        <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">{{ showBlock ? 'Hide' : 'Show' }} block</button>
     </section>
 
     <section class="container mx-auto mt-8" x-data="{list: ['First', 'Second', 'Third', 'Last']}">

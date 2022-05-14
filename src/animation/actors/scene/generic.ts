@@ -4,8 +4,8 @@ import { CreateAnimationActorCallback } from "../callback";
 export type SceneAnimatorActorOriginType = 'start' | 'center' | 'end';
 
 export interface ISceneAnimatorActorOrigin{
-    x: SceneAnimatorActorOriginType;
-    y: SceneAnimatorActorOriginType;
+    x?: SceneAnimatorActorOriginType;
+    y?: SceneAnimatorActorOriginType;
 }
 
 export interface ISceneAnimationFrame{
@@ -37,7 +37,7 @@ export interface ISceneAnimationActorInfo extends ISceneAnimationCallbackInfo{
     name: string;
 }
 
-export function CreateSceneAnimationCallback({ frames, origin }: ISceneAnimationCallbackInfo){
+export function CreateSceneAnimationCallback({ frames, origin: { x = 'center', y = 'center' } = {} }: ISceneAnimationCallbackInfo){
     let flatFrames = new Array<ISceneAnimationFrameFlat>();
     frames.forEach(({ actor, checkpoint }) => (Array.isArray(checkpoint) ? flatFrames.push(...checkpoint.map(c => ({ actor, checkpoint: c }))) : flatFrames.push({ actor, checkpoint  })))
     
@@ -47,7 +47,7 @@ export function CreateSceneAnimationCallback({ frames, origin }: ISceneAnimation
     let optimizedFrames = flatFrames.map(({ actor, checkpoint }, index) => <ISceneAnimationFrameOptimized>{ actor, range: { from: checkpoint, to: computeFrameExtent(index + 1) } });
     
     let translateOrigin = (value: SceneAnimatorActorOriginType) => ((value !== 'center') ? ((value === 'end') ? '100%' : '0%') : '50%');
-    let translatedOrigin = (origin ? `${translateOrigin(origin.x)} ${translateOrigin(origin.y)}` : '');
+    let translatedOrigin = `${translateOrigin(x)} ${translateOrigin(y)}`;
     
     let checkpointIsInFrame = (frame: ISceneAnimationFrameOptimized, checkpoint: number) => (frame.range.from <= checkpoint && (frame.range.to === null || checkpoint < frame.range.to));
     let currentFrame: ISceneAnimationFrameOptimized | null = null, findFrame = (checkpoint: number) => optimizedFrames.find(frame => checkpointIsInFrame(frame, checkpoint));
@@ -65,7 +65,8 @@ export function CreateSceneAnimationCallback({ frames, origin }: ISceneAnimation
         }
 
         if (currentFrame){
-            callActor(currentFrame.actor, { fraction: ((checkpoint - currentFrame.range.from) / (currentFrame.range.to || 100)), target, stage });
+            let rangeDelta = ((currentFrame.range.to || 100) - currentFrame.range.from);
+            callActor(currentFrame.actor, { fraction: ((rangeDelta == 0) ? 0 : ((checkpoint - currentFrame.range.from) / rangeDelta)), target, stage });
         }
     };
 }
