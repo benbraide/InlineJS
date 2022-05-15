@@ -17,7 +17,7 @@ export interface IConfig{
 
     AddKeyEventMap(key: string, target: string): void;
     RemoveKeyEventMap(key: string): void;
-    MapKeyEvent(key: string): string;
+    MapKeyEvent(key: string): string | Array<string>;
 
     AddBooleanAttribute(name: string): void;
     RemoveBooleanAttribute(name: string): void;

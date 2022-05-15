@@ -13,7 +13,7 @@ export interface IConfig {
     GetDirectiveName(name: string, addDataPrefix?: boolean): string;
     AddKeyEventMap(key: string, target: string): void;
     RemoveKeyEventMap(key: string): void;
-    MapKeyEvent(key: string): string;
+    MapKeyEvent(key: string): string | Array<string>;
     AddBooleanAttribute(name: string): void;
     RemoveBooleanAttribute(name: string): void;
     IsBooleanAttribute(name: string): boolean;

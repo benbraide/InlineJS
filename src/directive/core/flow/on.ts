@@ -36,7 +36,7 @@ function GetOptions(argKey: string, argOptions: Array<string>){
         alt: false,
         ctrl: false,
         shift: false,
-        list: new Array<string>(),
+        list: new Array<string | Array<string>>(),
     } : null);
 
     ResolveOptions({
@@ -45,7 +45,14 @@ function GetOptions(argKey: string, argOptions: Array<string>){
         defaultNumber: 250,
         unknownCallback: ({ option }) => {
             if (keyOptions && option){
-                keyOptions.list.push(GetGlobal().GetConfig().MapKeyEvent(ToCamelCase(option).toLowerCase()));
+                let parts = ((option.length > 1) ? option.split('-') : []);
+                if (parts.length == 2 && parts[0].length == 1 && parts[1].length == 1){//E.g. A-Z
+                    let fromCode = parts[0].charCodeAt(0), toCode = parts[1].charCodeAt(0);
+                    keyOptions.list.push(Array.from({ length: (toCode - fromCode) }).map((i, index) => String.fromCharCode(index + fromCode)));
+                }
+                else{
+                    keyOptions.list.push(GetGlobal().GetConfig().MapKeyEvent(ToCamelCase(option).toLowerCase()));
+                }
             }
         },
     });
@@ -60,8 +67,11 @@ export const OnDirectiveHandler = CreateDirectiveHandlerCallback('on', ({ compon
             return;//Event is debounced OR event target is not context element OR specified key option is not pressed
         }
 
-        if (keyOptions && keyOptions.list.length > 0 && !keyOptions.list.includes((e as KeyboardEvent).key.toLowerCase())){
-            return;//Key pressed doesn't match any specified
+        if (keyOptions && keyOptions.list.length > 0){
+            let key = (e as KeyboardEvent).key.toLowerCase();
+            if (keyOptions.list.findIndex(item => (Array.isArray(item) ? item.includes(key) : (item === key))) == -1){
+                return;//Key pressed doesn't match any specified
+            }
         }
 
         if (options.debounce >= 0){//Debounce for specified duration

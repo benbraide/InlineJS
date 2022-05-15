@@ -38,10 +38,9 @@ export interface ISceneAnimationActorInfo extends ISceneAnimationCallbackInfo{
 }
 
 export function CreateSceneAnimationCallback({ frames, origin: { x = 'center', y = 'center' } = {} }: ISceneAnimationCallbackInfo){
-    let flatFrames = new Array<ISceneAnimationFrameFlat>();
-    frames.forEach(({ actor, checkpoint }) => (Array.isArray(checkpoint) ? flatFrames.push(...checkpoint.map(c => ({ actor, checkpoint: c }))) : flatFrames.push({ actor, checkpoint  })))
-    
-    flatFrames = flatFrames.sort((first, second) => ((first.checkpoint <= second.checkpoint) ? ((first.checkpoint < second.checkpoint) ? -1 : 0) : 1));
+    let flatFrames = frames.reduce((prev, { actor, checkpoint }) => {
+        return (((Array.isArray(checkpoint) ? prev.push(...checkpoint.map(c => ({ actor, checkpoint: c }))) : prev.push({ actor, checkpoint  })) && false) || prev);
+    }, new Array<ISceneAnimationFrameFlat>()).sort((first, second) => ((first.checkpoint <= second.checkpoint) ? ((first.checkpoint < second.checkpoint) ? -1 : 0) : 1));
 
     let computeFrameExtent = (index: number) => ((index < flatFrames.length) ? flatFrames[index].checkpoint : null);
     let optimizedFrames = flatFrames.map(({ actor, checkpoint }, index) => <ISceneAnimationFrameOptimized>{ actor, range: { from: checkpoint, to: computeFrameExtent(index + 1) } });

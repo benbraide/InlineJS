@@ -7,7 +7,7 @@ export class Config implements IConfig{
     private directiveRegex_: RegExp;
     private directiveNameBuilder_: DirectiveNameBuilderType;
 
-    private keyMap_: Record<string, string> = {
+    private keyMap_: Record<string, string | Array<string>> = {
         'return': 'enter',
         ctrl: 'control',
         esc: 'escape',
@@ -19,6 +19,8 @@ export class Config implements IConfig{
         minus: '-',
         star: '*',
         slash: '/',
+        alpha: Array.from({ length: 26 }).map((i, index) => String.fromCharCode(index + 97)),
+        digits: Array.from({ length: 10 }).map((i, index) => index.toString()),
     };
 
     private booleanAttributes_ = new Array<string>(

@@ -19,7 +19,7 @@
         <template x-static="winFate = () => ((word.findIndex(c => !picks.includes(c)) == -1) ? 'win' : null)"></template>
         <template x-static="lossFate = () => ((wrongPicks >= 6) ? 'loss' : null)"></template>
         <template x-effect="wins += ((fate === 'win') ? 1 : 0); losses += ((fate === 'loss') ? 1 : 0)"></template>
-        <template x-on:keydown.window="if (playing && !fate && $event.key.match(/[a-z]/i) && !picks.includes($event.key)){ insertChar($event.key) }"></template>
+        <template x-on:keydown.alpha.window="if (playing && !fate && !picks.includes($event.key)){ insertChar($event.key) }"></template>
         <template x-effect="if ($log.and(playing, (seconds == 0))){ ++checkpoint; fate = 'loss'; wrongPicks = 6 }"></template>
         <template x-effect="if (fate){ window.clearInterval(intId); ++checkpoint }"></template>
 

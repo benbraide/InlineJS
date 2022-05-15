@@ -12,9 +12,9 @@
         }
     </style>
 </head>
-<body>
+<body class="pt-4">
     <section class="w-full flex flex-row justify-start items-start">
-        <x-canvas width="500" height="500" x-post="this.Render()" x-tick.delay.5.steps.250 x-data="{ circleColor: 'magenta' }">
+        <x-canvas class="ml-8 w-[500px] h-[500px] border" width="500" height="500" x-post="this.Render()" x-tick.delay.5.steps.250 x-data="{ circleColor: 'magenta' }">
             <x-canvas-rect :x="10 + $tick.steps * 1.5" y="10" width="10" height="10" color="red"></x-canvas-rect>
             <x-canvas-round-rect x="10" y="50" width="100" height="40" radius="5" color="blue" mode="stroke" x-on:click="console.log('Clicked round rect')"></x-canvas-round-rect>
             <x-canvas-path :x="10 + $tick.steps" y="100" color="green" x-on:click="console.log('Clicked green path')">
@@ -25,13 +25,16 @@
                 <x-canvas-circle x="0" y="0" radius="50"></x-canvas-circle>
             </x-canvas-path>
         </x-canvas>
-        <x-canvas class="ml-8 h-0 border" width="500" height="500" x-post="this.Render()" x-data="{ x: 10, y: 10, dx: 1, dy: 0, speed: 1 }"
-            x-tick.delay.5="x += (dx * speed); y += (dy * speed)" x-on:keydown.a.arrow-left.window="if (dx == 0){ dx = -1; dy = 0 }"
+        <x-canvas class="ml-8 w-[500px] h-[500px] border" width="500" height="500" x-post="this.Render()" x-data="{ x: 10, y: 10, dx: 1, dy: 0, leap: 2, speed: 1 }"
+            x-tick.delay.100="x += (dx * leap); y += (dy * leap)" x-on:keydown.a.arrow-left.window="if (dx == 0){ dx = -1; dy = 0 }"
             x-on:keydown.d.arrow-right.window="if (dx == 0){ dx = 1; dy = 0 }" x-on:keydown.w.arrow-up.window="if (dy == 0){ dx = 0; dy = -1 }"
-            x-on:keydown.s.arrow-down.window="if (dy == 0){ dx = 0; dy = 1 }">
-            <template x-effect="if ($log.and((dx == -1), $rel.lt(x, -5))){ x = 500 }else if ($log.and((dx == 1), $rel.gt(x, 500))){ x = 0 }"></template>
-            <template x-effect="if ($log.and((dy == -1), $rel.lt(y, -5))){ y = 500 }else if ($log.and((dy == 1), $rel.gt(y, 500))){ y = 0 }"></template>
-            <x-canvas-rect :position="`${x} ${y}`" width="10" height="10" color="red"></x-canvas-rect>
+            x-on:keydown.s.arrow-down.window="if (dy == 0){ dx = 0; dy = 1 }" x-on:keydown.minus.window="speed += ((speed == 1) ? 0 : -1)"
+            x-on:keydown.plus.window="speed += 1" x-effect="$tick.delay = (100 / speed); $tick.reset()">
+            <template x-effect="if ($log.and((dx == -1), $rel.lt(x, 0))){ x = 500 }else if ($log.and((dx == 1), $rel.gt(x, 500))){ x = 0 }"></template>
+            <template x-effect="if ($log.and((dy == -1), $rel.lt(y, 0))){ y = 500 }else if ($log.and((dy == 1), $rel.gt(y, 500))){ y = 0 }"></template>
+            <x-canvas-path :position="`${x} ${y}`" color="red">
+                <x-canvas-circle x="0" y="0" radius="5"></x-canvas-circle>
+            </x-canvas-path>
         </x-canvas>
     </section>
 

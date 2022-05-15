@@ -569,8 +569,8 @@ Ensure the default browser behavior of the `hidden` attribute.
 .hidden {
   display: none;
 }
-.h-0 {
-  height: 0px;
+.h-\[500px\] {
+  height: 500px;
 }
 .h-32 {
   height: 8rem;
@@ -607,6 +607,9 @@ Ensure the default browser behavior of the `hidden` attribute.
 }
 .w-full {
   width: 100%;
+}
+.w-\[500px\] {
+  width: 500px;
 }
 .w-4 {
   width: 1rem;
@@ -778,6 +781,9 @@ Ensure the default browser behavior of the `hidden` attribute.
 .px-8 {
   padding-left: 2rem;
   padding-right: 2rem;
+}
+.pt-4 {
+  padding-top: 1rem;
 }
 .pl-8 {
   padding-left: 2rem;
