@@ -9,8 +9,8 @@ export interface IScaleAnimatorActorOrigin{
 }
 
 export interface IScaleAnimationCallbackInfo{
-    axis: ScaleAnimatorActorAxisType;
-    origin: IScaleAnimatorActorOrigin;
+    axis?: ScaleAnimatorActorAxisType;
+    origin?: IScaleAnimatorActorOrigin;
     factor?: number;
 }
 
@@ -18,9 +18,9 @@ export interface IScaleAnimatorActorInfo extends IScaleAnimationCallbackInfo{
     name: string;
 }
 
-export function CreateScaleAnimationCallback({ axis, origin, factor }: IScaleAnimationCallbackInfo){
+export function CreateScaleAnimationCallback({ axis, origin, factor }: IScaleAnimationCallbackInfo = {}){
     let translateOrigin = (value: ScaleAnimatorActorOriginType) => ((value !== 'center') ? ((value === 'end') ? '100%' : '0%') : '50%');
-    let translatedOrigin = `${translateOrigin(origin.x)} ${translateOrigin(origin.y)}`, validFactor = ((factor && factor > 0) ? factor : 1);
+    let translatedOrigin = `${translateOrigin(origin?.x || 'center')} ${translateOrigin(origin?.y || 'center')}`, validFactor = ((factor && factor > 0) ? factor : 1);
 
     return ({ fraction, target, stage }) => {
         if (stage === 'start'){

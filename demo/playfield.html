@@ -140,6 +140,8 @@
 
     <section class="container mx-auto mt-8" x-data>
         <template x-static="customs = { scale: $animation.scale({ axis: 'y', origin: { x: 'center', y: 'end' }, factor: 1 }) }"></template>
+        <template x-static="customs.zoomOut = $animation.scale({ factor: 1.26 })"></template>
+        <template x-static="customs.zoomIn = $animation.scale({ factor: 0.5 })"></template>
         <template x-static="customs.translate = $animation.translate({ axis: 'x', factor: -12, unit: 'rem' })"></template>
         <template x-static="customs.shake = $animation.shake({ displacement: 18, unit: 'px' })"></template>
         <template x-static="customs.vibrate = $animation.vibrate({ displacement: 9, unit: 'deg' })"></template>
@@ -166,6 +168,8 @@
                     <option value="width">Width</option>
                     <option value="height">Height</option>
                     <option value="zoom">Zoom</option>
+                    <option value="zoomIn">Zoom In</option>
+                    <option value="zoomOut">Zoom Out</option>
                     <option value="slide.down">Slide down</option>
                     <option value="slide.left">Slide left</option>
                     <option value="slide.right">Slide right</option>
@@ -208,17 +212,29 @@
                 x-transition:duration="animationDuration">
                 <p class="text-white font-semibold">ONE</p>
             </div>
-            <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-gray-700 rounded-full overflow-hidden" x-animate.normal="showBlock"
+            <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-gray-700 rounded-full overflow-hidden" x-animate.normal.alternate="showBlock"
                 x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
-                x-transition:duration="animationDuration" x-transition:repeats="-1" x-transition:delay="250">
+                x-transition:duration="animationDuration" x-transition:repeats="-1" x-transition:delay="50">
                 <p class="text-white font-semibold">INFINITE</p>
             </div>
             <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-cyan-700 rounded-full overflow-hidden" x-animate:inner.normal="showBlock"
                 x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
                 x-transition:duration="animationDuration" x-transition:repeats="-1">
-                <span class="w-8 h-8 bg-red-700 rounded-full overflow-hidden"></span>
-                <span class="ml-2 w-8 h-8 bg-red-700 rounded-full overflow-hidden"></span>
-                <span class="ml-2 w-8 h-8 bg-red-700 rounded-full overflow-hidden"></span>
+                <span class="w-6 h-6 bg-red-700 rounded-full overflow-hidden"></span>
+                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden"></span>
+                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden"></span>
+            </div>
+            <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-cyan-700 rounded-full overflow-hidden" x-data="{ count: 0 }">
+                <template x-effect="if (!showBlock){ $scope.data.count = 0 }"></template>
+                <span class="w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="showBlock"
+                    x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.data.count += (($scope.data.count == 0) ? 1 : 0)"></span>
+                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="$log.and(showBlock, $scope.data.count > 0)"
+                    x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.data.count += (($scope.data.count == 1) ? 1 : 0)"></span>
+                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="$log.and(showBlock, $scope.data.count > 1)"
+                    x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
+                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.data.count += (($scope.data.count == 2) ? 1 : 0)"></span>
             </div>
         </div>
         <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">{{ showBlock ? 'Hide' : 'Show' }} block</button>
@@ -509,7 +525,6 @@
             console.log(component, componentId, contextElement, rest);
         }
     </script>
-    <script src="../dist/inlinejs-animation.js"></script>
     <script src="../dist/inlinejs-canvas.js"></script>
     <script src="../dist/inlinejs-swal.js"></script>
     <script src="../dist/inlinejs-plugins.js"></script>

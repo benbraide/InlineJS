@@ -9,6 +9,7 @@ export interface ITransitionParams{
     contextElement: HTMLElement;
     target?: HTMLElement;
     callback: (waited: boolean) => any;
+    onAbort?: () => void;
     reverse?: boolean;
     allowRepeats?: boolean;
 }
@@ -32,7 +33,7 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
     return info;
 }
 
-export function WaitTransition({ componentId, contextElement, target, callback, reverse, allowRepeats }: ITransitionParams): (() => void) | null{
+export function WaitTransition({ componentId, contextElement, target, callback, onAbort, reverse, allowRepeats }: ITransitionParams): (() => void) | null{
     let info = ResolveTransition((FindComponentById(componentId)?.FindElementScope(contextElement)?.GetData('transition') || null), (reverse || false));
     if (!info || !info.actor || !info.ease || typeof info.duration !== 'number' || info.duration <= 0){
         return ((callback(false) && false) || null);
@@ -44,6 +45,7 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
     let aborted = false, abort = () => (aborted = true), steps = 0, getFraction = (fraction: number) => (reverse ? (1 - fraction) : fraction), onAborted = () => {
         FindComponentById(componentId)?.FindElementScope(contextElement)?.RemoveUninitCallback(abort);
         (target || contextElement).dispatchEvent(new CustomEvent('transition.canceled'));
+        onAbort && onAbort();
         return false;
     };
 
@@ -72,8 +74,9 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
                 stage: 'end',
                 fraction: callEase({ duration: info!.duration, elapsed: info!.duration, fraction: getFraction(1) }),
             });
-            JournalTry(() => callback(true));
+            
             (target || contextElement).dispatchEvent(new CustomEvent('transition.leave'));
+            JournalTry(() => callback(true));
         }
         else{
             onAborted();

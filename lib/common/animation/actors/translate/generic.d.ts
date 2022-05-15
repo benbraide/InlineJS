@@ -1,6 +1,6 @@
 export declare type TranslateAnimationActorAxisType = 'x' | 'y' | 'both';
 export interface ITranslateAnimationCallbackInfo {
-    axis: TranslateAnimationActorAxisType;
+    axis?: TranslateAnimationActorAxisType;
     factor?: number;
     unit?: string;
 }
@@ -9,7 +9,7 @@ export interface ITranslateAnimationActorInfo extends ITranslateAnimationCallbac
 }
 export declare const DefaultTranslateAnimationActorFactor = 9999;
 export declare const DefaultTranslateAnimationActorUnit = "px";
-export declare function CreateTranslateAnimationCallback({ axis, factor, unit }: ITranslateAnimationCallbackInfo): ({ fraction, target }: {
+export declare function CreateTranslateAnimationCallback({ axis, factor, unit }?: ITranslateAnimationCallbackInfo): ({ fraction, target }: {
     fraction: any;
     target: any;
 }) => void;

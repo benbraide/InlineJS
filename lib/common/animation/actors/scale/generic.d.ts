@@ -5,14 +5,14 @@ export interface IScaleAnimatorActorOrigin {
     y: ScaleAnimatorActorOriginType;
 }
 export interface IScaleAnimationCallbackInfo {
-    axis: ScaleAnimatorActorAxisType;
-    origin: IScaleAnimatorActorOrigin;
+    axis?: ScaleAnimatorActorAxisType;
+    origin?: IScaleAnimatorActorOrigin;
     factor?: number;
 }
 export interface IScaleAnimatorActorInfo extends IScaleAnimationCallbackInfo {
     name: string;
 }
-export declare function CreateScaleAnimationCallback({ axis, origin, factor }: IScaleAnimationCallbackInfo): ({ fraction, target, stage }: {
+export declare function CreateScaleAnimationCallback({ axis, origin, factor }?: IScaleAnimationCallbackInfo): ({ fraction, target, stage }: {
     fraction: any;
     target: any;
     stage: any;

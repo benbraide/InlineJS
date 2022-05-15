@@ -5,7 +5,7 @@ export interface IRotateAnimatorActorOrigin {
     y: RotateAnimatorActorOriginType;
 }
 export interface IRotateAnimationCallbackInfo {
-    axis: RotateAnimationActorAxisType;
+    axis?: RotateAnimationActorAxisType;
     origin?: IRotateAnimatorActorOrigin;
     factor?: number;
     unit?: string;
@@ -15,7 +15,7 @@ export interface IRotateAnimationActorInfo extends IRotateAnimationCallbackInfo 
 }
 export declare const DefaultRotateAnimationActorFactor = 360;
 export declare const DefaultRotateAnimationActorUnit = "deg";
-export declare function CreateRotateAnimationCallback({ axis, origin, factor, unit }: IRotateAnimationCallbackInfo): ({ fraction, target, stage }: {
+export declare function CreateRotateAnimationCallback({ axis, origin, factor, unit }?: IRotateAnimationCallbackInfo): ({ fraction, target, stage }: {
     fraction: any;
     target: any;
     stage: any;

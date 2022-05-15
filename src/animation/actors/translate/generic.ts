@@ -3,7 +3,7 @@ import { CreateAnimationActorCallback } from "../callback";
 export type TranslateAnimationActorAxisType = 'x' | 'y' | 'both';
 
 export interface ITranslateAnimationCallbackInfo{
-    axis: TranslateAnimationActorAxisType;
+    axis?: TranslateAnimationActorAxisType;
     factor?: number;
     unit?: string;
 }
@@ -15,7 +15,7 @@ export interface ITranslateAnimationActorInfo extends ITranslateAnimationCallbac
 export const DefaultTranslateAnimationActorFactor = 9999;
 export const DefaultTranslateAnimationActorUnit = 'px';
 
-export function CreateTranslateAnimationCallback({ axis, factor, unit }: ITranslateAnimationCallbackInfo){
+export function CreateTranslateAnimationCallback({ axis, factor, unit }: ITranslateAnimationCallbackInfo = {}){
     let validFactor = (factor ? factor : DefaultTranslateAnimationActorFactor);
     let validUnit = (unit ? unit : DefaultTranslateAnimationActorUnit);
 

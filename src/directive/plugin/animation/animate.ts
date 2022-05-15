@@ -9,8 +9,14 @@ import { DefaultTransitionDelay, DefaultTransitionDuration, DefaultTransitionRep
 export const AnimateDirectiveHandler = CreateDirectiveHandlerCallback('animate', ({ componentId, contextElement, argKey, argOptions, ...rest }) => {
     let options = {
         alternate: argOptions.includes('alternate'),
+        normal: argOptions.includes('normal'),
         inner: (argKey === 'inner'),
     };
+
+    argOptions = argOptions.filter(opt => (opt !== 'normal'));
+    let traverseTargets = (callback: (target: HTMLElement) => void) => (options.inner ? Array.from(contextElement.children) : [contextElement]).forEach((target) => {
+        callback(<HTMLElement>target);
+    });
 
     let checkpoint = 0, bind = () => {
         let waitTransition = (reverse: boolean, target?: HTMLElement, callback?: () => void) => {
@@ -23,7 +29,7 @@ export const AnimateDirectiveHandler = CreateDirectiveHandlerCallback('animate',
                             callback && callback();
                         }
                         else{
-                            (options.inner ? Array.from(contextElement.children) : [contextElement]).forEach(child => (child as HTMLElement).style.transform = '');
+                            traverseTargets(child => (child as HTMLElement).style.removeProperty('transform'));
                         }
                     }
                 },
@@ -55,7 +61,12 @@ export const AnimateDirectiveHandler = CreateDirectiveHandlerCallback('animate',
             if (info && info.repeats){
                 let myCheckpoint = ++checkpoint;
                 (info.repeats > 0) && (info.repeats -= 1);
-                setTimeout(() => ((myCheckpoint == checkpoint) && begin(reverse)), (info.delay || DefaultTransitionDelay));
+                setTimeout(() => {
+                    if (myCheckpoint == checkpoint){
+                        contextElement.dispatchEvent(new CustomEvent('animate.repeat'));
+                        begin(reverse);
+                    }
+                }, (info.delay || DefaultTransitionDelay));
             }
         };
         
@@ -64,9 +75,18 @@ export const AnimateDirectiveHandler = CreateDirectiveHandlerCallback('animate',
                 return;
             }
     
-            transitionCancel && transitionCancel();
-            begin(!value);
-    
+            if (transitionCancel){
+                transitionCancel();
+                (options.inner ? Array.from(contextElement.children) : [contextElement]).forEach(child => {
+                    (child as HTMLElement).style.removeProperty('transform');
+                    (child as HTMLElement).style.removeProperty('opacity');
+                });
+            }
+
+            if (!options.normal || !!value){
+                begin(!value);
+            }
+            
             lastValue = !!value;
         };
     
