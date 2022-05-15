@@ -6,7 +6,7 @@ import { InitJITProxy } from "../../proxy/jit";
 
 export const ClassMagicHandler = CreateMagicHandlerCallback('class', ({ componentId, component, contextElement }) => {
     let [elementKey, proxy, scope] = InitJITProxy('class', (component || FindComponentById(componentId)), contextElement);
-    if (!elementKey || proxy){//Invalid context element OR proxy already exists
+    if (proxy){//Invalid context element OR proxy already exists
         return proxy;
     }
 
@@ -18,7 +18,7 @@ export const ClassMagicHandler = CreateMagicHandlerCallback('class', ({ componen
         contains: (...values: string[]) => (values.findIndex(value => !contextElement.classList.contains(value)) == -1),
     };
     
-    return (scope![elementKey] = CreateReadonlyProxy(methods));
+    return (elementKey ? (scope![elementKey] = CreateReadonlyProxy(methods)) : CreateReadonlyProxy(methods));
 });
 
 export function ClassMagicHandlerCompact(){

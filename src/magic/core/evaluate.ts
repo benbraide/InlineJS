@@ -7,7 +7,7 @@ export const FunctionMagicHandler = CreateMagicHandlerCallback('func', ({ compon
 });
 
 export const EvaluateMagicHandler = CreateMagicHandlerCallback('eval', ({ componentId, contextElement }) => {
-    return (expression: string) => EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true })();
+    return (expression: string, callback?: (value: any) => void) => EvaluateLater({ componentId, contextElement, expression, disableFunctionCall: true })(callback);
 });
 
 export function EvaluateMagicHandlerCompact(){

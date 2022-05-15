@@ -99,12 +99,12 @@ describe('x-data directive', () => {
         document.body.innerHTML = `
             <div x-data="{ foo: 'bar' }">
               <span x-text="foo"></span>
-              <span x-text="$scope.data.foo"></span>
+              <span x-text="$scope.foo"></span>
               <div x-data="{ foo: 'baz', other: 'value' }">
                 <span x-text="foo"></span>
-                <span x-text="$scope.data.foo"></span>
-                <span x-text="$scope.data.other"></span>
-                <span x-text="$scope.parent.data.foo"></span>
+                <span x-text="$scope.foo"></span>
+                <span x-text="$scope.other"></span>
+                <span x-text="$parent.foo"></span>
               </div>
             </div>
         `;
@@ -130,8 +130,8 @@ describe('x-data directive', () => {
                 <span x-text="foo"></span>
                 <div x-data="{ foo: 'baz' }">
                     <span x-text="foo"></span>
-                    <span x-text="$scope.data.foo"></span>
-                    <button x-on:click="$scope.data.foo = 'changed'"></button>
+                    <span x-text="$scope.foo"></span>
+                    <button x-on:click="$scope.foo = 'changed'"></button>
                 </div>
             </div>
         `;

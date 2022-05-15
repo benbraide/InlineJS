@@ -7,7 +7,7 @@ import { EvaluateLater } from "../../../evaluator/evaluate-later";
 import { GetGlobal } from "../../../global/get";
 import { JournalError } from "../../../journal/error";
 import { JournalTry } from "../../../journal/try";
-import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../../proxy/create";
+import { BuildProxyOptions, CreateInplaceProxy } from "../../../proxy/create";
 import { ReactiveStateType } from "../../../types/config";
 import { ContextKeys } from "../../../utilities/context-keys";
 import { GetTarget } from "../../../utilities/get-target";
@@ -59,36 +59,49 @@ export const DataDirectiveHandler = CreateDirectiveHandlerCallback('data', ({ co
             elementScope.AddPostProcessCallback(() => PopCurrentScope(componentId));
             
             target = {};
-            proxy[scopeId] = target;
+            proxy[scopeId] = target;//FindComponentById(componentId)?.FindScopeById(scopeId)?.GetName()
 
-            let methods = {
-                name: () => FindComponentById(componentId)?.FindScopeById(scopeId)?.GetName(),
-                parent: () => {
-                    let component = FindComponentById(componentId), parent = component?.FindElementLocalValue((component?.FindAncestor(contextElement) || ''), key, true);
-                    return ((parent && !GetGlobal().IsNothing(parent)) ? parent : null);
+            let local = CreateInplaceProxy(BuildProxyOptions({
+                getter: (prop) => {
+                    let scope = FindComponentById(componentId)?.GetRootProxy().GetNative()[scopeId];
+                    return ((scope && prop) ? scope[prop] : undefined);
                 },
-                data: () => (FindComponentById(componentId)?.GetRootProxy().GetNative()[scopeId] || {}),
-            }, local = CreateInplaceProxy(BuildGetterProxyOptions({
-                getter: (prop) => ((prop && methods.hasOwnProperty(prop)) ? methods[prop]() : null),
-                lookup: [...Object.keys(methods)],
+                setter: (prop, value) => {
+                    let scope = FindComponentById(componentId)?.GetRootProxy().GetNative()[scopeId];
+                    return ((scope && prop) ? (scope[prop] = value) : true);
+                },
+                lookup: () => true,
+            }));
+
+            let parentLocal = CreateInplaceProxy(BuildProxyOptions({
+                getter: (prop) => {
+                    let component = FindComponentById(componentId), parent = component?.FindElementLocalValue((component?.FindAncestor(contextElement) || ''), key, true);
+                    return ((parent && !GetGlobal().IsNothing(parent) && prop) ? parent[prop] : undefined);
+                },
+                setter: (prop, value) => {
+                    let component = FindComponentById(componentId), parent = component?.FindElementLocalValue((component?.FindAncestor(contextElement) || ''), key, true);
+                    return ((parent && !GetGlobal().IsNothing(parent) && prop) ? (parent[prop] = value) : true);
+                },
+                lookup: () => true,
             }));
 
             elementScope.SetLocal(key, local);
+            elementScope.SetLocal('$parent', parentLocal);
+            config?.name && elementScope.SetLocal('$name', config.name);
             elementScope.AddUninitCallback(() => FindComponentById(componentId)?.RemoveScope(scopeId));
         }
         else{//Root scope
             target = proxyTarget;
-
-            let name = (config?.name || ''), methods = {
-                name: () => name,
-                parent: () => null,
-                data: () => proxy,
-            }, local = CreateInplaceProxy(BuildGetterProxyOptions({
-                getter: (prop) => ((prop && methods.hasOwnProperty(prop)) ? methods[prop]() : null),
-                lookup: [...Object.keys(methods)],
-            }));
-            
-            elementScope.SetLocal(key, local);
+            elementScope.SetLocal('$parent', null);
+            elementScope.SetLocal('$name', (config?.name || ''));
+            elementScope.SetLocal('$componentName', (config?.name || ''));
+            elementScope.SetLocal(key, CreateInplaceProxy(BuildProxyOptions({
+                getter: (prop) => (prop ? proxy[prop] : undefined),
+                setter: (prop, value) => {
+                    return (prop ? (proxy[prop] = value) : true);
+                },
+                lookup: () => true,
+            })));
             
             if (config?.reactiveState){
                 component.SetReactiveState(config.reactiveState);

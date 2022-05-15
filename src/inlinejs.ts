@@ -36,17 +36,13 @@ import { LocalsMagicHandlerCompact } from './magic/core/data/locals';
 import { RefsMagicHandlerCompact } from './magic/core/data/refs';
 import { ScopeMagicHandlerCompact } from './magic/core/data/scope';
 import { ProxyMagicHandlerCompact } from './magic/core/data/proxy';
+import { NativeMagicHandlerCompact } from './magic/core/data/native';
 import { WaitMagicHandlerCompact } from './magic/core/data/wait';
 import { StreamMagicHandlerCompact } from './magic/core/data/stream';
 
 import { StaticMagicHandlerCompact } from './magic/core/reactive/static';
 import { UnoptimizedMagicHandlerCompact } from './magic/core/reactive/unoptimized';
 import { WatchMagicHandlerCompact } from './magic/core/reactive/watch';
-
-import { RootMagicHandlerCompact } from './magic/core/dom/root';
-import { ParentMagicHandlerCompact } from './magic/core/dom/parent';
-import { AncestorMagicHandlerCompact } from './magic/core/dom/ancestor';
-import { FormMagicHandlerCompact } from './magic/core/dom/form';
 
 import { ArithmeticMagicHandlerCompact } from './magic/core/operations/arithmetic';
 import { RelationalMagicHandlerCompact } from './magic/core/operations/relational';
@@ -56,6 +52,7 @@ import { NextTickMagicHandlerCompact } from './magic/core/nexttick';
 import { PickMagicHandlerCompact } from './magic/core/pick';
 import { ClassMagicHandlerCompact } from './magic/core/class';
 import { EvaluateMagicHandlerCompact } from './magic/core/evaluate';
+import { DomMagicHandlerCompact } from './magic/core/dom';
 import { GetGlobal } from './global/get';
 
 GetOrCreateGlobal();
@@ -107,17 +104,13 @@ LocalsMagicHandlerCompact();
 RefsMagicHandlerCompact();
 ScopeMagicHandlerCompact();
 ProxyMagicHandlerCompact();
+NativeMagicHandlerCompact();
 WaitMagicHandlerCompact();
 StreamMagicHandlerCompact();
 
 StaticMagicHandlerCompact();
 UnoptimizedMagicHandlerCompact();
 WatchMagicHandlerCompact();
-
-RootMagicHandlerCompact();
-ParentMagicHandlerCompact();
-AncestorMagicHandlerCompact();
-FormMagicHandlerCompact();
 
 ArithmeticMagicHandlerCompact();
 RelationalMagicHandlerCompact();
@@ -127,3 +120,4 @@ NextTickMagicHandlerCompact();
 PickMagicHandlerCompact();
 ClassMagicHandlerCompact();
 EvaluateMagicHandlerCompact();
+DomMagicHandlerCompact();

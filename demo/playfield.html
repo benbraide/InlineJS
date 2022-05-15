@@ -228,16 +228,16 @@
                 <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden"></span>
             </div>
             <div class="ml-4 w-32 h-32 flex flex-row justify-center items-center bg-cyan-700 rounded-full overflow-hidden" x-data="{ count: 0 }">
-                <template x-effect="if (!showBlock){ $scope.data.count = 0 }"></template>
+                <template x-effect="if (!showBlock){ $scope.count = 0 }"></template>
                 <span class="w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="showBlock"
                     x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
-                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.data.count += (($scope.data.count == 0) ? 1 : 0)"></span>
-                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="$log.and(showBlock, $scope.data.count > 0)"
+                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.count += (($scope.count == 0) ? 1 : 0)"></span>
+                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="$log.and(showBlock, $scope.count > 0)"
                     x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
-                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.data.count += (($scope.data.count == 1) ? 1 : 0)"></span>
-                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="$log.and(showBlock, $scope.data.count > 1)"
+                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.count += (($scope.count == 1) ? 1 : 0)"></span>
+                <span class="ml-2 w-6 h-6 bg-red-700 rounded-full overflow-hidden" x-animate.normal.alternate="$log.and(showBlock, $scope.count > 1)"
                     x-transition:actor="Object.keys(customs).includes(animationActor) ? customs[animationActor] : animationActor" x-transition:ease="animationEase"
-                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.data.count += (($scope.data.count == 2) ? 1 : 0)"></span>
+                    x-transition:duration="animationDuration" x-transition:repeats="-1" x-on:animate-repeat.join="$scope.count += (($scope.count == 2) ? 1 : 0)"></span>
             </div>
         </div>
         <button class="mt-2 px-4 py-2 border rounded-md overflow-hidden" x-on:click="showBlock = !showBlock">{{ showBlock ? 'Hide' : 'Show' }} block</button>
