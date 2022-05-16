@@ -1,10 +1,12 @@
 import { FindComponentById } from "../../component/find";
+import { ResourceConceptName } from "../../concepts/names";
 import { AddDirectiveHandler } from "../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { GetGlobal } from "../../global/get";
 import { JournalError } from "../../journal/error";
 import { AddChanges } from "../../proxy/add-changes";
 import { BuildGetterProxyOptions, BuildProxyOptions, CreateInplaceProxy } from "../../proxy/create";
+import { IResourceConcept } from "../../types/resource";
 import { BindEvent } from "../event";
 import { ResolveOptions } from "../options";
 
@@ -270,7 +272,7 @@ export const QuillDirectiveHandler = CreateDirectiveHandlerCallback(QuillDirecti
     });
 
     let bind = () => {
-        let resourceConcept = GetGlobal().GetResourceConcept();
+        let resourceConcept = GetGlobal().GetConcept<IResourceConcept>(ResourceConceptName);
         if (QuillUrl && resourceConcept){
             resourceConcept.Get({
                 items: QuillUrl,

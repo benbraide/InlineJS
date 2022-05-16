@@ -49,25 +49,8 @@ export interface IGlobal{
     SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;
 
-    SetRouterConcept(concept: IRouterConcept): void;
-    GetRouterConcept(): IRouterConcept | null;
-
-    SetResourceConcept(concept: IResourceConcept): void;
-    GetResourceConcept(): IResourceConcept | null;
-
-    SetAlertConcept(concept: IAlertConcept): void;
-    GetAlertConcept(): IAlertConcept | null;
-
-    SetCollectionConcept(concept: ICollectionConcept): void;
-    GetCollectionConcept(name: string): ICollectionConcept | null;
-
-    SetScreenConcept(concept: IScreenConcept): void;
-    GetScreenConcept(): IScreenConcept | null;
-
-    SetTimeDifferenceConcept(concept: ITimeDifferenceConcept): void;
-    GetTimeDifferenceConcept(): ITimeDifferenceConcept | null;
-
     SetConcept<T>(name: string, concept: T): void;
+    RemoveConcept(name: string): void;
     GetConcept<T>(name: string): T | null;
 
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;

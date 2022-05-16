@@ -1,12 +1,13 @@
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { ISplitPath } from "../types/path";
+import { IResourceConcept } from "../types/resource";
 import { IRouterPageName, IRouterConcept, IRouterMiddleware, IRouterPage, IRouterPageOptions, IRouterFetcher, RouterProtocolHandlerType, RouterProtocolDataHandlerType } from "../types/router";
 import { IUniqueMarkers } from "../types/unique-markers";
 import { DeepCopy } from "../utilities/deep-copy";
 import { IsObject } from "../utilities/is-object";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
-import { RouterConceptName } from "./names";
+import { ResourceConceptName, RouterConceptName } from "./names";
 import { JoinPath, PathToRelative, SplitPath, TidyPath } from "./path";
 
 interface IRouterProtocolHandlerInfo{
@@ -273,14 +274,14 @@ export class RouterConcept implements IRouterConcept{
 
         if (!fetcher){//Network fetch
             let reolvedPath = (this.prefix_ ? PathToRelative(joined, this.origin_, this.prefix_) : joined);
-            if (dataHandler || !page.cache || !GetGlobal().GetResourceConcept()){
+            if (dataHandler || !page.cache || !GetGlobal().GetConcept<IResourceConcept>(ResourceConceptName)){
                 GetGlobal().GetFetchConcept().Get(reolvedPath, {
                     method: 'GET',
                     credentials: 'same-origin',
                 }).then(res => res.text()).then(handleData).catch(handleError);
             }
             else{//Use resource
-                GetGlobal().GetResourceConcept()?.GetData(reolvedPath, true, false).then(handleData).catch(handleError);
+                GetGlobal().GetConcept<IResourceConcept>(ResourceConceptName)?.GetData(reolvedPath, true, false).then(handleData).catch(handleError);
             }
         }
         else{//Localized fetch

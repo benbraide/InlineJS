@@ -3,19 +3,20 @@ import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { CreateReadonlyProxy } from "../../proxy/create";
-import { IResourceGetParams } from "../../types/resource";
+import { IResourceConcept, IResourceGetParams } from "../../types/resource";
 
 function CreateResourceProxy(){
+    const getCollectionConcept = () => GetGlobal().GetConcept<IResourceConcept>(ResourceConceptName);
     let methods = {
-        get: (params: IResourceGetParams) => GetGlobal().GetResourceConcept()?.Get(params),
+        get: (params: IResourceGetParams) => getCollectionConcept()?.Get(params),
         getStyle: (path: string | Array<string>, concurrent?: boolean, attributes?: Record<string, string>) => {
-            return GetGlobal().GetResourceConcept()?.GetStyle(path, concurrent, attributes);
+            return getCollectionConcept()?.GetStyle(path, concurrent, attributes);
         },
         getScript: (path: string | Array<string>, concurrent?: boolean, attributes?: Record<string, string>) => {
-            return GetGlobal().GetResourceConcept()?.GetScript(path, concurrent, attributes);
+            return getCollectionConcept()?.GetScript(path, concurrent, attributes);
         },
         getData: (path: string | Array<string>, concurrent?: boolean, json?: boolean) => {
-            return GetGlobal().GetResourceConcept()?.GetData(path, concurrent, json);
+            return getCollectionConcept()?.GetData(path, concurrent, json);
         },
     };
 

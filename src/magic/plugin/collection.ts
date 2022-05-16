@@ -1,21 +1,22 @@
 import { GetGlobal } from "../../global/get";
-import { CollectionEntryType, CollectionIndexType, ICollectionImportParams, ICollectionOptions, ICollectionUpdateParams } from "../../types/collection";
+import { CollectionEntryType, CollectionIndexType, ICollectionConcept, ICollectionImportParams, ICollectionOptions, ICollectionUpdateParams } from "../../types/collection";
 
 export function BuildCollectionMethods(name: string){
+    const getCollectionConcept = () => GetGlobal().GetConcept<ICollectionConcept>(name);
     return {
-        setOptions: (options: ICollectionOptions) => GetGlobal().GetCollectionConcept(name)?.SetOptions(options),
-        setOption: (key: keyof ICollectionOptions, value: any) => GetGlobal().GetCollectionConcept(name)?.SetOption(key, value),
-        getOptions: () => GetGlobal().GetCollectionConcept(name)?.GetOptions(),
-        getOption: (key: keyof ICollectionOptions) => GetGlobal().GetCollectionConcept(name)?.GetOption(key),
-        getItems: () => GetGlobal().GetCollectionConcept(name)?.GetItems(),
-        getCount: () => GetGlobal().GetCollectionConcept(name)?.GetCount(),
-        getKeyedItem: (index: CollectionIndexType) => GetGlobal().GetCollectionConcept(name)?.GetKeyedItem(index),
-        findItem: (index: CollectionIndexType) => GetGlobal().GetCollectionConcept(name)?.FindItem(index),
-        import: (params: ICollectionImportParams) => GetGlobal().GetCollectionConcept(name)?.Import(params),
-        export: () => GetGlobal().GetCollectionConcept(name)?.Export(),
-        updateItem: (params: ICollectionUpdateParams) => GetGlobal().GetCollectionConcept(name)?.UpdateItem(params),
-        addItem: (entry: CollectionEntryType, quantity: number) => GetGlobal().GetCollectionConcept(name)?.AddItem(entry, quantity),
-        removeItem: (index: CollectionIndexType) => GetGlobal().GetCollectionConcept(name)?.RemoveItem(index),
-        removeAll: () => GetGlobal().GetCollectionConcept(name)?.RemoveAll(),
+        setOptions: (options: ICollectionOptions) => getCollectionConcept()?.SetOptions(options),
+        setOption: (key: keyof ICollectionOptions, value: any) => getCollectionConcept()?.SetOption(key, value),
+        getOptions: () => getCollectionConcept()?.GetOptions(),
+        getOption: (key: keyof ICollectionOptions) => getCollectionConcept()?.GetOption(key),
+        getItems: () => getCollectionConcept()?.GetItems(),
+        getCount: () => getCollectionConcept()?.GetCount(),
+        getKeyedItem: (index: CollectionIndexType) => getCollectionConcept()?.GetKeyedItem(index),
+        findItem: (index: CollectionIndexType) => getCollectionConcept()?.FindItem(index),
+        import: (params: ICollectionImportParams) => getCollectionConcept()?.Import(params),
+        export: () => getCollectionConcept()?.Export(),
+        updateItem: (params: ICollectionUpdateParams) => getCollectionConcept()?.UpdateItem(params),
+        addItem: (entry: CollectionEntryType, quantity: number) => getCollectionConcept()?.AddItem(entry, quantity),
+        removeItem: (index: CollectionIndexType) => getCollectionConcept()?.RemoveItem(index),
+        removeAll: () => getCollectionConcept()?.RemoveAll(),
     };
 }

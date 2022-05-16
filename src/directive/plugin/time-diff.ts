@@ -7,7 +7,7 @@ import { JournalError } from "../../journal/error";
 import { AddChanges } from "../../proxy/add-changes";
 import { BuildProxyOptions, CreateInplaceProxy } from "../../proxy/create";
 import { UseEffect } from "../../reactive/effect";
-import { ITimeDifferenceTrackInfo } from "../../types/time-diff";
+import { ITimeDifferenceConcept, ITimeDifferenceTrackInfo } from "../../types/time-diff";
 import { BindEvent } from "../event";
 import { ResolveOptions } from "../options";
 
@@ -23,7 +23,7 @@ export const TimeDifferenceDirectiveHandler = CreateDirectiveHandlerCallback('td
         return;
     }
 
-    let concept = GetGlobal().GetTimeDifferenceConcept(), localKey = '$tdiff';
+    let concept = GetGlobal().GetConcept<ITimeDifferenceConcept>('tdiff'), localKey = '$tdiff';
     if (!concept){
         return JournalError('Time difference concept is not installed.', `InlineJS.tdiff`, contextElement);
     }
@@ -60,7 +60,7 @@ export const TimeDifferenceDirectiveHandler = CreateDirectiveHandlerCallback('td
 
             if (date){
                 info && info.stop();
-                info = GetGlobal().GetTimeDifferenceConcept()?.Track({ date, ...options,
+                info = GetGlobal().GetConcept<ITimeDifferenceConcept>('tdiff')?.Track({ date, ...options,
                     startImmediately: !options.stopped,
                     handler: (label) => {
                         AddChanges('set', `${id}.label`, 'label', FindComponentById(componentId)?.GetBackend().changes);

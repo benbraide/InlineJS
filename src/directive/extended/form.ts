@@ -1,4 +1,5 @@
 import { FindComponentById } from "../../component/find";
+import { RouterConceptName } from "../../concepts/names";
 import { AddDirectiveHandler } from "../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { EvaluateLater } from "../../evaluator/evaluate-later";
@@ -8,7 +9,9 @@ import { JournalTry } from "../../journal/try";
 import { AddChanges } from "../../proxy/add-changes";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../proxy/create";
 import { UseEffect } from "../../reactive/effect";
+import { IAlertConcept } from "../../types/alert";
 import { IComponent } from "../../types/component";
+import { IRouterConcept } from "../../types/router";
 import { IsObject } from "../../utilities/is-object";
 import { ToString } from "../../utilities/to-string";
 import { BindEvent } from "../event";
@@ -277,7 +280,7 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
                 }
 
                 if (!options.silent && (response.hasOwnProperty('alert') || response.hasOwnProperty('report'))){
-                    GetGlobal().GetAlertConcept()?.Notify(response['alert'] || response['report']);
+                    GetGlobal().GetConcept<IAlertConcept>('alert')?.Notify(response['alert'] || response['report']);
                 }
 
                 afterHandledEvent((response['ok'] !== false), response['data']);
@@ -285,7 +288,7 @@ export const FormDirectiveHandler = CreateDirectiveHandlerCallback(FormDirective
                     return;
                 }
 
-                let router = GetGlobal().GetRouterConcept(), after: (() => void) | null = null;
+                let router = GetGlobal().GetConcept<IRouterConcept>(RouterConceptName), after: (() => void) | null = null;
                 if (response.hasOwnProperty('redirect')){
                     let redirect = response['redirect'];
                     if (IsObject(redirect)){

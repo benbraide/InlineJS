@@ -45,13 +45,6 @@ export class BaseGlobal implements IGlobal{
 
     private nativeFetch_ = new NativeFetchConcept();
     private fetchConcept_: IFetchConcept | null = null;
-
-    private routerConcept_: IRouterConcept | null = null;
-    private resourceConcept_: IResourceConcept | null = null;
-    private alertConcept_: IAlertConcept | null = null;
-    private collectionConcepts_: Record<string, ICollectionConcept> = {};
-    private screenConcept_: IScreenConcept | null = null;
-    private timeDifferenceConcept_: ITimeDifferenceConcept | null = null;
     private concepts_: Record<string, any> = {};
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
@@ -156,56 +149,12 @@ export class BaseGlobal implements IGlobal{
         return (this.fetchConcept_ || this.nativeFetch_);
     }
 
-    public SetRouterConcept(concept: IRouterConcept){
-        this.routerConcept_ = concept;
-    }
-
-    public GetRouterConcept(){
-        return this.routerConcept_;
-    }
-
-    public SetResourceConcept(concept: IResourceConcept){
-        this.resourceConcept_ = concept;
-    }
-
-    public GetResourceConcept(){
-        return this.resourceConcept_;
-    }
-
-    public SetAlertConcept(concept: IAlertConcept){
-        this.alertConcept_ = concept;
-    }
-
-    public GetAlertConcept(){
-        return this.alertConcept_;
-    }
-
-    public SetCollectionConcept(concept: ICollectionConcept){
-        this.collectionConcepts_[concept.GetName()] = concept;
-    }
-
-    public GetCollectionConcept(name: string){
-        return (this.collectionConcepts_.hasOwnProperty(name) ? this.collectionConcepts_[name] : null);
-    }
-
-    public SetScreenConcept(concept: IScreenConcept){
-        this.screenConcept_ = concept;
-    }
-
-    public GetScreenConcept(){
-        return this.screenConcept_;
-    }
-
-    public SetTimeDifferenceConcept(concept: ITimeDifferenceConcept){
-        this.timeDifferenceConcept_ = concept;
-    }
-
-    public GetTimeDifferenceConcept(){
-        return this.timeDifferenceConcept_;
-    }
-
     public SetConcept<T>(name: string, concept: T){
         this.concepts_[name] = concept;
+    }
+
+    public RemoveConcept(name: string){
+        delete this.concepts_[name];
     }
 
     public GetConcept<T>(name: string){

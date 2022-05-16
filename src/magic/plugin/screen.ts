@@ -2,27 +2,29 @@ import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../proxy/create";
-import { IScreenScrollParams } from "../../types/screen";
+import { IScreenConcept, IScreenScrollParams } from "../../types/screen";
 
 function CreateScreenProxy(){
+    const getCollectionConcept = () => GetGlobal().GetConcept<IScreenConcept>('screen');
+    
     let methods = {
-        stopListening: () => GetGlobal().GetScreenConcept()?.StopListening(),
-        scroll: (params: IScreenScrollParams) => GetGlobal().GetScreenConcept()?.Scroll(params),
-        scrollTop: (animate?: boolean) => GetGlobal().GetScreenConcept()?.ScrollTop(animate),
-        scrollRight: (animate?: boolean) => GetGlobal().GetScreenConcept()?.ScrollRight(animate),
-        scrollBottom: (animate?: boolean) => GetGlobal().GetScreenConcept()?.ScrollBottom(animate),
-        scrollLeft: (animate?: boolean) => GetGlobal().GetScreenConcept()?.ScrollLeft(animate),
+        stopListening: () => getCollectionConcept()?.StopListening(),
+        scroll: (params: IScreenScrollParams) => getCollectionConcept()?.Scroll(params),
+        scrollTop: (animate?: boolean) => getCollectionConcept()?.ScrollTop(animate),
+        scrollRight: (animate?: boolean) => getCollectionConcept()?.ScrollRight(animate),
+        scrollBottom: (animate?: boolean) => getCollectionConcept()?.ScrollBottom(animate),
+        scrollLeft: (animate?: boolean) => getCollectionConcept()?.ScrollLeft(animate),
     };
 
     let properties = {
-        scrollOffset: () => GetGlobal().GetScreenConcept()?.GetScrollOffset(),
-        scrollPercentage: () => GetGlobal().GetScreenConcept()?.GetScrollPercentage(),
-        scrollTrend: () => GetGlobal().GetScreenConcept()?.GetScrollTrend(),
-        scrollStreak: () => GetGlobal().GetScreenConcept()?.GetScrollStreak(),
-        size: () => GetGlobal().GetScreenConcept()?.GetSize(),
-        sizeMarks: () => GetGlobal().GetScreenConcept()?.GetSizeMarks(),
-        breakpoint: () => GetGlobal().GetScreenConcept()?.GetBreakpoint(),
-        checkpoint: () => GetGlobal().GetScreenConcept()?.GetCheckpoint(),
+        scrollOffset: () => getCollectionConcept()?.GetScrollOffset(),
+        scrollPercentage: () => getCollectionConcept()?.GetScrollPercentage(),
+        scrollTrend: () => getCollectionConcept()?.GetScrollTrend(),
+        scrollStreak: () => getCollectionConcept()?.GetScrollStreak(),
+        size: () => getCollectionConcept()?.GetSize(),
+        sizeMarks: () => getCollectionConcept()?.GetSizeMarks(),
+        breakpoint: () => getCollectionConcept()?.GetBreakpoint(),
+        checkpoint: () => getCollectionConcept()?.GetCheckpoint(),
     };
 
     return CreateInplaceProxy(BuildGetterProxyOptions({

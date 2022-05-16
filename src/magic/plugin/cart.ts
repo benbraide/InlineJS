@@ -2,22 +2,23 @@ import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { BuildGetterProxyOptions, CreateInplaceProxy } from "../../proxy/create";
-import { CartOffsetHandlerType, ICartCollectionConcept } from "../../types/collection";
+import { CartOffsetHandlerType, ICartCollectionConcept, ICollectionConcept } from "../../types/collection";
 import { BuildCollectionMethods } from "./collection";
 
 const CartCollectionConceptName = 'cart';
 
 function CreateCartProxy(){
+    const getCollectionConcept = () => GetGlobal().GetConcept<ICartCollectionConcept>(CartCollectionConceptName);
     let methods = {
         ...BuildCollectionMethods(CartCollectionConceptName),
         addOffset: (key: string, handler: CartOffsetHandlerType, initValue?: any) => {
-            (GetGlobal().GetCollectionConcept(CartCollectionConceptName) as ICartCollectionConcept | null)?.AddOffset(key, handler, initValue);
+            getCollectionConcept()?.AddOffset(key, handler, initValue);
         },
         removeOffset: (key: string) => {
-            (GetGlobal().GetCollectionConcept(CartCollectionConceptName) as ICartCollectionConcept | null)?.RemoveOffset(key);
+            getCollectionConcept()?.RemoveOffset(key);
         },
         getOffset: (key: string) => {
-            return (GetGlobal().GetCollectionConcept(CartCollectionConceptName) as ICartCollectionConcept | null)?.GetOffset(key);
+            return getCollectionConcept()?.GetOffset(key);
         },
     };
 
@@ -28,19 +29,19 @@ function CreateCartProxy(){
             }
 
             if (prop === 'keyed'){
-                return GetGlobal().GetCollectionConcept(CartCollectionConceptName)?.GetKeyedProxy();
+                return (getCollectionConcept() as ICollectionConcept | null)?.GetKeyedProxy();
             }
 
             if (prop === 'items'){
-                return GetGlobal().GetCollectionConcept(CartCollectionConceptName)?.GetItemProxies();
+                return (getCollectionConcept() as ICollectionConcept | null)?.GetItemProxies();
             }
 
             if (prop === 'count'){
-                return GetGlobal().GetCollectionConcept(CartCollectionConceptName)?.GetCount();
+                return (getCollectionConcept() as ICollectionConcept | null)?.GetCount();
             }
 
             if(prop){
-                return (GetGlobal().GetCollectionConcept(CartCollectionConceptName) as ICartCollectionConcept | null)?.GetOffset(prop);
+                return getCollectionConcept()?.GetOffset(prop);
             }
         },
         lookup: [...Object.keys(methods), 'keyed', 'items', 'count', 'subTotal', 'total'],

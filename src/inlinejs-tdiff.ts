@@ -7,7 +7,7 @@ import { TimeDifferenceDirectiveHandlerCompact } from './directive/plugin/time-d
 import { TimeDifferenceMagicHandlerCompact } from './magic/plugin/time-diff';
 
 WaitForGlobal().then(() => {
-    GetGlobal().SetTimeDifferenceConcept(new TimeDifferenceConcept());
+    GetGlobal().SetConcept('tdiff', new TimeDifferenceConcept());
     TimeDifferenceDirectiveHandlerCompact();
     TimeDifferenceMagicHandlerCompact();
 });

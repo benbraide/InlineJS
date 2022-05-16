@@ -2,12 +2,14 @@ import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { CreateReadonlyProxy } from "../../proxy/create";
+import { IAlertConcept } from "../../types/alert";
 
 function CreateAlertProxy(){
+    const getCollectionConcept = () => GetGlobal().GetConcept<IAlertConcept>('alert');
     let methods = {
-        notify: (options: any) => GetGlobal().GetAlertConcept()?.Notify(options),
-        confirm: (options: any) => GetGlobal().GetAlertConcept()?.Confirm(options),
-        prompt: (options: any) => GetGlobal().GetAlertConcept()?.Prompt(options),
+        notify: (options: any) => getCollectionConcept()?.Notify(options),
+        confirm: (options: any) => getCollectionConcept()?.Confirm(options),
+        prompt: (options: any) => getCollectionConcept()?.Prompt(options),
     };
     
     return CreateReadonlyProxy(methods);

@@ -4,27 +4,28 @@ import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { CreateReadonlyProxy } from "../../proxy/create";
 import { ISplitPath } from "../../types/path";
-import { IRouterFetcher, IRouterMiddleware, IRouterPageName, IRouterPageOptions, RouterProtocolHandlerType } from "../../types/router";
+import { IRouterConcept, IRouterFetcher, IRouterMiddleware, IRouterPageName, IRouterPageOptions, RouterProtocolHandlerType } from "../../types/router";
 
 function CreateRouterProxy(){
+    const getCollectionConcept = () => GetGlobal().GetConcept<IRouterConcept>(RouterConceptName);
     let methods = {
-        setPrefix: (prefix: string) => GetGlobal().GetRouterConcept()?.SetPrefix(prefix),
-        addMiddleware: (middleware: IRouterMiddleware) => GetGlobal().GetRouterConcept()?.AddMiddleware(middleware),
-        removeMiddleware: (middleware: IRouterMiddleware | string) => GetGlobal().GetRouterConcept()?.RemoveMiddleware(middleware),
-        addFetcher: (fetcher: IRouterFetcher) => GetGlobal().GetRouterConcept()?.AddFetcher(fetcher),
-        removeFetcher: (fetcher: IRouterFetcher) => GetGlobal().GetRouterConcept()?.RemoveFetcher(fetcher),
-        addProtocolHandler: (protocol: string | RegExp, handler: RouterProtocolHandlerType) => GetGlobal().GetRouterConcept()?.AddProtocolHandler(protocol, handler),
-        removeProtocolHandler: (handler: RouterProtocolHandlerType) => GetGlobal().GetRouterConcept()?.RemoveProtocolHandler(handler),
-        addPage: (page: IRouterPageOptions) => GetGlobal().GetRouterConcept()?.AddPage(page),
-        removePage: (page: string | IRouterPageName) => GetGlobal().GetRouterConcept()?.RemovePage(page),
-        findPage: (page: string | IRouterPageName) => GetGlobal().GetRouterConcept()?.FindPage(page),
-        findMatchingPage: (path: string) => GetGlobal().GetRouterConcept()?.FindMatchingPage(path),
-        mount: (load?: boolean) => GetGlobal().GetRouterConcept()?.Mount(load),
-        goto: (path: string | ISplitPath | IRouterPageName, shouldReload?: boolean, data?: any) => GetGlobal().GetRouterConcept()?.Goto(path, shouldReload, data),
-        reload: () => GetGlobal().GetRouterConcept()?.Reload(),
-        getCurrentPath: () => GetGlobal().GetRouterConcept()?.GetCurrentPath(),
-        getActivePage: () => GetGlobal().GetRouterConcept()?.GetActivePage(),
-        getActivePageData: (key?: string) => GetGlobal().GetRouterConcept()?.GetActivePageData(key),
+        setPrefix: (prefix: string) => getCollectionConcept()?.SetPrefix(prefix),
+        addMiddleware: (middleware: IRouterMiddleware) => getCollectionConcept()?.AddMiddleware(middleware),
+        removeMiddleware: (middleware: IRouterMiddleware | string) => getCollectionConcept()?.RemoveMiddleware(middleware),
+        addFetcher: (fetcher: IRouterFetcher) => getCollectionConcept()?.AddFetcher(fetcher),
+        removeFetcher: (fetcher: IRouterFetcher) => getCollectionConcept()?.RemoveFetcher(fetcher),
+        addProtocolHandler: (protocol: string | RegExp, handler: RouterProtocolHandlerType) => getCollectionConcept()?.AddProtocolHandler(protocol, handler),
+        removeProtocolHandler: (handler: RouterProtocolHandlerType) => getCollectionConcept()?.RemoveProtocolHandler(handler),
+        addPage: (page: IRouterPageOptions) => getCollectionConcept()?.AddPage(page),
+        removePage: (page: string | IRouterPageName) => getCollectionConcept()?.RemovePage(page),
+        findPage: (page: string | IRouterPageName) => getCollectionConcept()?.FindPage(page),
+        findMatchingPage: (path: string) => getCollectionConcept()?.FindMatchingPage(path),
+        mount: (load?: boolean) => getCollectionConcept()?.Mount(load),
+        goto: (path: string | ISplitPath | IRouterPageName, shouldReload?: boolean, data?: any) => getCollectionConcept()?.Goto(path, shouldReload, data),
+        reload: () => getCollectionConcept()?.Reload(),
+        getCurrentPath: () => getCollectionConcept()?.GetCurrentPath(),
+        getActivePage: () => getCollectionConcept()?.GetActivePage(),
+        getActivePageData: (key?: string) => getCollectionConcept()?.GetActivePageData(key),
     };
 
     return CreateReadonlyProxy(methods);

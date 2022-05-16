@@ -1,4 +1,5 @@
 import { FindComponentById } from "../../component/find";
+import { ResourceConceptName } from "../../concepts/names";
 import { AddDirectiveHandler } from "../../directives/add";
 import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { EvaluateLater } from "../../evaluator/evaluate-later";
@@ -7,6 +8,7 @@ import { JournalError } from "../../journal/error";
 import { JournalTry } from "../../journal/try";
 import { AddChanges } from "../../proxy/add-changes";
 import { BuildGetterProxyOptions, BuildProxyOptions, CreateInplaceProxy } from "../../proxy/create";
+import { IResourceConcept } from "../../types/resource";
 import { BindEvent } from "../event";
 import { ResolveOptions } from "../options";
 
@@ -514,7 +516,7 @@ export const StripeDirectiveHandler = CreateDirectiveHandlerCallback(StripeDirec
     })));
 
     let bind = () => {
-        let resourceConcept = GetGlobal().GetResourceConcept();
+        let resourceConcept = GetGlobal().GetConcept<IResourceConcept>(ResourceConceptName);
         if (StripeUrl && resourceConcept){
             resourceConcept.GetScript(StripeUrl).then(init);
         }

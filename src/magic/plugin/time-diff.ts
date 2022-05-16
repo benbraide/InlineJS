@@ -2,11 +2,11 @@ import { GetGlobal } from "../../global/get";
 import { AddMagicHandler } from "../../magics/add";
 import { CreateMagicHandlerCallback } from "../../magics/callback";
 import { CreateReadonlyProxy } from "../../proxy/create";
-import { ITimeDifferenceFormatParams } from "../../types/time-diff";
+import { ITimeDifferenceConcept, ITimeDifferenceFormatParams } from "../../types/time-diff";
 
 function CreateTimeDifferenceProxy(){
     let methods = {
-        format: (params: ITimeDifferenceFormatParams) => GetGlobal().GetTimeDifferenceConcept()?.Format(params),
+        format: (params: ITimeDifferenceFormatParams) => GetGlobal().GetConcept<ITimeDifferenceConcept>('tdiff')?.Format(params),
     };
 
     return CreateReadonlyProxy(methods);

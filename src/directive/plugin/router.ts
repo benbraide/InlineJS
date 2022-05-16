@@ -8,7 +8,7 @@ import { CreateDirectiveHandlerCallback } from "../../directives/callback";
 import { EvaluateLater } from "../../evaluator/evaluate-later";
 import { GetGlobal } from "../../global/get";
 import { JournalError } from "../../journal/error";
-import { IRouterProtocolHandlerParams } from "../../types/router";
+import { IRouterConcept, IRouterProtocolHandlerParams } from "../../types/router";
 import { BindEvent, ForwardEvent } from "../event";
 import { ResolveOptions } from "../options";
 
@@ -32,7 +32,7 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
 
         EvaluateLater({ componentId, contextElement, expression })((value) => {
             if (value && (typeof value === 'string' || value instanceof RegExp)){
-                let concept = GetGlobal().GetRouterConcept();
+                let concept = GetGlobal().GetConcept<IRouterConcept>(RouterConceptName);
                 if (concept){
                     let fetcher = new RouterFetcher(value, () => Promise.resolve(contextElement.innerHTML));
                     concept.AddFetcher(fetcher);
@@ -45,7 +45,7 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
         });
     }
     else if (argKey === 'mount'){
-        let concept = GetGlobal().GetRouterConcept();
+        let concept = GetGlobal().GetConcept<IRouterConcept>(RouterConceptName);
         if (!concept){
             return JournalError(`${RouterConceptName} concept is not installed.`, `${RouterConceptName}:${argKey}`, contextElement);
         }
@@ -179,7 +179,7 @@ export const RouterDirectiveHandler = CreateDirectiveHandlerCallback(RouterConce
         let options = ResolveOptions({ options: { reload: false }, list: argOptions }), onEvent = (e: Event) => {
             e.preventDefault();
             e.stopPropagation();
-            GetGlobal().GetRouterConcept()?.Goto(getPath(), options.reload);
+            GetGlobal().GetConcept<IRouterConcept>(RouterConceptName)?.Goto(getPath(), options.reload);
         };
 
         contextElement.addEventListener(getEvent(), onEvent);

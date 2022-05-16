@@ -10,8 +10,11 @@ import { CartMagicHandlerCompact } from './magic/plugin/cart';
 import { FavoritesMagicHandlerCompact } from './magic/plugin/favorites';
 
 WaitForGlobal().then(() => {
-    GetGlobal().SetCollectionConcept(new CartCollectionConcept(GetGlobal().CreateComponent(document.createElement('template'))));
-    GetGlobal().SetCollectionConcept(new FavoritesCollectionConcept(GetGlobal().CreateComponent(document.createElement('template'))));
+    const cartCollection = new CartCollectionConcept(GetGlobal().CreateComponent(document.createElement('template')));
+    const favCollection = new FavoritesCollectionConcept(GetGlobal().CreateComponent(document.createElement('template')));
+    
+    GetGlobal().SetConcept(cartCollection.GetName(), cartCollection);
+    GetGlobal().SetConcept(favCollection.GetName(), favCollection);
 
     CartDirectiveHandlerCompact();
     FavoritesDirectiveHandlerCompact();

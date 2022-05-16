@@ -6,7 +6,8 @@ import { CartDirectiveHandlerCompact } from './directive/plugin/cart';
 import { CartMagicHandlerCompact } from './magic/plugin/cart';
 
 WaitForGlobal().then(() => {
-    GetGlobal().SetCollectionConcept(new CartCollectionConcept(GetGlobal().CreateComponent(document.createElement('template'))));
+    const cartConcept = new CartCollectionConcept(GetGlobal().CreateComponent(document.createElement('template')));
+    GetGlobal().SetConcept(cartConcept.GetName(), cartConcept);
 
     CartDirectiveHandlerCompact();
     CartMagicHandlerCompact();
