@@ -1,7 +1,5 @@
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
-import { IAlertConcept } from "./alert";
-import { ICollectionConcept } from "./collection";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directives";
@@ -10,10 +8,6 @@ import { IMagicManager } from "./magics";
 import { IMutationObserver } from "./mutation";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
-import { IResourceConcept } from "./resource";
-import { IRouterConcept } from "./router";
-import { IScreenConcept } from "./screen";
-import { ITimeDifferenceConcept } from "./time-diff";
 
 export interface IGlobal{
     SwapConfig(config: IConfig): void;
