@@ -62,6 +62,25 @@ You can even use it for non-trivial things:
 </div>
 ```
 
+**Text Interpolation**
+
+In InlineJS reactive text can be interpolated using a pair of `{{` and `}}`. Interpolation is valid for `attribute values` and `text contents`.
+
+**Example**
+
+```html
+<form x-data="{ btnText: 'Save', txtValue: 'Default value' }">
+	<input name="content" value="{{ txtValue }}">
+	<button type="submit">{{ btnText }} Draft</button>
+</form>
+```
+
+**Quick Notes**
+> - When using the compiled scripts in a `script` tag no initialization is necessary, as InlineJS will automatically initialize and bind to the document.
+> - If the result of an evaluated expression is a function, most directives will call that function.
+> - When evaluating an expression, `this` refers to the element that the directive is being executed on.
+> - Directives are executed accordingly from `left` to `right` as they appear on an element. There is no precedence.
+
 ## Learn
 
 Available **core** directives:
@@ -166,7 +185,7 @@ You can create nested scopes by using the `x-data` directive on an offspring of 
 
 **Structure:** `<div x-data="..." x-component="[identifier]"></div>`
 
-`x-component` assigns a key to a component.
+`x-component` assigns a name to a component.
 
 **`evaluate` argument**
 
@@ -196,7 +215,7 @@ Use the `evaluate` argument to instruct the directive to evaluate the specified 
 ---
 
 ### `x-post`
-**Example:** `<div x-data x-post="$console.log('Every offspring initialized')"></div>`
+**Example:** `<div x-data x-post="console.log('Every offspring initialized')"></div>`
 
 **Structure:** `<div x-data="..." x-post="[expression]"></div>`
 
@@ -205,7 +224,7 @@ Use the `evaluate` argument to instruct the directive to evaluate the specified 
 ---
 
 ### `x-uninit`
-**Example:** `<div x-data="{ foo: 'bar' }" x-uninit="$console.log('Element removed')"></div>`
+**Example:** `<div x-data="{ foo: 'bar' }" x-uninit="console.log('Element removed')"></div>`
 
 **Structure:** `<div x-data="..." x-uninit="[expression]"></div>`
 
@@ -268,11 +287,17 @@ Boolean attributes are supported as per the [HTML specification](https://html.sp
 ---
 
 ### `x-style`
-**Example:** `<span x-style:display="'block'"></span>`
-**Example:** `<span x-style="{ display: 'block', width: '1rem' }"></span>`
+**Example:**
+```
+<span x-style:display="'block'"></span>
+<span x-style="{ display: 'block', width: '1rem' }"></span>
+```
 
-**Structure:** `<span x-style:[property]="[expression]"`
-**Structure:** `<span x-style="{ [property]: [expression], ... }"`
+**Structure:**
+```
+<span x-style:[property]="[expression]"></span>
+<span x-style="{ [property]: [expression], ... }"></span>
+```
 
 `x-style` sets the value of a style property on an element to the evaluated expression.
 
@@ -282,11 +307,17 @@ Boolean attributes are supported as per the [HTML specification](https://html.sp
 
 > Note: You are free to use the shorter "." syntax: `.block="..."`
 
-**Example:** `<span x-class:block="shouldBeBlock"></span>`
-**Example:** `<span x-class="{ block: true, inline: false }"></span>`
+**Example:**
+```
+<span x-class:block="shouldBeBlock"></span>
+<span x-class="{ block: true, inline: false }"></span>
+```
 
-**Structure:** `<span x-class:[name]="[boolean expression]"`
-**Structure:** `<span x-class="{ [name]: [boolean expression], ... }"`
+**Structure:**
+```
+<span x-class:[name]="[boolean expression]"></span>
+<span x-class="{ [name]: [boolean expression], ... }"></span>
+```
 
 `x-class` sets or removes a class name on an element based on the truthiness of the evaluated expression.
 
@@ -332,6 +363,9 @@ If any data is modified in the expression, other element attributes "bound" to t
 
 > Note: You can also specify a JavaScript function name
 
+> - This directive exposes a `$event` context variable, representing the generated native event, accessible during the evaluation of the specified expression.
+> - When a function is specified, it is passed the generated event as the first argument.
+
 **Example:** `<button x-on:click="myFunction"></button>`
 
 This is equivalent to: `<button x-on:click="myFunction($event)"></button>`
@@ -340,12 +374,14 @@ This is equivalent to: `<button x-on:click="myFunction($event)"></button>`
 
 **Example:** `<input type="text" x-on:keydown.esc="open = false">`
 
-You can specify specific keys to listen for using keydown modifiers appended to the `x-on:keydown` directive. Note that the modifiers are kebab-cased versions of `Event.key` values.
+You can specify specific keys to listen for using `keydown` modifiers appended to the `x-on:keydown` directive. Note that the modifiers are kebab-cased versions of `Event.key` values.
 
 Examples: `enter`, `escape`, `arrow-up`, `arrow-down`
 
 > Note: You can also listen for system-modifier key combinations like: `x-on:keydown.ctrl.enter="foo"`
 > Multiple keys can be combined for alternatives e.g. `x-on:keydown.enter.space`
+> Character ranges can be specified e.g. `x-on:keydown.a-z` `x-on:keydown.0-9`
+> Character groups can be specified e.g. `x-on:keydown.alpha` `x-on:keydown.digits`
 
 **`.outside` modifier**
 
@@ -390,11 +426,11 @@ Adding the `.passive` modifier to an event listener will make the listener a pas
 **`.debounce` modifier**
 **Example:** `<input x-on:input.debounce="fetchSomething()">`
 
-The `debounce` modifier allows you to "debounce" an event handler. In other words, the event handler will NOT run until a certain amount of time has elapsed since the last event that fired. When the handler is ready to be called, the last handler call will execute.
+The `.debounce` modifier allows you to "debounce" an event handler. In other words, the event handler will NOT run until a certain amount of time has elapsed since the last event that fired. When the handler is ready to be called, the last handler call will execute.
 
 The default debounce "wait" time is 250 milliseconds.
 
-If you wish to customize this, you can specifiy a custom wait time like so:
+If you wish to customize this, you can specify a custom wait time like so:
 
 ```
 <input x-on:input.debounce.750="fetchSomething()">
@@ -410,7 +446,7 @@ If you wish to customize this, you can specifiy a custom wait time like so:
 
 `x-model` adds "two-way data binding" to an element. In other words, the value of the input element will be kept in sync with the value of the data item of the component.
 
-> Note: `x-model` is smart enough to detect changes on text inputs, checkboxes, radio buttons, textareas, selects, and multiple selects. It should behave [how Vue would](https://vuejs.org/v2/guide/forms.html) in those scenarios.
+> Note: `x-model` is smart enough to detect changes on text inputs, checkboxes, radio buttons, textareas, selects, and multiple selects.
 
 **`.number` modifier**
 **Example:** `<input x-model.number="age">`
@@ -424,7 +460,7 @@ The `debounce` modifier allows you to add a "debounce" to a value update. In oth
 
 The default debounce "wait" time is 250 milliseconds.
 
-If you wish to customize this, you can specifiy a custom wait time like so:
+If you wish to customize this, you can specify a custom wait time like so:
 
 ```
 <input x-model.debounce.750="search">
@@ -432,3 +468,130 @@ If you wish to customize this, you can specifiy a custom wait time like so:
 ```
 
 ---
+
+### `x-if`
+**Example:** `<template x-if="true"><div>...</div></template>`
+
+**Structure:** `<template x-if="[expression]">...</template>`
+
+For cases where `x-show` isn't sufficient (`x-show` sets an element to `display: none` if it's false), `x-if` can be used to  actually remove an element completely from the DOM.
+
+>**Note**:
+> - A `template` element is required for this directive.
+> - The template element must have a single direct child.
+
+---
+
+### `x-else`
+**Example:**
+```html
+<template x-if="count == 0"><div>...</div></template>
+<template x-else="count == 1"><div>...</div></template>
+<template x-else><div>...</div></template>
+```
+
+**Structure:** `<template x-else="[optional expression]">...</template>`
+
+The `x-else` directive enables an `if-then-else` paradigm. A `x-if` or `x-else` directive is required to precede it.
+
+>**Note**:
+> - A `template` element is required for this directive.
+> - The template element must have a single direct child.
+
+---
+
+### `x-each`
+**Example:**
+```html
+<template x-each="items"><div>...<div></template>
+<template x-each="items as item"><div>...<div></template>
+<template x-each="items as key => item"><div>...<div></template>
+```
+**Structure:**
+```html
+<template x-each="[expression]">...</template>
+<template x-each="[expression] as [identifier]">...</template>
+<template x-each="[expression] as [key] => [identifier]">...</template>
+```
+
+`x-each` is available for cases when you want to create new DOM nodes for each item in an array.
+
+>**Note**:
+> - A `template` element is required for this directive.
+> - The template element must have a single direct child.
+
+It exposes a `$each` local property with the following fields:
+
+ - `count:` Retrieves the total count of the loop
+ - `index:` Retrieves the current index
+ - `value:` Retrieves the current value
+ - `collection:` Retrieves the collection that is being iterated
+ - `parent:` Retrieves the parent loop property, if any
+
+It can iterate over arrays, key-value associative objects, and integer ranges.
+
+A name can be specified for `$each.value` using the following syntax:
+
+```html
+<template x-each="items as item">
+	<p>{{ item }}</p>
+</template>
+```
+A name can be specified for `$each.index` using the following syntax:
+
+```html
+<template x-each="items as index => item">
+	<p>{{ index }}{{ item }}</p>
+</template>
+```
+
+#### Nesting `x-each`s
+You can nest `x-each` loops. For example:
+
+```html
+<template x-each="items as item">
+    <template x-each="item.subItems as subItem">
+	    <div x-text="subItem"></div>
+    </template>
+</template>
+```
+
+#### Iterating over an integer range
+
+Iteration over integers are supported. Example:
+
+```html
+<template x-each="10 as i"><div>...</div></template>
+```
+
+> By default, the iteration range is from `0` to `value - 1`.
+
+Negative values can be specified. Example:
+
+```html
+<template x-each="-10 as i"><div>...</div></template>
+```
+
+> By default, the iteration range is from to `value + 1` to `0`.
+
+---
+
+### `x-show`
+**Example:** `<div x-show="open"></div>`
+
+**Structure:** `<div x-show="[expression]"></div>`
+
+`x-show` toggles the `display: none;` style on the element depending if the expression resolves to `true` or `false`.
+
+---
+
+### `x-cloak`
+**Example:** `<div x-data="{}" x-cloak></div>`
+
+`x-cloak` attributes are removed from elements when InlineJS initializes. This is useful for hiding pre-initialized DOM. It's typical to add the following global style for this to work:
+
+```html
+<style>
+    [x-cloak] { display: none; }
+</style>
+```
