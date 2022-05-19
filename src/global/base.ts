@@ -1,28 +1,22 @@
 import { BaseComponent } from "../component/base";
 import { GetElementScopeId } from "../component/element-scope-id";
-import { NativeFetchConcept } from "../concepts/fetch/native";
-import { DirectiveManager } from "../directives/manager";
+import { DirectiveManager } from "../directive/manager";
 import { JournalTry } from "../journal/try";
-import { MagicManager } from "../magics/manager";
-import { MutationObserver } from "../observers/mutation/base";
+import { MagicManager } from "../magic/manager";
+import { MutationObserver } from "../observers/mutation";
 import { ChildProxy } from "../proxy/child";
 import { Stack } from "../stack";
-import { IAlertConcept } from "../types/alert";
-import { ICollectionConcept } from "../types/collection";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
 import { IGlobal } from "../types/global";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
-import { IResourceConcept } from "../types/resource";
-import { IRouterConcept } from "../types/router";
-import { IScreenConcept } from "../types/screen";
-import { ITimeDifferenceConcept } from "../types/time-diff";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { Config } from "./config";
+import { NativeFetchConcept } from "./native-fetch";
 
 export class BaseGlobal implements IGlobal{
     private nothing_ = new Nothing;
@@ -78,6 +72,10 @@ export class BaseGlobal implements IGlobal{
 
     public RemoveComponent(component: IComponent | string){
         delete this.components_[((typeof component === 'string') ? component : component.GetId())];
+    }
+
+    public TraverseComponents(callback: (component: IComponent) => void | boolean){
+        Object.values(this.components_).some(component => (callback(component) === false));
     }
 
     public FindComponentById(id: string): IComponent | null{

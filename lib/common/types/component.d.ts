@@ -2,6 +2,7 @@ import { IChanges } from "./changes";
 import { ReactiveStateType } from "./config";
 import { IContext } from "./context";
 import { IElementScope } from "./element-scope";
+import { IGlobal } from "./global";
 import { IIntersectionObserver } from "./intersection";
 import { IProxy } from "./proxy";
 import { IRootElement } from "./root-element";
@@ -43,8 +44,9 @@ export interface IComponent {
     FindProxy(path: string): IProxy | null;
     AddRefElement(ref: string, element: HTMLElement): void;
     FindRefElement(ref: string): HTMLElement | null;
-    CreateIntersectionObserver(options?: IntersectionObserverInit): IIntersectionObserver;
+    AddIntersectionObserver(observer: IIntersectionObserver): void;
     FindIntersectionObserver(id: string): IIntersectionObserver | null;
     RemoveIntersectionObserver(id: string): void;
     GetBackend(): IComponentBackend;
+    GetGlobal(): IGlobal;
 }

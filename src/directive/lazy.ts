@@ -1,8 +1,9 @@
 import { FindComponentById } from "../component/find";
 import { EvaluateLater } from "../evaluator/evaluate-later";
 import { WaitPromise } from "../evaluator/wait-promise";
+import { IntersectionObserver } from "../observers/intersection";
 import { UseEffect } from "../reactive/effect";
-import { IDirectiveHandlerParams } from "../types/directives";
+import { IDirectiveHandlerParams } from "../types/directive";
 import { ResolveOptions } from "./options";
 
 export interface ILazyOptions{
@@ -39,8 +40,9 @@ export function LazyCheck({ componentId, component, contextElement, expression, 
             threshold: ((resolvedOptions.threshold < 0) ? 0 : resolvedOptions.threshold),
         };
 
-        let observer = resolvedComponent?.CreateIntersectionObserver(intersectionOptions);
+        let observer = (resolvedComponent ? new IntersectionObserver(resolvedComponent.GenerateUniqueId('intob_'), intersectionOptions) : null);
         if (observer){
+            resolvedComponent?.AddIntersectionObserver(observer);
             observer.Observe(contextElement, ({ id, entry } = {}) => {
                 if (entry?.isIntersecting){//Element is visible
                     FindComponentById(componentId)?.RemoveIntersectionObserver(id!);

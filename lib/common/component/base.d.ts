@@ -1,4 +1,3 @@
-import { IntersectionObserver } from "../observers/intersection/base";
 import { IComponent, IComponentBackend } from "../types/component";
 import { ReactiveStateType } from "../types/config";
 import { IElementScope } from "../types/element-scope";
@@ -55,8 +54,9 @@ export declare class BaseComponent implements IComponent {
     FindProxy(path: string): IProxy | null;
     AddRefElement(ref: string, element: HTMLElement): void;
     FindRefElement(ref: string): HTMLElement | null;
-    CreateIntersectionObserver(options?: IntersectionObserverInit): IntersectionObserver;
+    AddIntersectionObserver(observer: IIntersectionObserver): void;
     FindIntersectionObserver(id: string): IIntersectionObserver | null;
     RemoveIntersectionObserver(id: string): void;
     GetBackend(): IComponentBackend;
+    GetGlobal(): import("..").IGlobal;
 }

@@ -1,6 +1,5 @@
 import { ProcessDirectives } from "../directive/process";
 import { GetGlobal } from "../global/get";
-import { IntersectionObserver } from "../observers/intersection/base";
 import { RootProxy } from "../proxy/root";
 import { Stack } from "../stack";
 import { IChanges } from "../types/changes";
@@ -300,9 +299,8 @@ export class BaseComponent implements IComponent{
         return ((ref in this.refs_) ? this.refs_[ref] : null);
     }
 
-    public CreateIntersectionObserver(options?: IntersectionObserverInit){
-        let observer = new IntersectionObserver(this.GenerateUniqueId('intobs_'), (options || {}));
-        return (this.observers_.intersections[observer.GetId()] = observer);
+    public AddIntersectionObserver(observer: IIntersectionObserver){
+        this.observers_.intersections[observer.GetId()] = observer;
     }
 
     public FindIntersectionObserver(id: string){
@@ -320,5 +318,9 @@ export class BaseComponent implements IComponent{
             context: this.context_,
             changes: this.changes_,
         };
+    }
+
+    public GetGlobal(){
+        return GetGlobal();
     }
 }

@@ -1,4 +1,4 @@
-import { IDirectiveManager } from "../types/directives";
+import { IDirectiveManager } from "../types/directive";
 import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
 export declare class ElementScope implements IElementScope {
     private componentId_;

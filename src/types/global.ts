@@ -2,9 +2,9 @@ import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
-import { IDirectiveManager } from "./directives";
+import { IDirectiveManager } from "./directive";
 import { IFetchConcept } from "./fetch";
-import { IMagicManager } from "./magics";
+import { IMagicManager } from "./magic";
 import { IMutationObserver } from "./mutation";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
@@ -17,6 +17,7 @@ export interface IGlobal{
     
     CreateComponent(root: HTMLElement): IComponent;
     RemoveComponent(component: IComponent | string): void;
+    TraverseComponents(callback: (component: IComponent) => void | boolean): void;
 
     FindComponentById(id: string): IComponent | null;
     FindComponentByName(name: string): IComponent | null;

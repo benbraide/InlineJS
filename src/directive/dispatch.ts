@@ -5,7 +5,7 @@ import { JournalTry } from "../journal/try";
 import { JournalWarn } from "../journal/warn";
 import { IComponent } from "../types/component";
 import { IDirective } from "../types/directive";
-import { DirectiveHandlerCallbackType } from "../types/directives";
+import { DirectiveHandlerCallbackType } from "../types/directive";
 import { FlattenDirective } from "./flatten";
 
 export function DispatchDirective(component: IComponent | string, element: HTMLElement, directive: IDirective, repeats = 0){

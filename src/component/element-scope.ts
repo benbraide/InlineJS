@@ -1,8 +1,8 @@
-import { DirectiveManager } from "../directives/manager";
+import { DirectiveManager } from "../directive/manager";
 import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
-import { IDirectiveManager } from "../types/directives";
+import { IDirectiveManager } from "../types/directive";
 import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
 import { PeekCurrentScope } from "./current-scope";
 import { ElementScopeKey } from "./element-scope-id";

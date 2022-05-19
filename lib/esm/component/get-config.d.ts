@@ -1,1 +1,1 @@
-export declare function GetConfig(): import("../types/config").IConfig;
+export declare function GetConfig(): import("..").IConfig;

@@ -1,6 +1,6 @@
-import { DirectiveManager } from "../directives/manager";
-import { MagicManager } from "../magics/manager";
-import { MutationObserver } from "../observers/mutation/base";
+import { DirectiveManager } from "../directive/manager";
+import { MagicManager } from "../magic/manager";
+import { MutationObserver } from "../observers/mutation";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
@@ -28,6 +28,7 @@ export declare class BaseGlobal implements IGlobal {
     GenerateUniqueId(prefix?: string, suffix?: string): string;
     CreateComponent(root: HTMLElement): IComponent;
     RemoveComponent(component: IComponent | string): void;
+    TraverseComponents(callback: (component: IComponent) => void | boolean): void;
     FindComponentById(id: string): IComponent | null;
     FindComponentByName(name: string): IComponent | null;
     FindComponentByRoot(root: HTMLElement): IComponent | null;

@@ -1,4 +1,4 @@
-import { IDirectiveManager } from "./directives";
+import { IDirectiveManager } from "./directive";
 
 export interface ITreeChangeCallbackParams{
     added: Array<Node>;

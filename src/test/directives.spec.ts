@@ -3,9 +3,10 @@ import { describe, it } from 'mocha'
 
 import { CreateGlobal } from '../global/create';
 import { CreateDirective } from '../directive/create';
-import { BindDirectiveExpansionRule } from '../directive/core/attr/bind';
-import { ClassDirectiveExpansionRule } from '../directive/core/attr/class';
-import { OnDirectiveExpansionRule } from '../directive/core/flow/on';
+
+import { BindDirectiveExpansionRule } from '../expansion/bind';
+import { ClassDirectiveExpansionRule } from '../expansion/class';
+import { OnDirectiveExpansionRule } from '../expansion/on';
 
 describe('directives parser', () => {
     it('should parse a well-formed directive', () => {

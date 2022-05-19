@@ -1,5 +1,5 @@
 import { GetGlobal } from "../global/get";
-import { DirectiveExpansionRuleType } from "../types/directives";
+import { DirectiveExpansionRuleType } from "../types/directive";
 
 export function CreateDirectiveExpansionRule(rule: RegExp | string, expandWith: string): DirectiveExpansionRuleType{
     return (name) => ((name.search(rule) == -1) ? null : name.replace(rule, expandWith));

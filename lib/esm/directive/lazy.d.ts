@@ -1,4 +1,4 @@
-import { IDirectiveHandlerParams } from "../types/directives";
+import { IDirectiveHandlerParams } from "../types/directive";
 export interface ILazyOptions {
     lazy: boolean;
     ancestor: number;
