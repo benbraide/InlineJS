@@ -1,6 +1,6 @@
 # InlineJS
 
-[![npm (scoped)](https://img.shields.io/npm/v/@benbraide/inlinejs.svg)](https://www.npmjs.com/package/@benbraide/inlinejs) [![npm bundle size (minified)](https://img.shields.io/bundlephobia/min/@benbraide/inlinejs.svg)](https://www.npmjs.com/package/@benbraide/inlinejs)
+[![npm (scoped)](https://img.shields.io/npm/v/@benbraide/inlinejs.svg)](https://www.npmjs.com/package/@benbraide/inlinejs) [![npm bundle size (minified)](https://img.shields.io/bundlephobia/minzip/@benbraide/inlinejs.svg)](https://www.npmjs.com/package/@benbraide/inlinejs)
 
 Run JavaScript code by embedding them in your HTML using the element as context.
 
@@ -9,18 +9,6 @@ Run JavaScript code by embedding them in your HTML using the element as context.
 `InlineJS` works without creating shadow DOMs.
 
 ## Install
-
- - Grab source or distribution versions from `GitHub`
- - Include script in your HTML file.
- 
- ## CDNs
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/@benbraide/inlinejs-core@1.x.x/dist/inlinejs.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@benbraide/inlinejs-core@1.x.x/dist/inlinejs.min.js"></script>
-```
- 
-## NPM Install
 
 ```
 npm install @benbraide/inlinejs
