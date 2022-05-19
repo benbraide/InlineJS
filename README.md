@@ -108,6 +108,31 @@ Available **core** directives:
 | [`x-show`](#x-show) | Toggles `display: none;` on the element depending on expression (true or false). |
 | [`x-cloak`](#x-cloak) | This attribute is removed when InlineJS initializes. Useful for hiding pre-initialized DOM. |
 
+Available **core** magic properties:
+
+| Property | Description |
+| --- | --- |
+| [`$component`](#component) |  Retrieve the specified component storage. |
+| [`$locals`](#locals) |  Retrieve the local storage associated with the element. |
+| [`$proxy`](#proxy) |  Retrieve the root proxy. |
+| [`$native`](#native) |  Retrieve the non-proxied data associated with a key. |
+| [`$refs`](#refs) |  Retrieve DOM elements marked with `x-ref` inside the component. |
+| [`$scope`](#scope) |  Retrieve the current scope. |
+| [`$scopes`](#scopes) |  Retrieve all scopes in the current component. |
+| [`$stream`](#stream) | Stream the specified data using a callback.  |
+| [`$wait`](#wait) | Wait the specified data using a callback.  |
+| [`$static`](#static) |  Suppress reactivity for the specified access. |
+| [`$unoptimized`](#unoptimized) |  Suppress optimizations for the specified access. |
+| [`$watch`](#watch) |  Watch a given expression for changes. |
+| [`$pick`](#pick) |  Return one of two values based on a predicate. |
+| [`$rel`](#rel) |  Use one of the `relational` operators. |
+| [`$log`](#log) |  Use one of the `logical` operators. |
+| [`$math`](#math) |  Use one of the `arithmetic` operators. |
+| [`$dom`](#dom) |  Access a DOM property. |
+| [`$class`](#class) |  Use one of the available `class` helpers. |
+| [`$eval`](#eval) |  Evaluate an expression and return the result. |
+| [`$nextTick`](#nexttick) | Execute a given expression **after** `InlineJS` has made its reactive DOM updates. |
+
 ### Directives
 
 ---
@@ -177,6 +202,11 @@ You can create nested scopes by using the `x-data` directive on an offspring of 
     </div>
 </div>
 ```
+
+> `x-data` exposes the following local properties, available to the component root and its offspring:
+> - `$name` retrieves the name of the current scope. If not accessed from a nested scope, then it returns the name of the current component.
+> - `$componentName` retrieves the name of the current component.
+> - `$parent` retrieves the data associated with the parent of the current scope. Returns `undefined` if not accessed from a nested scope.
 
 ---
 
