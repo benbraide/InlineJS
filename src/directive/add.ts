@@ -8,7 +8,7 @@ import {
 } from "../types/directive";
 import { IsObject } from "../utilities/is-object";
 
-export function AddDirectiveHandler(handler: IDirectiveHandler | IDirectiveHandlerCallbackDetails | FunctionDirectiveHandlerType | WrappedFunctionDirectiveHandlerType){
+export function AddDirectiveHandler(handler: IDirectiveHandler | IDirectiveHandlerCallbackDetails | FunctionDirectiveHandlerType | WrappedFunctionDirectiveHandlerType, target?: string){
     let name = '', callback: DirectiveHandlerCallbackType | null = null;
     if (typeof handler === 'function'){
         let response = handler();
@@ -28,6 +28,11 @@ export function AddDirectiveHandler(handler: IDirectiveHandler | IDirectiveHandl
     }
 
     if (name && callback){
-        GetGlobal().GetDirectiveManager().AddHandler(callback, name);
+        if (target){
+            GetGlobal().GetDirectiveManager().AddHandlerExtension(target, callback, name);
+        }
+        else{
+            GetGlobal().GetDirectiveManager().AddHandler(callback, name);
+        }
     }
 }
