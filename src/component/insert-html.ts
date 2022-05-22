@@ -1,4 +1,6 @@
 import { ProcessDirectives } from "../directive/process";
+import { WaitTransition } from "../directive/transition";
+import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
 import { FindComponentById } from "./find";
 
@@ -10,12 +12,50 @@ export interface InsertionOptions{
     type?: InsertionType;
     component?: IComponent | string;
     processDirectives?: boolean;
+    afterInsert?: () => void;
+    afterTransitionCallback?: () => void;
+    transitionScope?: HTMLElement;
 }
 
-export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true }: InsertionOptions){
-    let resolvedComponent = (((component && typeof component === 'string') ? FindComponentById(component) : <IComponent>component) || null);
+export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions){
+    let componentId = ((typeof component === 'string') ? component : (component?.GetId() || '')), insert = () => {
+        let tmpl = document.createElement('template');
+        tmpl.innerHTML = html;
+
+        if (type === 'replace' || type === 'append'){
+            element.append(...Array.from(tmpl.content.childNodes));
+        }
+        else if (type === 'prepend'){//Insert before child nodes
+            element.prepend(...Array.from(tmpl.content.childNodes));
+        }
+
+        (afterInsert && JournalTry(afterInsert, 'InlineJS.InsertHtml', element));
+
+        let resolvedComponent = FindComponentById(componentId);
+        if (processDirectives && resolvedComponent){
+            Array.from(element.children).forEach(child => ProcessDirectives({
+                component: resolvedComponent!,
+                element: child,
+                options: {
+                    checkTemplate: true,
+                    checkDocument: true,
+                    ignoreChildren: false,
+                },
+            }));
+        }
+
+        if (afterTransitionCallback){
+            WaitTransition({ componentId,
+                contextElement: (transitionScope || element),
+                target: element,
+                callback: afterTransitionCallback,
+            });
+        }
+    };
+
     if (type === 'replace'){//Remove all child nodes
         let destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
+            let resolvedComponent = FindComponentById(componentId);
             Array.from(el.children).forEach((child) => {
                 let elementScope = resolvedComponent?.FindElementScope(child);
                 if (elementScope){
@@ -27,29 +67,25 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             });
         };
 
-        destroyOffspring(element);
-        Array.from(element.childNodes).forEach(child => child.remove());
-    }
+        let remove = () => {
+            destroyOffspring(element);
+            Array.from(element.childNodes).forEach(child => child.remove());
+            insert();
+        };
 
-    let tmpl = document.createElement('template');
-    tmpl.innerHTML = html;
-
-    if (type === 'replace' || type === 'append'){
-        element.append(...Array.from(tmpl.content.childNodes));
+        if (afterTransitionCallback){
+            WaitTransition({ componentId,
+                contextElement: (transitionScope || element),
+                target: element,
+                reverse: true,
+                callback: () => remove(),
+            });
+        }
+        else{
+            remove();
+        }
     }
-    else if (type === 'prepend'){//Insert before child nodes
-        element.prepend(...Array.from(tmpl.content.childNodes));
-    }
-
-    if (processDirectives && resolvedComponent){
-        Array.from(element.children).forEach(child => ProcessDirectives({
-            component: resolvedComponent!,
-            element: child,
-            options: {
-                checkTemplate: true,
-                checkDocument: true,
-                ignoreChildren: false,
-            },
-        }));
+    else{
+        insert();
     }
 }

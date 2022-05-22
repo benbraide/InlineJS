@@ -83,6 +83,7 @@ export * from './global/interpolation';
 export * from './global/interpolator';
 export * from './global/native-fetch';
 export * from './bootstrap/attach';
+export * from './bootstrap/auto';
 export * from './directive/add';
 export * from './directive/callback';
 export * from './directive/create';

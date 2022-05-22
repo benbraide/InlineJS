@@ -6,5 +6,8 @@ export interface InsertionOptions {
     type?: InsertionType;
     component?: IComponent | string;
     processDirectives?: boolean;
+    afterInsert?: () => void;
+    afterTransitionCallback?: () => void;
+    transitionScope?: HTMLElement;
 }
-export declare function InsertHtml({ element, html, type, component, processDirectives }: InsertionOptions): void;
+export declare function InsertHtml({ element, html, type, component, processDirectives, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions): void;

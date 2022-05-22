@@ -8,6 +8,7 @@ import { DeepCopy } from '../utilities/deep-copy';
 import { EndsWith } from '../utilities/ends-with';
 import { IsEqual } from '../utilities/is-equal';
 import { AreObjects, IsObject } from '../utilities/is-object';
+import { JoinPath, PathToRelative, SplitPath, TidyPath } from '../utilities/path';
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from '../utilities/unique-markers';
 
 describe('is-equal utility', () => {
@@ -148,5 +149,39 @@ describe('unique-markers utility', () => {
         expect(GenerateUniqueId(markers, 'comp.') === 'comp.0_0_1').equal(true);
         expect(GenerateUniqueId(markers, 'comp.', 'scope_') === 'comp.scope_0_0_2').equal(true);
         expect(GenerateUniqueId(markers, 'comp.', 'scope_', '_ms') === 'comp.scope_0_0_3_ms').equal(true);
+    });
+});
+
+describe('path utility', () => {
+    it('should tidy a path', () => {
+        expect(TidyPath('//path/from//to??arg1=val1&arg2=val2&&arg3==val3')).equal('path/from/to?arg1=val1&arg2=val2&arg3=val3');
+        expect(TidyPath('/path?arg1=val1?arg2=val2')).equal('path?arg1=val1&arg2=val2');
+        expect(TidyPath('/path?arg1=val1?&arg2=val2&?arg3=val3')).equal('path?arg1=val1&arg2=val2&arg3=val3');
+        expect(TidyPath('https:/path?')).equal('https://path');
+    });
+
+    it('should transform an absolute path to a tidied relative path and prepend prefix if available', () => {
+        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300')).equal('/path');
+        expect(PathToRelative('https://localhost:300/path?arg1=val1?&arg2=val2&', 'https://localhost:300')).equal('/path?arg1=val1&arg2=val2');
+        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', 'ajax')).equal('/ajax/path');
+        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', '/ajax')).equal('/ajax/path');
+    });
+
+    it('should split a path', () => {
+        expect(JSON.stringify(SplitPath('/path?arg1=val1&arg2=val2'))).equal('{"base":"/path","query":"arg1=val1&arg2=val2"}');
+        expect(JSON.stringify(SplitPath('https://localhost:300/path?arg1=val1&arg2=val2'))).equal('{"base":"https://localhost:300/path","query":"arg1=val1&arg2=val2"}');
+        expect(JSON.stringify(SplitPath('/path'))).equal('{"base":"/path","query":""}');
+    });
+
+    it('should split a path and transform absolute to relative', () => {
+        expect(JSON.stringify(SplitPath('https://localhost:300/path?arg1=val1&arg2=val2', 'https://localhost:300'))).equal('{"base":"/path","query":"arg1=val1&arg2=val2"}');
+    });
+
+    it('should join a split path', () => {
+        expect(JoinPath({base: '/path', query: 'arg1=val1&arg2=val2'})).equal('/path?arg1=val1&arg2=val2');
+        expect(JoinPath({base: 'https://localhost:300/path', query: 'arg1=val1&arg2=val2'})).equal('https://localhost:300/path?arg1=val1&arg2=val2');
+        expect(JoinPath({base: 'https://localhost:300/path', query: 'arg1=val1&arg2=val2'}, 'https://localhost:300')).equal('/path?arg1=val1&arg2=val2');
+        expect(JoinPath({base: 'https://localhost:300/path', query: 'arg1=val1&arg2=val2'}, 'https://localhost:300', '', true)).equal('https://localhost:300/path?arg1=val1&arg2=val2');
+        expect(JoinPath({base: '/path', query: ''})).equal('/path');
     });
 });

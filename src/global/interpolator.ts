@@ -15,6 +15,19 @@ const InterpolateBlockRegex = /\{%(.+?)%\}/g;
 const InterpolateInlineTestRegex = /\{\{.+?\}\}/;
 const InterpolateBlockTestRegex = /\{%.+?%\}/;
 
+export function GetElementContent(el: Element){
+    let computeContent = (node: Element) => {
+        return [...node.childNodes].reduce((prev, child) => `${prev}${((child.nodeType != 3) ? computeText(<Element>child) : (child.textContent || ''))}`, '');
+    }
+
+    let computeText = (node: Element) => {
+        let tag = ([...node.attributes].reduce((prev, attr) => `${prev} ${attr.name}="${attr.value}"`, `<${node.tagName.toLowerCase()}`) + '>');
+        return `${tag}${computeContent(node)}</${node.tagName.toLowerCase()}>`;
+    };
+
+    return computeContent(el);
+}
+
 export function Interpolate({ componentId, contextElement, text, handler }: IInterpolateParams){
     let resolvedtext: string;
     if (!text){
@@ -23,16 +36,7 @@ export function Interpolate({ componentId, contextElement, text, handler }: IInt
             return;
         }
 
-        let computeContent = (node: Element) => {
-            return [...node.childNodes].reduce((prev, child) => `${prev}${((child.nodeType != 3) ? computeText(<Element>child) : (child.textContent || ''))}`, '');
-        }
-
-        let computeText = (node: Element) => {
-            let tag = ([...node.attributes].reduce((prev, attr) => `${prev} ${attr.name}="${attr.value}"`, `<${node.tagName.toLowerCase()}`) + '>');
-            return `${tag}${computeContent(node)}</${node.tagName.toLowerCase()}>`;
-        };
-
-        resolvedtext = computeContent(contextElement);
+        resolvedtext = GetElementContent(contextElement);
     }
     else if (!InterpolateInlineTestRegex.test(text) && !InterpolateInlineTestRegex.test(resolvedtext = text)){
         return;
