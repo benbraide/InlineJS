@@ -174,9 +174,20 @@ AddMagicHandler(greeter);
 - [Alert](https://github.com/benbraide/inlinejs-alert)
 - [Collections](https://github.com/benbraide/inlinejs-collections)
 - [Router](https://github.com/benbraide/inlinejs-router)
-- [Time Difference](https://github.com/benbraide/inlinejs-time-difference)
+- [Moment](https://github.com/benbraide/inlinejs-moment)
+- [Database](https://github.com/benbraide/inlinejs-database)
+- [Theme](https://github.com/benbraide/inlinejs-theme)
+- [Geolocation](https://github.com/benbraide/inlinejs-geolocation)
 - [Quill](https://github.com/benbraide/inlinejs-quill)
 - [Stripe](https://github.com/benbraide/inlinejs-stripe)
+- [Echo](https://github.com/benbraide/inlinejs-echo)
+
+## Bundles
+- [Pack](https://github.com/benbraide/inlinejs-pack)
+- [Plugins](https://github.com/benbraide/inlinejs-plugins)
+
+## Resources
+- [Demos](https://github.com/benbraide/inlinejs-demos)
 
 ## Security
 If you find a security vulnerability, please send an email to [benplaeska@gmail.com]()

@@ -120,6 +120,8 @@ export * from './expansion/class'
 export * from './expansion/on'
 
 export * from './observers/mutation'
+export * from './observers/intersection'
+export * from './observers/intersection-options'
 
 export * from './journal/error'
 export * from './journal/log'
