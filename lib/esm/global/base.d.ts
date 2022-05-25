@@ -4,7 +4,7 @@ import { MutationObserver } from "../observers/mutation";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
-import { IGlobal } from "../types/global";
+import { ComponentsMonitorType, IGlobal } from "../types/global";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
 import { Future } from "../values/future";
@@ -12,6 +12,7 @@ import { Nothing } from "../values/nothing";
 export declare class BaseGlobal implements IGlobal {
     private nothing_;
     private config_;
+    private componentsMonitorList_;
     private components_;
     private currentComponent_;
     private attributeProcessors_;
@@ -26,6 +27,8 @@ export declare class BaseGlobal implements IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
     GenerateUniqueId(prefix?: string, suffix?: string): string;
+    AddComponentMonitor(monitor: ComponentsMonitorType): void;
+    RemoveComponentMonitor(monitor: ComponentsMonitorType): void;
     CreateComponent(root: HTMLElement): IComponent;
     RemoveComponent(component: IComponent | string): void;
     TraverseComponents(callback: (component: IComponent) => void | boolean): void;

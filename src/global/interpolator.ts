@@ -29,7 +29,7 @@ export function GetElementContent(el: Element){
 }
 
 export function Interpolate({ componentId, contextElement, text, handler }: IInterpolateParams){
-    let resolvedtext: string;
+    let resolvedtext = '';
     if (!text){
         let passesTest = (text: string) => (InterpolateInlineTestRegex.test(text) || InterpolateBlockTestRegex.test(text));
         if (![...contextElement.childNodes].filter(child => (child.nodeType == 3)).find(child => passesTest(child.textContent || ''))){
@@ -38,11 +38,11 @@ export function Interpolate({ componentId, contextElement, text, handler }: IInt
 
         resolvedtext = GetElementContent(contextElement);
     }
-    else if (!InterpolateInlineTestRegex.test(text) && !InterpolateInlineTestRegex.test(resolvedtext = text)){
+    else if (!InterpolateInlineTestRegex.test(text) && !InterpolateBlockTestRegex.test(text)){
         return;
     }
 
-    let replace = () => JSON.stringify(resolvedtext).replace(InterpolateInlineRegex, '"+($1)+"').replace(InterpolateBlockRegex, '";$1\noutput+="');
+    let replace = () => JSON.stringify(resolvedtext || text).replace(InterpolateInlineRegex, '"+($1)+"').replace(InterpolateBlockRegex, '";$1\noutput+="');
     let evaluate = EvaluateLater({ componentId, contextElement,
         expression: "let output = " + replace() + "; return output;",
     });

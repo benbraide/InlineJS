@@ -1,5 +1,4 @@
 import { BaseComponent } from "../component/base";
-import { GetElementScopeId } from "../component/element-scope-id";
 import { DirectiveManager } from "../directive/manager";
 import { JournalTry } from "../journal/try";
 import { MagicManager } from "../magic/manager";
@@ -9,7 +8,7 @@ import { Stack } from "../stack";
 import { IComponent } from "../types/component";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
-import { IGlobal } from "../types/global";
+import { ComponentsMonitorType, IGlobal } from "../types/global";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
@@ -23,6 +22,7 @@ export class BaseGlobal implements IGlobal{
     
     private config_: IConfig;
     
+    private componentsMonitorList_ = new Array<ComponentsMonitorType>();
     private components_: Record<string, IComponent> = {};
     private currentComponent_ = new Stack<string>();
 
@@ -57,9 +57,17 @@ export class BaseGlobal implements IGlobal{
     public GenerateUniqueId(prefix?: string, suffix?: string){
         return GenerateUniqueId(this.uniqueMarkers_, '', prefix, suffix);
     }
+
+    public AddComponentMonitor(monitor: ComponentsMonitorType){
+        this.componentsMonitorList_.push(monitor);
+    }
+
+    public RemoveComponentMonitor(monitor: ComponentsMonitorType){
+        this.componentsMonitorList_ = this.componentsMonitorList_.filter(m => (m !== monitor));
+    }
     
     public CreateComponent(root: HTMLElement){
-        let existing = Object.values(this.components_).find(component => (component.GetRoot() === root));
+        let existing = this.InferComponentFrom(root);
         if (existing){
             return existing;
         }
@@ -67,11 +75,18 @@ export class BaseGlobal implements IGlobal{
         let component = new BaseComponent(this.GenerateUniqueId(), root);
         this.components_[component.GetId()] = component;
 
+        this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'add', component }), 'InlineJS.Global.CreateComponent'));
+
         return component;
     }
 
     public RemoveComponent(component: IComponent | string){
-        delete this.components_[((typeof component === 'string') ? component : component.GetId())];
+        let key = ((typeof component === 'string') ? component : component.GetId());
+        if (this.components_.hasOwnProperty(key)){
+            let component = this.components_[key];
+            delete this.components_[key];
+            this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'remove', component }), 'InlineJS.Global.RemoveComponent'));
+        }
     }
 
     public TraverseComponents(callback: (component: IComponent) => void | boolean){
@@ -107,8 +122,7 @@ export class BaseGlobal implements IGlobal{
     }
 
     public InferComponentFrom(element: HTMLElement | null): IComponent | null{
-        let scopeId = GetElementScopeId(element);
-        return ((scopeId && Object.values(this.components_).find(component => !!component.FindElementScope(scopeId))) || null);
+        return ((element && Object.values(this.components_).find(component => (component.GetRoot() === element || component.GetRoot().contains(element)))) || null);
     }
 
     public GetDirectiveManager(){

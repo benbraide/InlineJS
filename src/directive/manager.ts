@@ -23,6 +23,7 @@ function CreateComposedDirectiveHandler(handler: DirectiveHandlerCallbackType){
 function AddDirectiveHandlerExtension(ref: DirectiveHandlerCallbackType | IDirectiveHandlerComposition, name: string, handler: DirectiveHandlerCallbackType){
     let info = ((typeof ref === 'function') ? CreateComposedDirectiveHandler(ref) : ref);
     info.extensions[name] = handler;
+    return info;
 }
 
 function RemoveDirectiveHandlerExtension(ref: DirectiveHandlerCallbackType | IDirectiveHandlerComposition, name: string){
@@ -95,7 +96,7 @@ export class DirectiveManager implements IDirectiveManager{
         }
 
         let info = this.handlers_[name];
-        return ((typeof info === 'function') ? info : info.handler);
+        return ((typeof info === 'function') ? info : info.handler.bind(info));
     }
 
     public AddHandlerExtension(target: string, handler: IDirectiveHandler | DirectiveHandlerCallbackType, name?: string){
@@ -106,7 +107,7 @@ export class DirectiveManager implements IDirectiveManager{
         
         let { computedName, callback } = ComputeNameAndCallback(handler, name);
         if (computedName && callback){
-            AddDirectiveHandlerExtension(info, computedName, callback);
+            this.handlers_[target] =AddDirectiveHandlerExtension(info, computedName, callback);
         }
     }
 
@@ -115,6 +116,5 @@ export class DirectiveManager implements IDirectiveManager{
         if (info){
             RemoveDirectiveHandlerExtension(info, name);
         }
-        
     }
 }

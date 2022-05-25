@@ -45,10 +45,11 @@ export function InsertHtml({ element, html, type = 'replace', component, process
         }
 
         if (afterTransitionCallback){
+            (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.begin', { detail: { insert: true } }));
             WaitTransition({ componentId,
                 contextElement: (transitionScope || element),
                 target: element,
-                callback: afterTransitionCallback,
+                callback: () => (((transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: true } })) && false) || afterTransitionCallback()),
             });
         }
     };
@@ -74,11 +75,12 @@ export function InsertHtml({ element, html, type = 'replace', component, process
         };
 
         if (afterTransitionCallback){
+            (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.begin', { detail: { insert: false } }));
             WaitTransition({ componentId,
                 contextElement: (transitionScope || element),
                 target: element,
                 reverse: true,
-                callback: () => remove(),
+                callback: () => (((transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: false } })) && false) || remove()),
             });
         }
         else{

@@ -10,43 +10,50 @@ export interface ILoopCallbackInfo{
 type CallbackType = (value: ILoopCallbackInfo) => void;
 
 export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0){
-    let activeDelay = delay;
-    let startTimestamp = -1, lastTimestamp = -1, aborted = false, passes = 0, pass = (doWhile: CallbackType, doFinal: CallbackType, timestamp: DOMHighResTimeStamp) => {
+    delay = (delay || 1);
+    
+    let totalSteps = (duration ? Math.floor(duration / delay) : -1), steps = 0, waitingRepeat = false;
+    let startTimestamp = -1, aborted = false, step = (doWhile: CallbackType, doFinal: CallbackType, doAbort: () => void, timestamp: DOMHighResTimeStamp) => {
         if (aborted){
-            return;
+            return doAbort();
         }
-
-        if (startTimestamp == -1){
-            startTimestamp = timestamp;
-        }
-
-        let elapsed = (timestamp - startTimestamp);
-        if (duration && elapsed >= duration){
-            if (!repeats){
-                return doFinal({ passes, elapsed, duration });
+        
+        if (waitingRepeat){
+            if ((timestamp - startTimestamp) >= repeatDelay){//Wait complete
+                waitingRepeat = false;
+                startTimestamp = -1;
+                steps = 0;
             }
 
-            activeDelay = repeatDelay;
-            lastTimestamp = timestamp;
-            
+            return requestAnimationFrame(step.bind(null, doWhile, doFinal, doAbort));
+        }
+
+        if (startTimestamp == -1){//First entry
+            startTimestamp = timestamp;
+            return requestAnimationFrame(step.bind(null, doWhile, doFinal, doAbort));
+        }
+
+        let computedSteps = Math.floor((timestamp - startTimestamp) / delay);
+        if (totalSteps != -1 && computedSteps >= totalSteps){
+            if (!repeats){//No repeats
+                return doFinal({ passes: totalSteps, elapsed: (timestamp - startTimestamp), duration });
+            }
+
+            doWhile({ passes: totalSteps, elapsed: (timestamp - startTimestamp), duration, abort: () => (aborted = true) });
+
+            waitingRepeat = true;
+            startTimestamp = timestamp;
+
             (repeats > 0) && (repeats -= 1);
         }
-
-        if (lastTimestamp == -1){
-            lastTimestamp = timestamp;
+        else if (computedSteps != steps){
+            doWhile({ passes: (steps = computedSteps), elapsed: (timestamp - startTimestamp), duration, abort: () => (aborted = true) });
         }
 
-        let wait = (timestamp - lastTimestamp);
-        if (wait >= activeDelay){
-            lastTimestamp = (timestamp - (wait - activeDelay));
-            activeDelay = delay;
-            doWhile({ passes: ++passes, elapsed, duration, abort: () => (aborted = true) });
-        }
-
-        requestAnimationFrame(pass.bind(null, doWhile, doFinal));
+        requestAnimationFrame(step.bind(null, doWhile, doFinal, doAbort));
     };
 
-    return new Loop<ILoopCallbackInfo>((doWhile, doFinal) => {
-        requestAnimationFrame(pass.bind(null, doWhile, doFinal));
+    return new Loop<ILoopCallbackInfo>((doWhile, doFinal, doAbort) => {
+        requestAnimationFrame(step.bind(null, doWhile, doFinal, doAbort));
     });
 }

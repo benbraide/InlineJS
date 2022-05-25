@@ -69,7 +69,7 @@ export function AddOutsideEventListener(target: HTMLElement, events: string | Ar
                 });
             };
 
-            document.body.addEventListener(event, block.eventCallbacks[event]);
+            window.addEventListener(event, block.eventCallbacks[event]);
         }
     });
 }

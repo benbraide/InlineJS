@@ -20,7 +20,7 @@ export class Config implements IConfig{
         star: '*',
         slash: '/',
         alpha: Array.from({ length: 26 }).map((i, index) => String.fromCharCode(index + 97)),
-        digits: Array.from({ length: 10 }).map((i, index) => index.toString()),
+        digit: Array.from({ length: 10 }).map((i, index) => index.toString()),
     };
 
     private booleanAttributes_ = new Array<string>(

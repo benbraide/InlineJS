@@ -9,11 +9,21 @@ import { IMutationObserver } from "./mutation";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
 
+export interface IComponentsMonitorParams{
+    action: 'add' | 'remove';
+    component: IComponent;
+}
+
+export type ComponentsMonitorType = (params: IComponentsMonitorParams) => void;
+
 export interface IGlobal{
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
 
     GenerateUniqueId(prefix?: string, suffix?: string): string;
+
+    AddComponentMonitor(monitor: ComponentsMonitorType): void;
+    RemoveComponentMonitor(monitor: ComponentsMonitorType): void;
     
     CreateComponent(root: HTMLElement): IComponent;
     RemoveComponent(component: IComponent | string): void;
