@@ -8,7 +8,24 @@ Run JavaScript code by embedding them in your HTML using the element as context.
 
 `InlineJS` works without creating shadow DOMs.
 
+> **Notes:**
+> - Directives are of the general form: `x-[DirectiveName]` or `data-x-[DirectiveName]`. Example: `x-effect` or `data-x-effect`.
+> - The `x-` prefix can be configured via the global `config` object.
+> - `InlineJS` binds to elements with the `x-data` directive present.
+
 ## Install
+
+ - Grab source or distribution versions from `GitHub`
+ - Include script in your HTML file.
+
+## CDNs
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@benbraide/inlinejs@1.x.x/dist/inlinejs.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@benbraide/inlinejs@1.x.x/dist/inlinejs.min.js"></script>
+```
+
+## NPM Install
 
 ```
 npm install @benbraide/inlinejs
@@ -76,7 +93,7 @@ You can even use it for non-trivial things:
 > - If the result of an evaluated expression is a function, most directives will call that function.
 > - When evaluating an expression, `this` refers to the element that the directive is being executed on.
 > - Directives are executed accordingly from `left` to `right` as they appear on an element. There is no precedence.
-> - This is the base `API` for development and extension purposes.
+> - This is the base `API` and it can be used for development and extension purposes.
 
 ## Extending InlineJS
 
@@ -188,6 +205,10 @@ AddMagicHandler(greeter);
 
 ## Resources
 - [Demos](https://github.com/benbraide/inlinejs-demos)
+
+## Utilities
+- [Intellisense](https://github.com/benbraide/inlinejs-intellisense)
+- [Chrome Dev Tools](https://github.com/benbraide/inlinejs-devtools)
 
 ## Security
 If you find a security vulnerability, please send an email to [benplaeska@gmail.com]()

@@ -1,19 +1,24 @@
 import { FindComponentById } from "../component/find";
 import { EvaluateLater } from "../evaluator/evaluate-later";
+import { JournalTry } from "../journal/try";
 import { UseEffect } from "../reactive/effect";
 
 export interface IInterpolateParams{
     componentId: string;
     contextElement: HTMLElement;
-    handler: (value: string) => void;
     text?: string;
+    handler?: (value: string) => void;
+}
+
+export interface IInterpolateTextParams{
+    componentId: string;
+    contextElement: HTMLElement;
+    text: string;
+    handler: (value: string) => void;
 }
 
 const InterpolateInlineRegex = /\{\{\s*(.+?)\s*\}\}/g;
-const InterpolateBlockRegex = /\{%(.+?)%\}/g;
-
 const InterpolateInlineTestRegex = /\{\{.+?\}\}/;
-const InterpolateBlockTestRegex = /\{%.+?%\}/;
 
 export function GetElementContent(el: Element){
     let computeContent = (node: Element) => {
@@ -28,27 +33,79 @@ export function GetElementContent(el: Element){
     return computeContent(el);
 }
 
-export function Interpolate({ componentId, contextElement, text, handler }: IInterpolateParams){
-    let resolvedtext = '';
-    if (!text){
-        let passesTest = (text: string) => (InterpolateInlineTestRegex.test(text) || InterpolateBlockTestRegex.test(text));
-        if (![...contextElement.childNodes].filter(child => (child.nodeType == 3)).find(child => passesTest(child.textContent || ''))){
-            return;
-        }
+export interface IInterpolateTextNode{
+    text: string;
+    evaluated: string;
+}
 
-        resolvedtext = GetElementContent(contextElement);
-    }
-    else if (!InterpolateInlineTestRegex.test(text) && !InterpolateBlockTestRegex.test(text)){
-        return;
-    }
-
-    let replace = () => JSON.stringify(resolvedtext || text).replace(InterpolateInlineRegex, '"+($1)+"').replace(InterpolateBlockRegex, '";$1\noutput+="');
+export function ReplaceText({ componentId, contextElement, text, handler }: IInterpolateTextParams){
     let evaluate = EvaluateLater({ componentId, contextElement,
-        expression: "let output = " + replace() + "; return output;",
+        expression: "let output = " + JSON.stringify(text).replace(InterpolateInlineRegex, '"+($1)+"') + "; return output;",
     });
 
     FindComponentById(componentId)?.CreateElementScope(contextElement);
     UseEffect({ componentId, contextElement,
         callback: () => evaluate(handler),
     });
+}
+
+export function InterpolateText({ text, ...rest }: IInterpolateTextParams){
+    if (InterpolateInlineTestRegex.test(text)){
+        ReplaceText({ text, ...rest });
+    }
+}
+
+export function Interpolate({ componentId, contextElement, text, handler }: IInterpolateParams){
+    if (typeof text === 'string'){
+        return (handler && InterpolateText({ componentId, contextElement, text, handler }));
+    }
+    
+    if (!InterpolateInlineTestRegex.test(contextElement.textContent || '')){
+        return;
+    }
+
+    let children = new Array<Element | IInterpolateTextNode | string>(), replaceCallers = new Array<() => void>(), refresh = () => {
+        while (contextElement.firstChild){//Empty tree
+            contextElement.firstChild.remove();
+        }
+        
+        let previousElement: Element | Text | null = null;
+        children.forEach((child) => {
+            let element = ((child instanceof Element) ? child : document.createTextNode((typeof child === 'string') ? child : child.evaluated));
+            if (previousElement){
+                contextElement.insertBefore(element, previousElement);
+            }
+            else{
+                contextElement.append(element);
+            }
+
+            previousElement = element;
+        });
+    };
+
+    [...contextElement.childNodes].forEach((child) => {
+        if (child.nodeType == 3 && child.textContent && InterpolateInlineTestRegex.test(child.textContent)){
+            let textNode: IInterpolateTextNode = { text: (child.textContent || ''), evaluated: (child.textContent || '') };
+
+            children.push(textNode);
+            replaceCallers.push(() => ReplaceText({
+                componentId,
+                contextElement,
+                text: textNode.text,
+                handler: (value) => {
+                    textNode.evaluated = value;
+                    refresh();
+                },
+            }));
+        }
+        else if (child.nodeType == 3){
+            children.push(child.textContent || '');
+        }
+        else{
+            children.push(<Element>child);
+        }
+    });
+
+    children.reverse();
+    replaceCallers.forEach(caller => JournalTry(caller, 'InlineJS.Interpolate', contextElement));
 }

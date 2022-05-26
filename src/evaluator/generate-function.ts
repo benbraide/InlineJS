@@ -8,13 +8,26 @@ import { WaitPromise } from "./wait-promise";
 
 const InlineJSContextKey = '__InlineJS_Context__';
 
+let InlineJSValueFunctions: Record<string, any> = {};
+let InlineJSVoidFunctions: Record<string, any> = {};
+
 export function GenerateValueReturningFunction(expression: string, contextElement: HTMLElement, componentId?: string){
+    if (InlineJSValueFunctions.hasOwnProperty(expression)){
+        return InlineJSValueFunctions[expression];
+    }
+
+    if (InlineJSVoidFunctions.hasOwnProperty(expression)){
+        return null;//Prevent retries when a void version exists
+    }
+    
     try{
-        return (new Function(InlineJSContextKey, `
+        let newFunction = (new Function(InlineJSContextKey, `
             with (${InlineJSContextKey}){
                 return (${expression});
             };
         `)).bind(contextElement);
+
+        return (InlineJSValueFunctions[expression] = newFunction);
     }
     catch (err){
         if (!(err instanceof SyntaxError)){
@@ -26,12 +39,18 @@ export function GenerateValueReturningFunction(expression: string, contextElemen
 }
 
 export function GenerateVoidFunction(expression: string, contextElement: HTMLElement, componentId?: string){
+    if (InlineJSVoidFunctions.hasOwnProperty(expression)){
+        return InlineJSVoidFunctions[expression];
+    }
+    
     try{
-        return (new Function(InlineJSContextKey, `
+        let newFunction = (new Function(InlineJSContextKey, `
             with (${InlineJSContextKey}){
                 ${expression};
             };
         `)).bind(contextElement);
+
+        return (InlineJSVoidFunctions[expression] = newFunction);
     }
     catch (err){
         JournalError(err, `InlineJs.Region<${componentId || 'NIL'}>.GenerateVoidFunction`);
@@ -55,8 +74,9 @@ export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Ar
 export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive' }: IEvaluateOptions): GeneratedFunctionType{
     expression = expression.trim();
     if (!expression){
-        return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>) => {
-            return (handler ? handler(null) : null);
+        return (handler?: (value: any) => void) => {
+            handler && handler(null);
+            return null;
         };
     }
 
@@ -139,6 +159,8 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
             return (runFunction(handler, voidFunction, (params || []), (contexts || {}), false) || null);
         }
 
-        return (handler ? handler(null) : null);
+        handler && handler(null);
+
+        return null;
     };
 }

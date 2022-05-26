@@ -1,19 +1,21 @@
 {
   "name": "@benbraide/inlinejs",
-  "version": "1.0.15",
+  "version": "1.0.17",
   "description": "Run javascript code by embedding them in your HTML using the element as context.",
   "main": "./lib/common/index.js",
   "module": "./lib/esm/index.js",
   "files": [
+    "dist/",
     "lib/"
   ],
   "scripts": {
     "test": "mocha -r jsdom-global/register lib/**/*.spec.js",
     "ts-test": "mocha -r ts-node/register -r jsdom-global/register src/**/*.spec.ts",
     "dbg-test": "mocha --inspect-brk -r ts-node/register -r jsdom-global/register src/**/*.spec.ts",
-    "tsc": "tsc -p ./tsconfig.json && tsc -p ./tsconfig.esm.json",
-    "prepublishOnly": "npm run tsc",
-    "tailwind": "postcss tailwind.css -o plublic/style.css"
+    "compile": "tsc -p ./tsconfig.json && tsc -p ./tsconfig.esm.json",
+    "prepublishOnly": "npm run compile",
+    "build": "webpack -c ./webpack.config.js && webpack -c ./webpack2.config.js",
+    "upload": "npm run build && npm publish --access=public"
   },
   "repository": {
     "type": "git",
