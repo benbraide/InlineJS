@@ -2,7 +2,7 @@ import { FindComponentById } from "../component/find";
 import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IAnimationActorParams, IAnimationConcept, IAnimationEaseParams, IAnimationTransition } from "../types/animation";
-import { CreateLoop } from "../utilities/loop";
+import { CreateAnimationLoop } from "../utilities/loop";
 
 export interface ITransitionParams{
     componentId: string;
@@ -51,7 +51,7 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
 
     FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(abort);
 
-    CreateLoop(info.duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
+    CreateAnimationLoop(info.duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
         if (aborted){
             return onAborted();
         }
