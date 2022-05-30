@@ -9,6 +9,7 @@ export const InlineJSGlobalKey = '__InlineJS_GLOBAL_KEY__';
 export function CreateGlobal(configOptions?: IConfigOptions, idOffset = 0): IGlobal{
     InitComponentCache();
     globalThis[InlineJSGlobalKey] = new BaseGlobal(configOptions, idOffset);
+    (globalThis['InlineJS'] = (globalThis['InlineJS'] || {}))['global'] = globalThis[InlineJSGlobalKey];
     window.dispatchEvent(new CustomEvent(GlobalCreatedEvent));
     return globalThis[InlineJSGlobalKey];
 }

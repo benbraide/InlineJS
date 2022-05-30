@@ -30,6 +30,7 @@ export class Changes implements IChanges{
     
     public AddNextTickHandler(handler: () => void){
         this.nextTickHandlers_.push(handler);
+        this.Schedule();
     }
 
     public Schedule(){

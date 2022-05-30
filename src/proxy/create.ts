@@ -40,14 +40,14 @@ export function CreateInplaceProxy({ target, getter, setter, deleter, lookup, al
                 return Reflect.set(target, prop, value);
             }
 
-            return (setter ? setter(prop.toString(), value, target) : (!!target[prop] || true));
+            return (setter ? (setter(prop.toString(), value, target) !== false) : (!!target[prop] || true));
         },
         deleteProperty(target: object, prop: string | number | symbol){
             if (typeof prop === 'symbol' || (typeof prop === 'string' && prop === 'prototype')){
                 return Reflect.deleteProperty(target, prop);
             }
 
-            return (deleter ? deleter(prop.toString(), target) : (!!(delete target[prop]) || true));
+            return (deleter ? (deleter(prop.toString(), target) !== false) : (!!(delete target[prop]) || true));
         },
         has(target: object, prop: string | number | symbol){
             if (Reflect.has(target, prop)){

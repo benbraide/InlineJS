@@ -80,7 +80,7 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         };
     }
 
-    let runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true) => {
+    let runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true, waitMessage?: string) => {
         let component = FindComponentById(componentId), proxy = component?.GetRootProxy().GetNative();
         if (!proxy || component?.FindElementScope(contextElement)?.IsDestroyed()){
             return;
@@ -105,8 +105,9 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
             }
 
             let handleResult = (value: any) => {
-                if (waitPromise !== 'none'){
+                if (value && waitPromise !== 'none'){
                     WaitPromise(value, handler, waitPromise === 'recursive');
+                    return (waitMessage || 'Loading data...');
                 }
                 else{//Immediate
                     handler(value);
@@ -140,10 +141,10 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         voidFunction = GenerateVoidFunction(expression, contextElement, componentId);
     }
     
-    return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>) => {
+    return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>, waitMessage?: string) => {
         if (!voidFunction && valueReturnFunction){
             try{
-                return runFunction(handler, valueReturnFunction, (params || []), (contexts || {}));
+                return runFunction(handler, valueReturnFunction, (params || []), (contexts || {}), undefined, waitMessage);
             }
             catch (err){
                 if (err instanceof SyntaxError){

@@ -18,7 +18,10 @@ export interface IProcessDetails{
 }
 
 function CheckElement(element: Element, { checkTemplate = true, checkDocument = true }: IProcessOptions){
-    return (element?.nodeType === 1 && (!checkDocument || document.contains(element)) && (!checkTemplate || element instanceof HTMLTemplateElement || !element.closest('template')));
+    return (
+        element?.nodeType === 1 &&
+        (!checkDocument || document.contains(element)) &&
+        (!checkTemplate || element instanceof HTMLTemplateElement || !element.closest('template')));
 }
 
 export function ProcessDirectives({ component, element, options = {} }: IProcessDetails){
@@ -55,11 +58,11 @@ export function ProcessDirectives({ component, element, options = {} }: IProcess
 
     if (!options.ignoreChildren && !(element instanceof HTMLTemplateElement)){//Process children
         resolvedComponent?.PushSelectionScope();
-        Array.from(element.children).forEach(child => ProcessDirectives({ component, options,
+        Array.from(element.children).filter(child => !child.contains(element)).forEach(child => ProcessDirectives({ component, options,
             element: child,
         }));
         resolvedComponent?.PopSelectionScope();
     }
 
-    resolvedComponent?.CreateElementScope(<HTMLElement>element)?.ExecutePostProcessCallbacks();
+    resolvedComponent?.FindElementScope(<HTMLElement>element)?.ExecutePostProcessCallbacks();
 }

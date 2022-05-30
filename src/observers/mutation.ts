@@ -35,21 +35,32 @@ export class MutationObserver implements IMutationObserver{
                     };
 
                     entries.forEach((entry) => {
-                        let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
-                        if (!key){//Invalid target
-                            return;
-                        }
-
                         if (entry?.type === 'childList'){
-                            let info = getInfo(key);
-                            info.added.push(...Array.from(entry.addedNodes));
-                            info.removed.push(...Array.from(entry.removedNodes));
+                            let pushRemovedNode = (node: Node) => {
+                                let key = GetElementScopeId(InferComponent(<HTMLElement>node)?.GetRoot() || null);
+                                if (key){
+                                    getInfo(key).removed.push(node);
+                                }
+                                else{//Try children
+                                    Array.from(node.childNodes).filter(child => !child.contains(node)).forEach(pushRemovedNode);
+                                }
+                            };
+                            
+                            entry.removedNodes.forEach(pushRemovedNode);
+
+                            let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
+                            if (key){
+                                getInfo(key).added.push(...Array.from(entry.addedNodes));
+                            }
                         }
                         else if (entry?.type === 'attributes' && entry.attributeName){
-                            getInfo(key).attributes.push({
-                                name: entry.attributeName,
-                                target: entry.target,
-                            });
+                            let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
+                            if (key){
+                                getInfo(key).attributes.push({
+                                    name: entry.attributeName,
+                                    target: entry.target,
+                                });
+                            }
                         }
                     });
 

@@ -1,7 +1,9 @@
 import { ProcessDirectives } from "../directive/process";
 import { WaitTransition } from "../directive/transition";
+import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
+import { ElementScopeKey } from "./element-scope-id";
 import { FindComponentById } from "./find";
 
 export type InsertionType = 'replace' | 'append' | 'prepend';
@@ -56,10 +58,10 @@ export function InsertHtml({ element, html, type = 'replace', component, process
 
     if (type === 'replace'){//Remove all child nodes
         let destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
-            let resolvedComponent = FindComponentById(componentId);
+            let resolvedComponent = FindComponentById(componentId), global = GetGlobal();
             Array.from(el.children).forEach((child) => {
                 let elementScope = resolvedComponent?.FindElementScope(child);
-                if (elementScope){
+                if (elementScope || (ElementScopeKey in child && (elementScope = global.InferComponentFrom(<HTMLElement>child)?.FindElementScope(child)))){
                     elementScope.Destroy();
                 }
                 else{

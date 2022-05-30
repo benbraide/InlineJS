@@ -182,7 +182,7 @@ export class ElementScope implements IElementScope{
         }
         
         this.state_.isMarked = true;
-        if (!(this.element_ instanceof HTMLTemplateElement) && this.element_.tagName.toLowerCase() !== 'svg'){
+        if (!(this.element_ instanceof HTMLTemplateElement)){
             let component = FindComponentById(this.componentId_);
             if (component){
                 this.DestroyChildren_(component, this.element_, (markOnly || false));
@@ -234,7 +234,7 @@ export class ElementScope implements IElementScope{
     }
 
     private DestroyChildren_(component: IComponent, target: HTMLElement, markOnly: boolean){
-        Array.from(target.children).forEach((child) => {
+        Array.from(target.children).filter(child => !child.contains(target)).forEach((child) => {
             let childScope = component.FindElementScope(<HTMLElement>child);
             if (childScope){//Destroy element scope
                 childScope.Destroy(markOnly);
