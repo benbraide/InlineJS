@@ -6,4 +6,5 @@ export declare class Stack<T> implements IStack<T> {
     Pop(): T | null;
     Peek(): T | null;
     IsEmpty(): boolean;
+    GetHistory(): T[];
 }

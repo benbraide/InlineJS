@@ -24,4 +24,8 @@ export class Stack<T> implements IStack<T>{
     public IsEmpty(): boolean{
         return (this.list_.length == 0);
     }
+
+    public GetHistory(){
+        return this.list_.map(item => item);
+    }
 }

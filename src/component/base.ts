@@ -141,19 +141,21 @@ export class BaseComponent implements IComponent{
 
         let scope = new Scope(this.id_, this.GenerateUniqueId('scope_'), root);
         this.scopes_[scope.GetId()] = scope;
+        this.AddProxy(scope.GetProxy());
 
         return scope;
     }
 
     public RemoveScope(scope: IScope | string){
         let id = ((typeof scope === 'string') ? scope : scope.GetId());
-        if (id in this.scopes_){
+        if (this.scopes_.hasOwnProperty(id)){
+            this.RemoveProxy(this.scopes_[id].GetProxy());
             delete this.scopes_[id];
         }
     }
 
     public FindScopeById(id: string): IScope | null{
-        return ((id in this.scopes_) ? this.scopes_[id] : null);
+        return (this.scopes_.hasOwnProperty(id) ? this.scopes_[id] : null);
     }
 
     public FindScopeByName(name: string): IScope | null{
@@ -213,7 +215,7 @@ export class BaseComponent implements IComponent{
                 }
             }
             catch {}
-        } while (deepestElement !== this.root_)
+        } while (deepestElement !== this.root_);
 
         return null;
     }
@@ -278,7 +280,7 @@ export class BaseComponent implements IComponent{
 
     public RemoveProxy(proxy: IProxy | string){
         let path = ((typeof proxy === 'string') ? proxy : proxy.GetPath());
-        if (path in this.proxies_){
+        if (this.proxies_.hasOwnProperty(path)){
             delete this.proxies_[path];
         }
     }

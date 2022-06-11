@@ -6,4 +6,6 @@ export declare class Context implements IContext {
     Pop(key: string, noResult?: any): any;
     Peek(key: string, noResult?: any): any;
     Get(key: string): Stack<any> | null;
+    GetHistory(key: string): any[];
+    GetRecordKeys(): string[];
 }

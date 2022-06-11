@@ -9,14 +9,22 @@ export class Context implements IContext{
     }
 
     public Pop(key: string, noResult?: any){
-        return ((key in this.record_) ? this.record_[key].Pop() : (noResult || null));
+        return (this.record_.hasOwnProperty(key) ? this.record_[key].Pop() : (noResult || null));
     }
 
     public Peek(key: string, noResult?: any){
-        return ((key in this.record_) ? this.record_[key].Peek() : (noResult || null));
+        return (this.record_.hasOwnProperty(key) ? this.record_[key].Peek() : (noResult || null));
     }
 
     public Get(key: string){
-        return ((key in this.record_) ? this.record_[key] : null);
+        return (this.record_.hasOwnProperty(key) ? this.record_[key] : null);
+    }
+
+    public GetHistory(key: string){
+        return (this.record_.hasOwnProperty(key) ? this.record_[key].GetHistory() : []);
+    }
+
+    public GetRecordKeys(){
+        return Object.keys(this.record_);
     }
 }

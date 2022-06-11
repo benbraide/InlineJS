@@ -3,4 +3,5 @@ export interface IStack<T> {
     Pop(): T | null;
     Peek(): T | null;
     IsEmpty(): boolean;
+    GetHistory(): Array<T>;
 }

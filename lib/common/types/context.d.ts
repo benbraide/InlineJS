@@ -4,4 +4,6 @@ export interface IContext {
     Pop(key: string, noResult?: any): any;
     Peek(key: string, noResult?: any): any;
     Get(key: string): IStack<any> | null;
+    GetHistory(key: string): Array<any>;
+    GetRecordKeys(): Array<string>;
 }

@@ -11,7 +11,7 @@ const InlineJSContextKey = '__InlineJS_Context__';
 let InlineJSValueFunctions: Record<string, any> = {};
 let InlineJSVoidFunctions: Record<string, any> = {};
 
-export function GenerateValueReturningFunction(expression: string, contextElement: HTMLElement, componentId?: string){
+export function GenerateValueReturningFunction(expression: string, componentId?: string){
     if (InlineJSValueFunctions.hasOwnProperty(expression)){
         return InlineJSValueFunctions[expression];
     }
@@ -25,7 +25,7 @@ export function GenerateValueReturningFunction(expression: string, contextElemen
             with (${InlineJSContextKey}){
                 return (${expression});
             };
-        `)).bind(contextElement);
+        `));
 
         return (InlineJSValueFunctions[expression] = newFunction);
     }
@@ -38,7 +38,7 @@ export function GenerateValueReturningFunction(expression: string, contextElemen
     return null;
 }
 
-export function GenerateVoidFunction(expression: string, contextElement: HTMLElement, componentId?: string){
+export function GenerateVoidFunction(expression: string, componentId?: string){
     if (InlineJSVoidFunctions.hasOwnProperty(expression)){
         return InlineJSVoidFunctions[expression];
     }
@@ -48,7 +48,7 @@ export function GenerateVoidFunction(expression: string, contextElement: HTMLEle
             with (${InlineJSContextKey}){
                 ${expression};
             };
-        `)).bind(contextElement);
+        `));
 
         return (InlineJSVoidFunctions[expression] = newFunction);
     }
@@ -136,19 +136,19 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         }
     };
 
-    let valueReturnFunction = GenerateValueReturningFunction(expression, contextElement, componentId), voidFunction: any = null;
+    let valueReturnFunction = GenerateValueReturningFunction(expression, componentId), voidFunction: any = null;
     if (!valueReturnFunction){
-        voidFunction = GenerateVoidFunction(expression, contextElement, componentId);
+        voidFunction = GenerateVoidFunction(expression, componentId);
     }
     
     return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>, waitMessage?: string) => {
         if (!voidFunction && valueReturnFunction){
             try{
-                return runFunction(handler, valueReturnFunction, (params || []), (contexts || {}), undefined, waitMessage);
+                return runFunction(handler, valueReturnFunction.bind(contextElement), (params || []), (contexts || {}), undefined, waitMessage);
             }
             catch (err){
                 if (err instanceof SyntaxError){
-                    voidFunction = GenerateVoidFunction(expression, contextElement, componentId);
+                    voidFunction = GenerateVoidFunction(expression, componentId);
                 }
                 else{
                     throw err;
@@ -157,7 +157,7 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         }
         
         if (voidFunction){
-            return (runFunction(handler, voidFunction, (params || []), (contexts || {}), false) || null);
+            return (runFunction(handler, voidFunction.bind(contextElement), (params || []), (contexts || {}), false) || null);
         }
 
         handler && handler(null);
