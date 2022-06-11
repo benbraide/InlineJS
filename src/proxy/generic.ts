@@ -12,7 +12,7 @@ export class GenericProxy implements IProxy{
     protected native_: any = null;
     protected children_: Record<string, IProxy> = {};
     
-    public constructor(protected componentId_: string, protected target_: any, private name_: string, parent?: IProxy){
+    public constructor(protected componentId_: string, protected target_: any, private name_: string, parent?: IProxy, isFalseRoot = false){
         this.parentPath_ = (parent?.GetPath() || '');
         parent?.AddChild(this);
         
@@ -38,7 +38,7 @@ export class GenericProxy implements IProxy{
             return result;
         };
         
-        let isRoot = !this.parentPath_, handler = {
+        let isRoot = (!isFalseRoot && !this.parentPath_), handler = {
             get(target: object, prop: string | number | symbol){
                 if (typeof prop === 'symbol' || prop === 'prototype'){
                     return Reflect.get(target, prop);

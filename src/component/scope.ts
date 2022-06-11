@@ -6,7 +6,7 @@ export class Scope implements IScope{
     private proxy_: RootProxy;
     
     public constructor(private componentId_: string, private id_: string, private root_: HTMLElement){
-        this.proxy_ = new RootProxy(this.id_, {});
+        this.proxy_ = new RootProxy(this.componentId_, {}, this.id_);
     }
     
     public GetComponentId(){

@@ -6,7 +6,7 @@ export declare class GenericProxy implements IProxy {
     private parentPath_;
     protected native_: any;
     protected children_: Record<string, IProxy>;
-    constructor(componentId_: string, target_: any, name_: string, parent?: IProxy);
+    constructor(componentId_: string, target_: any, name_: string, parent?: IProxy, isFalseRoot?: boolean);
     IsRoot(): boolean;
     GetComponentId(): string;
     GetTarget(): any;
