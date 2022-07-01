@@ -4,6 +4,7 @@ import { IContext } from "./context";
 import { IElementScope } from "./element-scope";
 import { IGlobal } from "./global";
 import { IIntersectionObserver } from "./intersection";
+import { IMutationObserverAttributeInfo } from "./mutation";
 import { IProxy } from "./proxy";
 import { IRootElement } from "./root-element";
 import { IScope } from "./scope";
@@ -59,6 +60,9 @@ export interface IComponent{
 
     AddRefElement(ref: string, element: HTMLElement): void;
     FindRefElement(ref: string): HTMLElement | null;
+
+    AddAttributeChangeCallback(element: HTMLElement, callback: (list: Array<IMutationObserverAttributeInfo>) => void): void;
+    RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void): void;
 
     AddIntersectionObserver(observer: IIntersectionObserver): void;
     FindIntersectionObserver(id: string): IIntersectionObserver | null;

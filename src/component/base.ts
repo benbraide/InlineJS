@@ -1,5 +1,6 @@
 import { ProcessDirectives } from "../directive/process";
 import { GetGlobal } from "../global/get";
+import { JournalTry } from "../journal/try";
 import { RootProxy } from "../proxy/root";
 import { Stack } from "../stack";
 import { IChanges } from "../types/changes";
@@ -7,6 +8,7 @@ import { IComponent, IComponentBackend } from "../types/component";
 import { ReactiveStateType } from "../types/config";
 import { IElementScope } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
+import { IMutationObserverAttributeInfo } from "../types/mutation";
 import { IProxy } from "../types/proxy";
 import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
@@ -20,6 +22,11 @@ import { ElementScopeKey, GetElementScopeId } from "./element-scope-id";
 import { FindComponentById } from "./find";
 import { GetConfig } from "./get-config";
 import { Scope } from "./scope";
+
+interface IAttributeObserverInfo{
+    element: HTMLElement;
+    callback: (list: Array<IMutationObserverAttributeInfo>) => void;
+}
 
 export class BaseComponent implements IComponent{
     private reactiveState_: ReactiveStateType = 'default';
@@ -39,6 +46,8 @@ export class BaseComponent implements IComponent{
     private selectionScopes_ = new Stack<ISelectionStackEntry>();
     private uniqueMarkers_ = GetDefaultUniqueMarkers();
 
+    private attributeObservers_ = new Array<IAttributeObserverInfo>();
+
     private observers_ = {
         intersections: <Record<string, IIntersectionObserver>>{},
     };
@@ -57,7 +66,9 @@ export class BaseComponent implements IComponent{
             }
 
             let checklist = new Array<HTMLElement>(), dirRegex = GetGlobal().GetConfig().GetDirectiveRegex();
-            attributes?.filter(attr => (attr.target instanceof HTMLElement)).forEach((attr) => {
+            let filteredAttributes = attributes?.filter(attr => (attr.target instanceof HTMLElement));
+            
+            filteredAttributes?.forEach((attr) => {
                 if (!dirRegex.test(attr.name)){
                     component?.FindElementScope(<HTMLElement>attr.target)?.ExecuteAttributeChangeCallbacks(attr.name);
                 }
@@ -65,6 +76,13 @@ export class BaseComponent implements IComponent{
                     checklist.push(<HTMLElement>attr.target);
                 }
             });
+
+            if (filteredAttributes){//Alert listeners
+                this.attributeObservers_.forEach((info) => {
+                    let list = filteredAttributes!.filter(attr => (attr.target === info.element || info.element.contains(attr.target)));
+                    (list.length != 0) && JournalTry(() => info.callback(list));
+                });
+            }
 
             checklist.forEach(element => ProcessDirectives({ element,
                 component: component!, 
@@ -299,6 +317,14 @@ export class BaseComponent implements IComponent{
 
     public FindRefElement(ref: string): HTMLElement | null{
         return ((ref in this.refs_) ? this.refs_[ref] : null);
+    }
+
+    public AddAttributeChangeCallback(element: HTMLElement, callback: (list: Array<IMutationObserverAttributeInfo>) => void){
+        this.attributeObservers_.push({ element, callback });
+    }
+
+    public RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void){
+        this.attributeObservers_ = this.attributeObservers_.filter(info => (info.element !== element && info.callback !== callback));
     }
 
     public AddIntersectionObserver(observer: IIntersectionObserver){

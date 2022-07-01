@@ -2,6 +2,7 @@ import { IComponent, IComponentBackend } from "../types/component";
 import { ReactiveStateType } from "../types/config";
 import { IElementScope } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
+import { IMutationObserverAttributeInfo } from "../types/mutation";
 import { IProxy } from "../types/proxy";
 import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
@@ -21,6 +22,7 @@ export declare class BaseComponent implements IComponent {
     private currentScope_;
     private selectionScopes_;
     private uniqueMarkers_;
+    private attributeObservers_;
     private observers_;
     constructor(id_: string, root_: HTMLElement);
     SetReactiveState(state: ReactiveStateType): void;
@@ -54,6 +56,8 @@ export declare class BaseComponent implements IComponent {
     FindProxy(path: string): IProxy | null;
     AddRefElement(ref: string, element: HTMLElement): void;
     FindRefElement(ref: string): HTMLElement | null;
+    AddAttributeChangeCallback(element: HTMLElement, callback: (list: Array<IMutationObserverAttributeInfo>) => void): void;
+    RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void): void;
     AddIntersectionObserver(observer: IIntersectionObserver): void;
     FindIntersectionObserver(id: string): IIntersectionObserver | null;
     RemoveIntersectionObserver(id: string): void;
