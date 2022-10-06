@@ -14,12 +14,13 @@ export interface InsertionOptions{
     type?: InsertionType;
     component?: IComponent | string;
     processDirectives?: boolean;
+    afterRemove?: () => void;
     afterInsert?: () => void;
     afterTransitionCallback?: () => void;
     transitionScope?: HTMLElement;
 }
 
-export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions){
+export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, afterRemove, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions){
     let componentId = ((typeof component === 'string') ? component : (component?.GetId() || '')), insert = () => {
         let tmpl = document.createElement('template');
         tmpl.innerHTML = html;
@@ -73,6 +74,7 @@ export function InsertHtml({ element, html, type = 'replace', component, process
         let remove = () => {
             destroyOffspring(element);
             Array.from(element.childNodes).forEach(child => child.remove());
+            (afterRemove && JournalTry(afterRemove, 'InlineJS.InsertHtml', element));
             insert();
         };
 
