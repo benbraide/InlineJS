@@ -1,4 +1,5 @@
 import { Loop } from "../values/loop";
+import { MeasureCallback } from "./measure-callback";
 
 export interface ILoopCallbackInfo{
     passes: number;
@@ -11,13 +12,24 @@ type CallbackType = (value: ILoopCallbackInfo) => void;
 
 export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0, vsync = true){
     delay = (delay || 1);
-    let totalSteps = (duration ? Math.floor(duration / delay) : -1), steps = 0, aborted = false, checkpoint = 0, call = (steps: number, doWhile: CallbackType) => {
+    let delayOffset = 0, totalSteps = (duration ? Math.floor(duration / delay) : -1), steps = 0, aborted = false, checkpoint = 0;
+    
+    let call = (steps: number, doWhile: CallbackType, delay: number) => {
+        let doCall = () => {
+            const elapsed = MeasureCallback(() => doWhile({ passes: steps, elapsed: (steps * delay), duration, abort: () => (aborted = true) }));
+            if (elapsed > delay){
+                const elapsedSteps = Math.floor((elapsed - delay) / delay);//Compute how many steps were missed
+                steps += elapsedSteps;//Add them to the current step
+                delayOffset = (elapsed - (Math.floor(elapsed / delay) * delay));//Compute the offset
+            }
+        };
+        
         if (vsync){//Use checkpoints to avoid overlapping calls
             let myCheckpoint = ++checkpoint;
-            requestAnimationFrame(() => ((myCheckpoint == checkpoint) && doWhile({ passes: steps, elapsed: (steps * delay), duration, abort: () => (aborted = true) })));
+            requestAnimationFrame(() => ((myCheckpoint == checkpoint) && doCall()));
         }
         else{//Immediate
-            doWhile({ passes: steps, elapsed: (steps * delay), duration, abort: () => (aborted = true) });
+            doCall();
         }
     };
 
@@ -33,13 +45,15 @@ export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatD
             }
 
             setTimeout(() => setTimeout(step.bind(null, doWhile, doFinal, doAbort), delay), repeatDelay);
-            call(totalSteps, doWhile);
+            delayOffset = 0;
+            call(totalSteps, doWhile, repeatDelay);
 
             (repeats > 0) && (repeats -= 1);
         }
         else{//Step
-            setTimeout(step.bind(null, doWhile, doFinal, doAbort), delay);
-            call(steps, doWhile);
+            setTimeout(step.bind(null, doWhile, doFinal, doAbort), (delay - delayOffset));
+            delayOffset = 0;
+            call(steps, doWhile, delay);
         }
     };
 

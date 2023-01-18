@@ -3,6 +3,9 @@ import { IConfig, IConfigOptions, ReactiveStateType, DirectiveNameBuilderType } 
 export class Config implements IConfig{
     private appName_: string;
     private reactiveState_: ReactiveStateType;
+
+    private directivePrefix_: string;
+    private elementPrefix_: string;
     
     private directiveRegex_: RegExp;
     private directiveNameBuilder_: DirectiveNameBuilderType;
@@ -29,17 +32,38 @@ export class Config implements IConfig{
         'nomodule', 'novalidate', 'open', 'playsinline', 'readonly', 'required', 'reversed', 'selected',
     );
     
-    public constructor({ appName = '', reactiveState = 'unoptimized', directivePrefix = 'x', directiveRegex, directiveNameBuilder }: IConfigOptions = {}){
+    public constructor({ appName = '', reactiveState = 'unoptimized', directivePrefix = 'x', elementPrefix, directiveRegex, directiveNameBuilder }: IConfigOptions = {}){
         this.appName_ = appName;
         this.reactiveState_ = reactiveState;
+
+        this.directivePrefix_ = directivePrefix;
+        this.elementPrefix_ = (elementPrefix || directivePrefix);
+        
         this.directiveRegex_ = (directiveRegex || new RegExp(`^(data-)?${directivePrefix || 'x'}-(.+)$`));
         this.directiveNameBuilder_ = (directiveNameBuilder || ((name: string, addDataPrefix = false) => {
-            return (addDataPrefix ? `data-${directivePrefix || 'x'}-${name}` : `${directivePrefix || 'x'}-${name}`);
+            return (addDataPrefix ? `data-${this.directivePrefix_ || 'x'}-${name}` : `${this.directivePrefix_ || 'x'}-${name}`);
         }));
     }
     
     public GetAppName(){
         return this.appName_;
+    }
+
+    public SetDirectivePrefix(value: string){
+        this.directivePrefix_ = value;
+        this.directiveRegex_ = new RegExp(`^(data-)?${value || 'x'}-(.+)$`);
+    }
+
+    public GetDirectivePrefix(){
+        return this.directivePrefix_;
+    }
+
+    public SetElementPrefix(value: string){
+        this.elementPrefix_ = value;
+    }
+
+    public GetElementPrefix(){
+        return this.elementPrefix_;
     }
     
     public GetDirectiveRegex(){
@@ -48,6 +72,10 @@ export class Config implements IConfig{
 
     public GetDirectiveName(name: string, addDataPrefix?: boolean){
         return this.directiveNameBuilder_(name, addDataPrefix);
+    }
+
+    public GetElementName(name: string){
+        return `${this.elementPrefix_ || this.directivePrefix_ || 'x'}-${name}`;
     }
 
     public AddKeyEventMap(key: string, target: string){

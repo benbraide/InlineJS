@@ -5,15 +5,23 @@ export interface IConfigOptions{
     appName?: string;
     reactiveState?: ReactiveStateType;
     directivePrefix?: string;
+    elementPrefix?: string;
     directiveRegex?: RegExp;
     directiveNameBuilder?: DirectiveNameBuilderType;
 }
 
 export interface IConfig{
     GetAppName(): string;
+
+    SetDirectivePrefix(value: string): void;
+    GetDirectivePrefix(): string;
+
+    SetElementPrefix(value: string): void;
+    GetElementPrefix(): string;
     
     GetDirectiveRegex(): RegExp;
     GetDirectiveName(name: string, addDataPrefix?: boolean): string;
+    GetElementName(name: string): string;
 
     AddKeyEventMap(key: string, target: string): void;
     RemoveKeyEventMap(key: string): void;

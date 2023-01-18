@@ -270,7 +270,7 @@ export class BaseComponent implements IComponent{
         }
 
         let target = ((element === true) ? <HTMLElement>this.context_.Peek(ContextKeys.self) : ((element instanceof Node) ? element : this.root_));
-        if (target && ElementScopeKey in target && target[ElementScopeKey] in this.elementScopes_){
+        if (target && ElementScopeKey in target && typeof target[ElementScopeKey] === 'string' && target[ElementScopeKey] in this.elementScopes_){
             return this.elementScopes_[target[ElementScopeKey]];
         }
 

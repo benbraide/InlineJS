@@ -62,7 +62,7 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             let resolvedComponent = FindComponentById(componentId), global = GetGlobal();
             Array.from(el.children).forEach((child) => {
                 let elementScope = resolvedComponent?.FindElementScope(child);
-                if (elementScope || (ElementScopeKey in child && (elementScope = global.InferComponentFrom(<HTMLElement>child)?.FindElementScope(child)))){
+                if (elementScope || (elementScope = global.InferComponentFrom(<HTMLElement>child)?.FindElementScope(child))){
                     elementScope.Destroy();
                 }
                 else{
