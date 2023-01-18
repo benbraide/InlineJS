@@ -114,3 +114,4 @@ export * from './journal/error';
 export * from './journal/log';
 export * from './journal/try';
 export * from './journal/warn';
+export * from './entry';
