@@ -20,7 +20,7 @@ interface OutsideEventDetails{
     eventCallbacks: Record<string, (event: Event) => void>;
 }
 
-const InlineJS_OutsideEvent_Key = 'InlineJS_OutsideEvent'
+const InlineJS_OutsideEvent_Key = 'InlineJS_OutsideEvent';
 
 function GetOutsideEventGlobalBlock(): OutsideEventDetails{
     return (globalThis[InlineJS_OutsideEvent_Key] = (globalThis[InlineJS_OutsideEvent_Key] || {
@@ -122,5 +122,5 @@ export function AddOutsideEventExcept(target: HTMLElement, list: Record<string, 
 }
 
 export function UnbindOutsideEvent(target: HTMLElement){
-    GetOutsideEventGlobalBlock().targetScopes = GetOutsideEventGlobalBlock().targetScopes.filter(scope => (scope.target !== target && target.contains(scope.target)));
+    GetOutsideEventGlobalBlock().targetScopes = GetOutsideEventGlobalBlock().targetScopes.filter(scope => (scope.target !== target && !target.contains(scope.target)));
 }

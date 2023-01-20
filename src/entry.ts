@@ -20,8 +20,6 @@ import { Loop } from './values/loop';
 import { Nothing } from './values/nothing';
 import { Stack } from './stack';
 
-import { generate } from 'randomstring';
-
 export function InlineJS(){
     AutoBootstrap();
 
@@ -47,7 +45,10 @@ export function InlineJS(){
         pathToRelative: PathToRelative,
         splitPath: SplitPath,
         joinPath: JoinPath,
-        getRandomString: (len: number) => generate(len),
+        getRandomString: (length: number) => {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            return Array.from({ length: length }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
+        },
     };
 
     inlineScope['values'] = {
