@@ -1,3 +1,4 @@
+import { ElementScopeKey } from "../component/element-scope-id";
 import { FindComponentById } from "../component/find";
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
@@ -55,6 +56,10 @@ export function ProcessDirectives({ component, element, options = {} }: IProcess
         component: resolvedComponent!,
         contextElement: <HTMLElement>element,
     });
+
+    if (element.hasOwnProperty(ElementScopeKey) && element.hasOwnProperty('OnElementScopeCreated') && typeof (element as any).OnElementScopeCreated === 'function'){
+        resolvedComponent.CreateElementScope(<HTMLElement>element);
+    }
 
     if (!options.ignoreChildren && !(element instanceof HTMLTemplateElement)){//Process children
         resolvedComponent?.PushSelectionScope();

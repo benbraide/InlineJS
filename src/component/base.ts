@@ -257,6 +257,14 @@ export class BaseComponent implements IComponent{
         this.elementScopes_[elementScope.GetId()] = elementScope;
         element[ElementScopeKey] = elementScope.GetId();
 
+        if ((element as any).hasOwnProperty('OnElementScopeCreated') && typeof (element as any).OnElementScopeCreated === 'function'){
+            JournalTry(() => (element as any).OnElementScopeCreated({
+                componentId: this.id_,
+                component: this,
+                scope: elementScope,
+            }));
+        }
+
         return elementScope;
     }
 

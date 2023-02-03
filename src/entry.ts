@@ -1,5 +1,5 @@
 import { AutoBootstrap } from './bootstrap/auto';
-import { GetGlobal } from './global/get';
+import { GetGlobal, WaitForGlobal } from './global/get';
 import { AttributeInterpolator, TextContentInterpolator } from './global/interpolation';
 
 import { BeginsWith } from './utilities/begins-with';
@@ -27,6 +27,8 @@ export function InlineJS(){
     GetGlobal().AddTextContentProcessor(TextContentInterpolator);
 
     let inlineScope = (globalThis['InlineJS'] = (globalThis['InlineJS'] || {}));
+
+    inlineScope['waitForGlobal'] = WaitForGlobal;
 
     inlineScope['utilities'] = {
         beginsWith: BeginsWith,
