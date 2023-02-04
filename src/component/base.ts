@@ -4,7 +4,7 @@ import { JournalTry } from "../journal/try";
 import { RootProxy } from "../proxy/root";
 import { Stack } from "../stack";
 import { IChanges } from "../types/changes";
-import { IComponent, IComponentBackend } from "../types/component";
+import { IComponent, IComponentBackend, IElementScopeCreatedCallbackParams } from "../types/component";
 import { ReactiveStateType } from "../types/config";
 import { IElementScope } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
@@ -257,8 +257,8 @@ export class BaseComponent implements IComponent{
         this.elementScopes_[elementScope.GetId()] = elementScope;
         element[ElementScopeKey] = elementScope.GetId();
 
-        if ((element as any).hasOwnProperty('OnElementScopeCreated') && typeof (element as any).OnElementScopeCreated === 'function'){
-            JournalTry(() => (element as any).OnElementScopeCreated({
+        if ('OnElementScopeCreated' in element && typeof (element as any).OnElementScopeCreated === 'function'){
+            JournalTry(() => ((element as any).OnElementScopeCreated as (params: IElementScopeCreatedCallbackParams) => void)({
                 componentId: this.id_,
                 component: this,
                 scope: elementScope,
