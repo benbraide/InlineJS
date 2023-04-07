@@ -1,9 +1,6 @@
-export declare class NextTick {
-    private componentId_;
-    private callback_?;
-    private initialized_;
-    private queued_;
-    private setCallback_;
-    constructor(componentId_: string, callback_?: (() => void) | undefined, initialized_?: boolean);
-    Queue(callback?: () => void): void;
+import { IChanges } from "../types/changes";
+import { NextCooldown } from "./next-cooldown";
+export declare class NextTick extends NextCooldown {
+    constructor(componentId: string, callback?: () => void, initialized?: boolean);
+    protected ListenNext_(changes: IChanges | undefined, callback: () => void): void;
 }

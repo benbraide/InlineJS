@@ -1,4 +1,5 @@
 import { JournalError } from "../journal/error";
+import { JournalTry } from "../journal/try";
 import { Stack } from "../stack";
 import { ChangeCallbackType, IBubbledChange, IChange } from "../types/change";
 import { IChanges, IGetAccessDetails, IGetAccessStorage, IGetAccessStorageDetails, ISubscriberInfo } from "../types/changes";
@@ -13,8 +14,12 @@ interface IChangeBatchInfo{
 
 export class Changes implements IChanges{
     private nextTickHandlers_ = new Array<() => void>();
+    private nextIdleHandlers_ = new Array<() => void>();
+    private nextNonIdleHandlers_ = new Array<() => void>();
 
     private isScheduled_ = false;
+    private isIdle_ = true;
+
     private list_ = new Array<IChange | IBubbledChange>();
     private subscribers_: Record<string, ISubscriberInfo> = {};
 
@@ -33,6 +38,16 @@ export class Changes implements IChanges{
         this.Schedule();
     }
 
+    public AddNextIdleHandler(handler: () => void){
+        this.nextIdleHandlers_.push(handler);
+        this.Schedule();
+    }
+
+    public AddNextNonIdleHandler(handler: () => void){
+        this.nextNonIdleHandlers_.push(handler);
+        this.Schedule();
+    }
+
     public Schedule(){
         if (this.isScheduled_){
             return;
@@ -41,6 +56,11 @@ export class Changes implements IChanges{
         this.isScheduled_ = true;
         queueMicrotask(() => {//Defer dispatches
             this.isScheduled_ = false;
+
+            if (this.isIdle_){
+                this.isIdle_ = false;
+                this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
+            }
 
             let batches = new Array<IChangeBatchInfo>(), addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
                 let batch = batches.find(info => (info.callback === callback));
@@ -61,14 +81,12 @@ export class Changes implements IChanges{
             });
 
             batches.forEach(batch => batch.callback(batch.changes));
-            this.nextTickHandlers_.splice(0).forEach((handler) => {
-                try{
-                    handler();
-                }
-                catch (err){
-                    JournalError(err, `InlineJs.Region<${this.componentId_}>.NextTick`);
-                }
-            });
+            this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
+            
+            if (!this.isScheduled_){
+                this.isIdle_ = true;
+                this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
+            }
         });
     }
     

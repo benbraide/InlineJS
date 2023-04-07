@@ -3,7 +3,10 @@ import { IChanges, IGetAccessStorageDetails } from "../types/changes";
 export declare class Changes implements IChanges {
     private componentId_;
     private nextTickHandlers_;
+    private nextIdleHandlers_;
+    private nextNonIdleHandlers_;
     private isScheduled_;
+    private isIdle_;
     private list_;
     private subscribers_;
     private lastAccessContext_;
@@ -12,6 +15,8 @@ export declare class Changes implements IChanges {
     constructor(componentId_: string);
     GetComponentId(): string;
     AddNextTickHandler(handler: () => void): void;
+    AddNextIdleHandler(handler: () => void): void;
+    AddNextNonIdleHandler(handler: () => void): void;
     Schedule(): void;
     Add(change: IChange | IBubbledChange): void;
     AddComposed(prop: string, prefix?: string, targetPath?: string): void;

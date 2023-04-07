@@ -2,6 +2,8 @@ import { AutoBootstrap } from './bootstrap/auto';
 import { GetGlobal, WaitForGlobal } from './global/get';
 import { AttributeInterpolator, TextContentInterpolator } from './global/interpolation';
 
+import { BootstrapAndAttach } from "./bootstrap/attach";
+
 import { BeginsWith } from './utilities/begins-with';
 import { EndsWith } from './utilities/ends-with';
 import { ToCamelCase } from './utilities/camel-case';
@@ -19,6 +21,8 @@ import { Future } from './values/future';
 import { Loop } from './values/loop';
 import { Nothing } from './values/nothing';
 import { Stack } from './stack';
+import { IsBooleanAttribute } from './utilities/is-boolean-attribute';
+import { RandomString } from './utilities/random-string';
 
 export function InlineJS(){
     AutoBootstrap();
@@ -29,6 +33,7 @@ export function InlineJS(){
     let inlineScope = (globalThis['InlineJS'] = (globalThis['InlineJS'] || {}));
 
     inlineScope['waitForGlobal'] = WaitForGlobal;
+    inlineScope['bootstrap'] = BootstrapAndAttach;
 
     inlineScope['utilities'] = {
         beginsWith: BeginsWith,
@@ -36,6 +41,7 @@ export function InlineJS(){
         toCamelCase: ToCamelCase,
         getAttribute: GetAttribute,
         setAttribute: SetAttributeUtil,
+        isBooleanAttribute: IsBooleanAttribute,
         supportsAttributes: SupportsAttributes,
         getTarget: GetTarget,
         getTargets: GetTargets,
@@ -47,10 +53,7 @@ export function InlineJS(){
         pathToRelative: PathToRelative,
         splitPath: SplitPath,
         joinPath: JoinPath,
-        getRandomString: (length: number) => {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            return Array.from({ length: length }, () => characters.charAt(Math.floor(Math.random() * characters.length))).join('');
-        },
+        getRandomString: RandomString,
     };
 
     inlineScope['values'] = {

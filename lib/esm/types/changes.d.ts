@@ -23,6 +23,8 @@ export interface IGetAccessStorage {
 export interface IChanges {
     GetComponentId(): string;
     AddNextTickHandler(handler: () => void): void;
+    AddNextIdleHandler(handler: () => void): void;
+    AddNextNonIdleHandler(handler: () => void): void;
     Schedule(): void;
     Add(change: IChange | IBubbledChange): void;
     AddComposed(prop: string, prefix?: string, targetPath?: string): void;
