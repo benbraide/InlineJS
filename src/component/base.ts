@@ -63,7 +63,6 @@ export class BaseComponent implements IComponent{
         this.rootProxy_ = new RootProxy(this.id_, {});
         this.proxies_[this.rootProxy_.GetPath()] = this.rootProxy_;
 
-        this.CreateElementScope(this.root_);
         GetGlobal().GetMutationObserver().Observe(this.root_, ({ added, removed, attributes }) => {
             let component = FindComponentById(id_);
             if (!component){
