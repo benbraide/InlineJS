@@ -1,3 +1,5 @@
+import { CreateDirective } from "../directive/create";
+import { DispatchDirective } from "../directive/dispatch";
 import { ProcessDirectives } from "../directive/process";
 import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
@@ -6,7 +8,7 @@ import { Stack } from "../stack";
 import { IChanges } from "../types/changes";
 import { IComponent, IComponentBackend, IElementScopeCreatedCallbackParams } from "../types/component";
 import { ReactiveStateType } from "../types/config";
-import { IElementScope } from "../types/element-scope";
+import { IElementScope, ChangesMonitorType } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
 import { IMutationObserverAttributeInfo } from "../types/mutation";
 import { IProxy } from "../types/proxy";
@@ -14,6 +16,7 @@ import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
 import { ISelectionStackEntry } from "../types/selection";
 import { ContextKeys } from "../utilities/context-keys";
+import { FindFirstAttribute } from "../utilities/get-attribute";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Changes } from "./changes";
 import { Context } from "./context";
@@ -31,6 +34,8 @@ interface IAttributeObserverInfo{
 export class BaseComponent implements IComponent{
     private reactiveState_: ReactiveStateType = 'default';
     private name_ = '';
+
+    private changesMonitorList_ = new Array<ChangesMonitorType>();
     
     private context_ = new Context;
     private changes_: IChanges;
@@ -125,6 +130,10 @@ export class BaseComponent implements IComponent{
     
     public SetReactiveState(state: ReactiveStateType){
         this.reactiveState_ = state;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'reactive-state',
+            object: () => this.reactiveState_,
+        })));
     }
 
     public GetReactiveState(){
@@ -136,15 +145,41 @@ export class BaseComponent implements IComponent{
     }
 
     public GenerateUniqueId(prefix?: string, suffix?: string){
-        return GenerateUniqueId(this.uniqueMarkers_, `Cmpnt<${this.id_}>.`, prefix, suffix);
+        const generated = GenerateUniqueId(this.uniqueMarkers_, `Cmpnt<${this.id_}>.`, prefix, suffix);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'markers',
+            object: () => { return { ...this.uniqueMarkers_ } },
+        })));
+        return generated;
     }
 
     public SetName(name: string){
         this.name_ = name;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'name',
+            object: () => this.name_,
+        })));
     }
 
     public GetName(){
         return this.name_;
+    }
+
+    public AddChangesMonitor(monitor: ChangesMonitorType){
+        this.changesMonitorList_.push(monitor);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'changes-monitor',
+            object: () => { return { ...this.changesMonitorList_ } },
+        })));
+    }
+
+    public RemoveChangesMonitor(monitor: ChangesMonitorType){
+        let len = this.changesMonitorList_.length;
+        this.changesMonitorList_ = this.changesMonitorList_.filter(m => (m !== monitor));
+        (len != this.changesMonitorList_.length) && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'changes-monitor',
+            object: () => { return { ...this.changesMonitorList_ } },
+        })));
     }
 
     public CreateScope(root: HTMLElement){
@@ -161,6 +196,11 @@ export class BaseComponent implements IComponent{
         this.scopes_[scope.GetId()] = scope;
         this.AddProxy(scope.GetProxy());
 
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'scopes',
+            object: () => { return { ...this.scopes_ } },
+        })));
+
         return scope;
     }
 
@@ -169,6 +209,11 @@ export class BaseComponent implements IComponent{
         if (this.scopes_.hasOwnProperty(id)){
             this.RemoveProxy(this.scopes_[id].GetProxy());
             delete this.scopes_[id];
+
+            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+                target: 'scopes',
+                object: () => { return { ...this.scopes_ } },
+            })));
         }
     }
 
@@ -186,10 +231,19 @@ export class BaseComponent implements IComponent{
 
     public PushCurrentScope(scopeId: string){
         this.currentScope_.Push(scopeId);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'current-scope',
+            object: () => this.currentScope_,
+        })));
     }
 
     public PopCurrentScope(): string | null{
-        return this.currentScope_.Pop();
+        let isEmpty = this.currentScope_.IsEmpty(), popped = this.currentScope_.Pop();
+        !isEmpty && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'current-scope',
+            object: () => this.currentScope_,
+        })));
+        return popped
     }
 
     public PeekCurrentScope(): string | null{
@@ -204,12 +258,23 @@ export class BaseComponent implements IComponent{
         let scope: ISelectionStackEntry = {
             set: false,
         };
+
         this.selectionScopes_.Push(scope);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'selection-scopes',
+            object: () => this.selectionScopes_,
+        })));
+        
         return scope;
     }
 
     public PopSelectionScope(): ISelectionStackEntry | null{
-        return this.selectionScopes_.Pop();
+        let isEmpty = this.selectionScopes_.IsEmpty(), popped = this.selectionScopes_.Pop();
+        !isEmpty && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'selection-scopes',
+            object: () => this.selectionScopes_,
+        })));
+        return popped;
     }
 
     public PeekSelectionScope(): ISelectionStackEntry | null{
@@ -257,6 +322,17 @@ export class BaseComponent implements IComponent{
         this.elementScopes_[elementScope.GetId()] = elementScope;
         element[ElementScopeKey] = elementScope.GetId();
 
+        let processDirective = (name: string) => {
+            let info = FindFirstAttribute(element, [GetConfig().GetDirectiveName(name, false), GetConfig().GetDirectiveName(name, true)]);
+            if (info){
+                let directive = CreateDirective(info.name, info.value);
+                directive && DispatchDirective(this, element, directive);
+            }
+        }
+
+        ['data', 'component', 'ref', 'init'].forEach(dir => processDirective(dir));
+        elementScope.SetInitialized();
+
         if ('OnElementScopeCreated' in element && typeof (element as any).OnElementScopeCreated === 'function'){
             JournalTry(() => ((element as any).OnElementScopeCreated as (params: IElementScopeCreatedCallbackParams) => void)({
                 componentId: this.id_,
@@ -265,11 +341,20 @@ export class BaseComponent implements IComponent{
             }));
         }
 
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'element-scopes',
+            object: () => { return { ...this.elementScopes_ } },
+        })));
+
         return elementScope;
     }
 
     public RemoveElementScope(id: string){
         delete this.elementScopes_[id];
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'element-scopes',
+            object: () => { return { ...this.elementScopes_ } },
+        })));
     }
 
     public FindElementScope(element: HTMLElement | string | true | IRootElement): IElementScope | null{
@@ -283,6 +368,25 @@ export class BaseComponent implements IComponent{
         }
 
         return null;
+    }
+
+    public FindElementLocal(element: HTMLElement | string | true | IRootElement, key: string, shouldBubble?: boolean): IElementScope | null{
+        let elementScope = this.FindElementScope(element);
+        if (elementScope?.HasLocal(key)){
+            return elementScope;
+        }
+
+        if (!shouldBubble || (!elementScope && typeof element === 'string')){
+            return null;
+        }
+
+        let target = (elementScope?.GetElement() || ((element === true) ? <HTMLElement>this.context_.Peek(ContextKeys.self) : ((element instanceof Node) ? element : this.root_)));
+        if (!target){
+            return null;
+        }
+
+        let ancestor = this.FindAncestor(target);
+        return (ancestor ? this.FindElementLocal(ancestor, key, true) : null);
     }
 
     public FindElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string, shouldBubble?: boolean){
@@ -300,14 +404,30 @@ export class BaseComponent implements IComponent{
         return (ancestor ? this.FindElementLocalValue(ancestor, key, true) : value);
     }
 
+    public SetElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string, value: any){
+        this.FindElementScope(element)?.SetLocal(key, value);
+    }
+
+    public DeleteElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string){
+        this.FindElementScope(element)?.DeleteLocal(key);
+    }
+
     public AddProxy(proxy: IProxy){
         this.proxies_[proxy.GetPath()] = proxy;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'proxies',
+            object: () => { return { ...this.proxies_ } },
+        })));
     }
 
     public RemoveProxy(proxy: IProxy | string){
         let path = ((typeof proxy === 'string') ? proxy : proxy.GetPath());
         if (this.proxies_.hasOwnProperty(path)){
             delete this.proxies_[path];
+            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+                target: 'proxies',
+                object: () => { return { ...this.proxies_ } },
+            })));
         }
     }
 
@@ -321,6 +441,10 @@ export class BaseComponent implements IComponent{
 
     public AddRefElement(ref: string, element: HTMLElement){
         this.refs_[ref] = element;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'refs',
+            object: () => { return { ...this.refs_ } },
+        })));
     }
 
     public FindRefElement(ref: string): HTMLElement | null{
@@ -329,14 +453,26 @@ export class BaseComponent implements IComponent{
 
     public AddAttributeChangeCallback(element: HTMLElement, callback: (list: Array<IMutationObserverAttributeInfo>) => void){
         this.attributeObservers_.push({ element, callback });
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'attribute-observers',
+            object: () => { return { ...this.attributeObservers_ } },
+        })));
     }
 
     public RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void){
         this.attributeObservers_ = this.attributeObservers_.filter(info => (info.element !== element && info.callback !== callback));
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'attribute-observers',
+            object: () => { return { ...this.attributeObservers_ } },
+        })));
     }
 
     public AddIntersectionObserver(observer: IIntersectionObserver){
         this.observers_.intersections[observer.GetId()] = observer;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'intersection-observers',
+            object: () => { return { ...this.observers_.intersections } },
+        })));
     }
 
     public FindIntersectionObserver(id: string){
@@ -346,6 +482,10 @@ export class BaseComponent implements IComponent{
     public RemoveIntersectionObserver(id: string){
         if (id in this.observers_.intersections){
             delete this.observers_.intersections[id];
+            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+                target: 'intersection-observers',
+                object: () => { return { ...this.observers_.intersections } },
+            })));
         }
     }
 

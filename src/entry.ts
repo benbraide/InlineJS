@@ -7,7 +7,7 @@ import { BootstrapAndAttach } from "./bootstrap/attach";
 import { BeginsWith } from './utilities/begins-with';
 import { EndsWith } from './utilities/ends-with';
 import { ToCamelCase } from './utilities/camel-case';
-import { GetAttribute } from './utilities/get-attribute';
+import { FindFirstAttribute, FindFirstAttributeValue, GetAttribute } from './utilities/get-attribute';
 import { SetAttributeUtil } from './utilities/set-attribute';
 import { SupportsAttributes } from './utilities/supports-attributes';
 import { GetTarget, GetTargets } from './utilities/get-target';
@@ -40,6 +40,8 @@ export function InlineJS(){
         endsWith: EndsWith,
         toCamelCase: ToCamelCase,
         getAttribute: GetAttribute,
+        findFirstAttribute: FindFirstAttribute,
+        findFirstAttributeValue: FindFirstAttributeValue,
         setAttribute: SetAttributeUtil,
         isBooleanAttribute: IsBooleanAttribute,
         supportsAttributes: SupportsAttributes,
@@ -61,5 +63,14 @@ export function InlineJS(){
         loop: Loop,
         nothing: Nothing,
         stack: Stack,
+    };
+
+    inlineScope['version'] = {
+        major: 1,
+        minor: 0,
+        patch: 32,
+        get value(){
+            return `${this.major}.${this.minor}.${this.patch}`;
+        },
     };
 }

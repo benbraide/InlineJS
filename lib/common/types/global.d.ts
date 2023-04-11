@@ -1,6 +1,7 @@
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { IComponent } from "./component";
+import { ChangesMonitorType } from "./element-scope";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directive";
 import { IFetchConcept } from "./fetch";
@@ -12,11 +13,26 @@ export interface IComponentsMonitorParams {
     action: 'add' | 'remove';
     component: IComponent;
 }
+export interface IObjectStoreParams {
+    object: any;
+    componentId?: string;
+    contextElement?: HTMLElement;
+}
+export interface IObjectRetrievalParams {
+    key: string;
+    componentId?: string;
+    contextElement?: HTMLElement;
+}
 export declare type ComponentsMonitorType = (params: IComponentsMonitorParams) => void;
 export interface IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
     GenerateUniqueId(prefix?: string, suffix?: string): string;
+    StoreObject(params: IObjectStoreParams): string;
+    RetrieveObject(params: IObjectRetrievalParams): any;
+    PeekObject(params: IObjectRetrievalParams): any;
+    AddChangesMonitor(monitor: ChangesMonitorType): void;
+    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     AddComponentMonitor(monitor: ComponentsMonitorType): void;
     RemoveComponentMonitor(monitor: ComponentsMonitorType): void;
     CreateComponent(root: HTMLElement): IComponent;

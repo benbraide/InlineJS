@@ -3,11 +3,19 @@ export interface ITreeChangeCallbackParams {
     added: Array<Node>;
     removed: Array<Node>;
 }
+export interface IChangesMonitorParams {
+    target: string;
+    object: () => any;
+}
+export declare type ChangesMonitorType = (params: IChangesMonitorParams) => void;
 export declare type TreeChangeCallbackType = (params: ITreeChangeCallbackParams) => void;
 export interface IElementScope {
+    IsInitialized(): boolean;
     GetComponentId(): string;
     GetScopeId(): string;
     GetId(): string;
+    AddChangesMonitor(monitor: ChangesMonitorType): void;
+    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     SetKey(key: string): void;
     GetKey(): string;
     GetElement(): HTMLElement;

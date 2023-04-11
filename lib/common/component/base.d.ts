@@ -1,6 +1,6 @@
 import { IComponent, IComponentBackend } from "../types/component";
 import { ReactiveStateType } from "../types/config";
-import { IElementScope } from "../types/element-scope";
+import { IElementScope, ChangesMonitorType } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
 import { IMutationObserverAttributeInfo } from "../types/mutation";
 import { IProxy } from "../types/proxy";
@@ -12,6 +12,7 @@ export declare class BaseComponent implements IComponent {
     private root_;
     private reactiveState_;
     private name_;
+    private changesMonitorList_;
     private context_;
     private changes_;
     private scopes_;
@@ -31,6 +32,8 @@ export declare class BaseComponent implements IComponent {
     GenerateUniqueId(prefix?: string, suffix?: string): string;
     SetName(name: string): void;
     GetName(): string;
+    AddChangesMonitor(monitor: ChangesMonitorType): void;
+    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     CreateScope(root: HTMLElement): IScope | null;
     RemoveScope(scope: IScope | string): void;
     FindScopeById(id: string): IScope | null;
@@ -49,7 +52,10 @@ export declare class BaseComponent implements IComponent {
     CreateElementScope(element: HTMLElement): IElementScope | null;
     RemoveElementScope(id: string): void;
     FindElementScope(element: HTMLElement | string | true | IRootElement): IElementScope | null;
+    FindElementLocal(element: HTMLElement | string | true | IRootElement, key: string, shouldBubble?: boolean): IElementScope | null;
     FindElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string, shouldBubble?: boolean): any;
+    SetElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string, value: any): void;
+    DeleteElementLocalValue(element: HTMLElement | string | true | IRootElement, key: string): void;
     AddProxy(proxy: IProxy): void;
     RemoveProxy(proxy: IProxy | string): void;
     GetRootProxy(): IProxy;

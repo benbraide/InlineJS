@@ -2,9 +2,10 @@ import { DirectiveManager } from "../directive/manager";
 import { MagicManager } from "../magic/manager";
 import { MutationObserver } from "../observers/mutation";
 import { IComponent } from "../types/component";
+import { ChangesMonitorType } from "../types/element-scope";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
-import { ComponentsMonitorType, IGlobal } from "../types/global";
+import { ComponentsMonitorType, IObjectRetrievalParams, IObjectStoreParams, IGlobal } from "../types/global";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
 import { Future } from "../values/future";
@@ -12,6 +13,8 @@ import { Nothing } from "../values/nothing";
 export declare class BaseGlobal implements IGlobal {
     private nothing_;
     private config_;
+    private storedObjects_;
+    private changesMonitorList_;
     private componentsMonitorList_;
     private components_;
     private currentComponent_;
@@ -27,6 +30,11 @@ export declare class BaseGlobal implements IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
     GenerateUniqueId(prefix?: string, suffix?: string): string;
+    StoreObject({ object, componentId, contextElement }: IObjectStoreParams): string;
+    RetrieveObject(params: IObjectRetrievalParams): any;
+    PeekObject(params: IObjectRetrievalParams): any;
+    AddChangesMonitor(monitor: ChangesMonitorType): void;
+    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     AddComponentMonitor(monitor: ComponentsMonitorType): void;
     RemoveComponentMonitor(monitor: ComponentsMonitorType): void;
     CreateComponent(root: HTMLElement): IComponent;
@@ -57,4 +65,5 @@ export declare class BaseGlobal implements IGlobal {
     IsFuture(value: any): boolean;
     CreateNothing(): Nothing;
     IsNothing(value: any): boolean;
+    private RetrieveObject_;
 }

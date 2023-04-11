@@ -1,4 +1,5 @@
 import { IConfig, IConfigOptions, ReactiveStateType, DirectiveNameBuilderType } from "../types/config";
+import { IsObject } from "../utilities/is-object";
 
 export class Config implements IConfig{
     private appName_: string;
@@ -33,11 +34,16 @@ export class Config implements IConfig{
     );
     
     public constructor({ appName = '', reactiveState = 'unoptimized', directivePrefix = 'x', elementPrefix, directiveRegex, directiveNameBuilder }: IConfigOptions = {}){
-        this.appName_ = appName;
-        this.reactiveState_ = reactiveState;
+        globalThis['InlineJS'] = (globalThis['InlineJS'] || {});
 
-        this.directivePrefix_ = directivePrefix;
-        this.elementPrefix_ = (elementPrefix || directivePrefix);
+        let config = (globalThis['InlineJS'].config || {});
+        config = (IsObject(config) ? config : {});
+        
+        this.appName_ = (config.appName || appName);
+        this.reactiveState_ = (config.reactiveState || reactiveState);
+
+        this.directivePrefix_ = (config.directivePrefix || directivePrefix);
+        this.elementPrefix_ = (config.elementPrefix || elementPrefix || directivePrefix);
         
         this.directiveRegex_ = (directiveRegex || new RegExp(`^(data-)?${directivePrefix || 'x'}-(.+)$`));
         this.directiveNameBuilder_ = (directiveNameBuilder || ((name: string, addDataPrefix = false) => {

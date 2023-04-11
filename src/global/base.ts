@@ -6,11 +6,13 @@ import { MutationObserver } from "../observers/mutation";
 import { ChildProxy } from "../proxy/child";
 import { Stack } from "../stack";
 import { IComponent } from "../types/component";
+import { ChangesMonitorType } from "../types/element-scope";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
-import { ComponentsMonitorType, IGlobal } from "../types/global";
+import { ComponentsMonitorType, IObjectRetrievalParams, IObjectStoreParams, IGlobal } from "../types/global";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
+import { RandomString } from "../utilities/random-string";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
@@ -21,8 +23,11 @@ export class BaseGlobal implements IGlobal{
     private nothing_ = new Nothing;
     
     private config_: IConfig;
+    private storedObjects_: Record<string, any> = {};
     
+    private changesMonitorList_ = new Array<ChangesMonitorType>();
     private componentsMonitorList_ = new Array<ComponentsMonitorType>();
+
     private components_: Record<string, IComponent> = {};
     private currentComponent_ = new Stack<string>();
 
@@ -48,6 +53,10 @@ export class BaseGlobal implements IGlobal{
 
     public SwapConfig(config: IConfig){
         this.config_ = config;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'config',
+            object: () => config,
+        }), 'InlineJS.Global.ChangesMonitor::config'));
     }
 
     public GetConfig(){
@@ -55,15 +64,74 @@ export class BaseGlobal implements IGlobal{
     }
 
     public GenerateUniqueId(prefix?: string, suffix?: string){
-        return GenerateUniqueId(this.uniqueMarkers_, '', prefix, suffix);
+        const generated = GenerateUniqueId(this.uniqueMarkers_, '', prefix, suffix);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'markers',
+            object: () => { return { ...this.uniqueMarkers_ } },
+        }), 'InlineJS.Global.ChangesMonitor::markers'));
+        return generated;
+    }
+
+    public StoreObject({ object, componentId, contextElement }: IObjectStoreParams){
+        const key = `@!@${RandomString(18)}@!@`;
+
+        if (contextElement){
+            let scope = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement))?.FindElementScope(contextElement);
+            if (scope){
+                scope.SetLocal(key, object);
+                return key;
+            }
+        }
+
+        this.storedObjects_[key] = object;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'stored-objects',
+            object: () => { return { ...this.storedObjects_ } },
+        }), 'InlineJS.Global.ChangesMonitor::stored-objects'));
+        
+        return key;
+    }
+
+    public RetrieveObject(params: IObjectRetrievalParams){
+        return this.RetrieveObject_(params, true);
+    }
+
+    public PeekObject(params: IObjectRetrievalParams){
+        return this.RetrieveObject_(params, false);
+    }
+
+    public AddChangesMonitor(monitor: ChangesMonitorType){
+        this.changesMonitorList_.push(monitor);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'changes-monitor',
+            object: () => { return { ...this.changesMonitorList_ } },
+        }), 'InlineJS.Global.ChangesMonitor::changes-monitor'));
+    }
+
+    public RemoveChangesMonitor(monitor: ChangesMonitorType){
+        let len = this.changesMonitorList_.length;
+        this.changesMonitorList_ = this.changesMonitorList_.filter(m => (m !== monitor));
+        (len != this.changesMonitorList_.length) && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'changes-monitor',
+            object: () => { return { ...this.changesMonitorList_ } },
+        }), 'InlineJS.Global.ChangesMonitor::changes-monitor'));
     }
 
     public AddComponentMonitor(monitor: ComponentsMonitorType){
         this.componentsMonitorList_.push(monitor);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'components-monitor',
+            object: () => { return { ...this.componentsMonitorList_ } },
+        }), 'InlineJS.Global.ChangesMonitor::components-monitor'));
     }
 
     public RemoveComponentMonitor(monitor: ComponentsMonitorType){
+        let len = this.componentsMonitorList_.length;
         this.componentsMonitorList_ = this.componentsMonitorList_.filter(m => (m !== monitor));
+        (len != this.componentsMonitorList_.length) && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'components-monitor',
+            object: () => { return { ...this.componentsMonitorList_ } },
+        }), 'InlineJS.Global.ChangesMonitor::components-monitor'));
     }
     
     public CreateComponent(root: HTMLElement){
@@ -75,7 +143,11 @@ export class BaseGlobal implements IGlobal{
         let component = new BaseComponent(this.GenerateUniqueId(), root);
         this.components_[component.GetId()] = component;
 
-        this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'add', component }), 'InlineJS.Global.CreateComponent'));
+        this.componentsMonitorList_.forEach(monitor => JournalTry(() => monitor({ action: 'add', component }), 'InlineJS.Global.CreateComponent'));
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'components',
+            object: () => { return { ...this.components_ } },
+        }), 'InlineJS.Global.ChangesMonitor::components'));
 
         return component;
     }
@@ -85,7 +157,12 @@ export class BaseGlobal implements IGlobal{
         if (this.components_.hasOwnProperty(key)){
             let component = this.components_[key];
             delete this.components_[key];
+
             this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'remove', component }), 'InlineJS.Global.RemoveComponent'));
+            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+                target: 'components',
+                object: () => { return { ...this.components_ } },
+            }), 'InlineJS.Global.ChangesMonitor::components'));
         }
     }
 
@@ -107,10 +184,19 @@ export class BaseGlobal implements IGlobal{
 
     public PushCurrentComponent(componentId: string){
         this.currentComponent_.Push(componentId);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'current-component',
+            object: () => this.currentComponent_,
+        }), 'InlineJS.Global.ChangesMonitor::current-component'));
     }
 
     public PopCurrentComponent(){
-        return this.currentComponent_.Pop();
+        let isEmpty = this.currentComponent_.IsEmpty(), popped = this.currentComponent_.Pop();
+        !isEmpty && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'current-component',
+            object: () => this.currentComponent_,
+        }), 'InlineJS.Global.ChangesMonitor::current-component'));
+        return popped;
     }
 
     public PeekCurrentComponent(){
@@ -135,6 +221,10 @@ export class BaseGlobal implements IGlobal{
 
     public AddAttributeProcessor(processor: AttributeProcessorType){
         this.attributeProcessors_.push(processor);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'attribute-processors',
+            object: () => { return [ ...this.attributeProcessors_ ] },
+        }), 'InlineJS.Global.ChangesMonitor::attribute-processors'));
     }
 
     public DispatchAttributeProcessing(params: IAttributeProcessorParams){
@@ -143,6 +233,10 @@ export class BaseGlobal implements IGlobal{
 
     public AddTextContentProcessor(processor: TextContentProcessorType){
         this.textContentProcessors_.push(processor);
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'text-content-processors',
+            object: () => { return [ ...this.textContentProcessors_ ] },
+        }), 'InlineJS.Global.ChangesMonitor::text-content-processors'));
     }
 
     public DispatchTextContentProcessing(params: ITextContentProcessorParams){
@@ -155,6 +249,10 @@ export class BaseGlobal implements IGlobal{
 
     public SetFetchConcept(concept: IFetchConcept | null){
         this.fetchConcept_ = concept;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'fetch-concept',
+            object: () => this.fetchConcept_,
+        }), 'InlineJS.Global.ChangesMonitor::fetch-concept'));
     }
 
     public GetFetchConcept(): IFetchConcept{
@@ -163,10 +261,18 @@ export class BaseGlobal implements IGlobal{
 
     public SetConcept<T>(name: string, concept: T){
         this.concepts_[name] = concept;
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'concepts',
+            object: () => { return { ...this.concepts_ } },
+        }), 'InlineJS.Global.ChangesMonitor::concepts'));
     }
 
     public RemoveConcept(name: string){
         delete this.concepts_[name];
+        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+            target: 'concepts',
+            object: () => { return { ...this.concepts_ } },
+        }), 'InlineJS.Global.ChangesMonitor::concepts'));
     }
 
     public GetConcept<T>(name: string){
@@ -191,5 +297,33 @@ export class BaseGlobal implements IGlobal{
 
     public IsNothing(value: any){
         return (value instanceof Nothing);
+    }
+
+    private RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean){
+        if (contextElement){
+            let component = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement));
+            if (component){
+                let found = component.FindElementLocal(contextElement, key, true);
+                if (found){
+                    let value = found.GetLocal(key);
+                    remove && found.DeleteLocal(key);
+                    return value;
+                }
+            }
+        }
+
+        if (this.storedObjects_.hasOwnProperty(key)){
+            let value = this.storedObjects_[key];
+            if (remove){
+                delete this.storedObjects_[key];
+                this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+                    target: 'stored-objects',
+                    object: () => { return { ...this.storedObjects_ } },
+                }), 'InlineJS.Global.ChangesMonitor::stored-objects'));
+            }
+            return value;
+        }
+
+        return this.CreateNothing();
     }
 }

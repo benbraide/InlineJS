@@ -9,7 +9,7 @@ export function CreateDirective(name: string, value: string): IDirective | null{
         return null;
     }
 
-    if ((value = value.trim()) === name){
+    if ((value = (value || '').trim()) === name){
         value = '';
     }
 

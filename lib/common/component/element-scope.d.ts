@@ -1,21 +1,27 @@
 import { IDirectiveManager } from "../types/directive";
-import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
+import { IElementScope, TreeChangeCallbackType, ChangesMonitorType } from "../types/element-scope";
 export declare class ElementScope implements IElementScope {
     private componentId_;
     private id_;
     private element_;
     private isRoot_;
+    private isInitialized_;
     private scopeId_;
     private key_;
+    private changesMonitorList_;
     private locals_;
     private data_;
     private managers_;
     private callbacks_;
     private state_;
     constructor(componentId_: string, id_: string, element_: HTMLElement, isRoot_: boolean);
+    SetInitialized(): void;
+    IsInitialized(): boolean;
     GetComponentId(): string;
     GetScopeId(): string;
     GetId(): string;
+    AddChangesMonitor(monitor: ChangesMonitorType): void;
+    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     SetKey(key: string): void;
     GetKey(): string;
     GetElement(): HTMLElement;
