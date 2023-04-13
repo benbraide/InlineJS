@@ -1,4 +1,3 @@
-import { ElementScopeKey } from "../component/element-scope-id";
 import { FindComponentById } from "../component/find";
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
@@ -52,22 +51,25 @@ export function ProcessDirectives({ component, element, options = {} }: IProcess
     });
 
     GetGlobal().DispatchTextContentProcessing({
-        componentId: resolvedComponent!.GetId(),
-        component: resolvedComponent!,
+        componentId: resolvedComponent.GetId(),
+        component: resolvedComponent,
         contextElement: <HTMLElement>element,
     });
 
-    if (element.hasOwnProperty(ElementScopeKey) && element.hasOwnProperty('OnElementScopeCreated') && typeof (element as any).OnElementScopeCreated === 'function'){
+    if (element.hasOwnProperty('OnElementScopeCreated') && typeof (element as any).OnElementScopeCreated === 'function'){
         resolvedComponent.CreateElementScope(<HTMLElement>element);
     }
 
+    let elementScope = resolvedComponent.FindElementScope(<HTMLElement>element);
+    elementScope?.ExecutePostAttributesProcessCallbacks();
+
     if (!options.ignoreChildren && !(element instanceof HTMLTemplateElement)){//Process children
-        resolvedComponent?.PushSelectionScope();
+        resolvedComponent.PushSelectionScope();
         Array.from(element.children).filter(child => !child.contains(element)).forEach(child => ProcessDirectives({ component, options,
             element: child,
         }));
-        resolvedComponent?.PopSelectionScope();
+        resolvedComponent.PopSelectionScope();
     }
 
-    resolvedComponent?.FindElementScope(<HTMLElement>element)?.ExecutePostProcessCallbacks();
+    elementScope?.ExecutePostProcessCallbacks();
 }

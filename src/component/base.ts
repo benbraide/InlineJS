@@ -329,7 +329,7 @@ export class BaseComponent implements IComponent{
             }
         }
 
-        ['data', 'component', 'ref', 'init'].forEach(dir => processDirective(dir));
+        ['data', 'component', 'ref', 'locals', 'init'].forEach(dir => processDirective(dir));
         elementScope.SetInitialized();
 
         if ('OnElementScopeCreated' in element && typeof (element as any).OnElementScopeCreated === 'function'){

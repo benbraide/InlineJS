@@ -43,6 +43,9 @@ export interface IElementScope{
     AddPostProcessCallback(callback: () => void): void;
     ExecutePostProcessCallbacks(): void;
 
+    AddPostAttributesProcessCallback(callback: () => void): void;
+    ExecutePostAttributesProcessCallbacks(): void;
+
     AddUninitCallback(callback: () => void): void;
     RemoveUninitCallback(callback: () => void): void;
 

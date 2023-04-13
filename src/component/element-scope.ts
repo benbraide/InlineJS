@@ -31,6 +31,7 @@ export class ElementScope implements IElementScope{
 
     private callbacks_ = {
         post: new Array<() => void>(),
+        postAttributes: new Array<() => void>(),
         uninit: new Array<() => void>(),
         treeChange: new Array<TreeChangeCallbackType>(),
         attributeChange: new Array<AttributeChangeCallbackInfo>(),
@@ -157,7 +158,21 @@ export class ElementScope implements IElementScope{
     }
 
     public ExecutePostProcessCallbacks(){
-        (this.callbacks_.post || []).forEach(callback => JournalTry(callback, 'ElementScope.ExecutePostProcessCallbacks'));
+        (this.callbacks_.post || []).splice(0).forEach(callback => JournalTry(callback, 'ElementScope.ExecutePostProcessCallbacks'));
+    }
+
+    public AddPostAttributesProcessCallback(callback: () => void){
+        if (!this.state_.isMarked){
+            this.callbacks_.postAttributes.push(callback);
+            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
+                target: 'post-attributes-process-callbacks',
+                object: () => { return [ ...this.callbacks_.postAttributes ] },
+            })));
+        }
+    }
+
+    public ExecutePostAttributesProcessCallbacks(){
+        (this.callbacks_.postAttributes || []).splice(0).forEach(callback => JournalTry(callback, 'ElementScope.ExecutePostAttributesProcessCallbacks'));
     }
 
     public AddUninitCallback(callback: () => void){

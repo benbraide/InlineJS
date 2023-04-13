@@ -35,6 +35,8 @@ export declare class ElementScope implements IElementScope {
     GetData(key: string): any;
     AddPostProcessCallback(callback: () => void): void;
     ExecutePostProcessCallbacks(): void;
+    AddPostAttributesProcessCallback(callback: () => void): void;
+    ExecutePostAttributesProcessCallbacks(): void;
     AddUninitCallback(callback: () => void): void;
     RemoveUninitCallback(callback: () => void): void;
     AddTreeChangeCallback(callback: TreeChangeCallbackType): void;
