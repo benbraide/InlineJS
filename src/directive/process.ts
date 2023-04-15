@@ -56,8 +56,8 @@ export function ProcessDirectives({ component, element, options = {} }: IProcess
         contextElement: <HTMLElement>element,
     });
 
-    if (element.hasOwnProperty('OnElementScopeCreated') && typeof (element as any).OnElementScopeCreated === 'function'){
-        resolvedComponent.CreateElementScope(<HTMLElement>element);
+    if ('OnElementScopeCreated' in element && typeof (element as any).OnElementScopeCreated === 'function'){
+        resolvedComponent.CreateElementScope((element as unknown as HTMLElement));
     }
 
     let elementScope = resolvedComponent.FindElementScope(<HTMLElement>element);
