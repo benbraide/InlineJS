@@ -34,6 +34,10 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
 }
 
 export function WaitTransition({ componentId, contextElement, target, callback, onAbort, reverse, allowRepeats }: ITransitionParams): (() => void) | null{
+    if ('WaitTransition' in (target || contextElement) && typeof (target || contextElement)['WaitTransition'] === 'function'){
+        return ((target || contextElement)['WaitTransition'] as any)({ componentId, contextElement, target, callback, onAbort, reverse, allowRepeats });
+    }
+    
     let info = ResolveTransition((FindComponentById(componentId)?.FindElementScope(contextElement)?.GetData('transition') || null), (reverse || false));
     if (!info || !info.actor || !info.ease || typeof info.duration !== 'number' || info.duration <= 0){
         return ((callback(false) && false) || null);
