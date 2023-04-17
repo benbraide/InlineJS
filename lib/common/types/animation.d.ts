@@ -44,10 +44,16 @@ export interface IAnimationCreatorCollection {
     Remove(name: string): void;
     Find(name: string): AnimationCreatorCallbackType | null;
 }
+export interface IAnimationNamedNumericCollection {
+    Add(name: string, value: number): void;
+    Remove(name: string): void;
+    Find(name: string): number | null;
+}
 export interface IAnimationConcept {
     GetEaseCollection(): IAnimationEaseCollection;
     GetActorCollection(): IAnimationActorCollection;
     GetCreatorCollection(): IAnimationCreatorCollection;
+    GetNamedNumericCollection(): IAnimationNamedNumericCollection;
 }
 export interface IAnimationTransition {
     ease: IAnimationEase | AnimationEaseCallbackType | null;

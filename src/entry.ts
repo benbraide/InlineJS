@@ -68,7 +68,7 @@ export function InlineJS(){
     inlineScope['version'] = {
         major: 1,
         minor: 0,
-        patch: 36,
+        patch: 37,
         get value(){
             return `${this.major}.${this.minor}.${this.patch}`;
         },

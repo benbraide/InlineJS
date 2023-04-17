@@ -10,6 +10,7 @@ export interface ITransitionParams{
     target?: HTMLElement;
     callback: (waited: boolean) => any;
     onAbort?: () => void;
+    onPass?: (params: IAnimationEaseParams) => void;
     reverse?: boolean;
     allowRepeats?: boolean;
 }
@@ -33,7 +34,7 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
     return info;
 }
 
-export function WaitTransition({ componentId, contextElement, target, callback, onAbort, reverse, allowRepeats }: ITransitionParams): (() => void) | null{
+export function WaitTransition({ componentId, contextElement, target, callback, onAbort, onPass, reverse, allowRepeats }: ITransitionParams): (() => void) | null{
     if ('WaitTransition' in (target || contextElement) && typeof (target || contextElement)['WaitTransition'] === 'function'){
         return ((target || contextElement)['WaitTransition'] as any)({ componentId, contextElement, target, callback, onAbort, reverse, allowRepeats });
     }
@@ -55,7 +56,8 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
 
     FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(abort);
 
-    CreateAnimationLoop(info.duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
+    let duration = info.duration;
+    CreateAnimationLoop(duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
         if (aborted){
             return onAborted();
         }
@@ -66,11 +68,14 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
             (target || contextElement).dispatchEvent(new CustomEvent('transition.enter'));
         }
 
+        let fraction = getFraction(elapsed / duration);
         callActor({
             target: (target || contextElement),
             stage: ((steps++ == 0) ? 'start' : 'middle'),
-            fraction: callEase({ duration: info!.duration, elapsed, fraction: getFraction(elapsed / info!.duration) }),
+            fraction: callEase({ duration, elapsed, fraction }),
         });
+
+        onPass && onPass({ duration, elapsed, fraction });
     }).Final(() => {
         if (!aborted){
             callActor({//Final step
