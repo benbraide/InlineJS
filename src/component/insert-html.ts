@@ -3,7 +3,6 @@ import { WaitTransition } from "../directive/transition";
 import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
-import { ElementScopeKey } from "./element-scope-id";
 import { FindComponentById } from "./find";
 
 export type InsertionType = 'replace' | 'append' | 'prepend';
@@ -52,12 +51,15 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             WaitTransition({ componentId,
                 contextElement: (transitionScope || element),
                 target: element,
-                callback: () => (((transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: true } })) && false) || afterTransitionCallback()),
+                callback: () => {
+                    (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: true } }));
+                    afterTransitionCallback();
+                },
             });
         }
     };
 
-    if (type === 'replace'){//Remove all child nodes
+    if (type === 'replace' && element.childNodes.length != 0){//Remove all child nodes
         let destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
             let resolvedComponent = FindComponentById(componentId), global = GetGlobal();
             Array.from(el.children).forEach((child) => {
@@ -75,7 +77,6 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             destroyOffspring(element);
             Array.from(element.childNodes).forEach(child => child.remove());
             (afterRemove && JournalTry(afterRemove, 'InlineJS.InsertHtml', element));
-            insert();
         };
 
         if (afterTransitionCallback){
@@ -84,11 +85,16 @@ export function InsertHtml({ element, html, type = 'replace', component, process
                 contextElement: (transitionScope || element),
                 target: element,
                 reverse: true,
-                callback: () => (((transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: false } })) && false) || remove()),
+                callback: () => {
+                    (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: false } }));
+                    remove();
+                    insert();
+                },
             });
         }
         else{
             remove();
+            insert();
         }
     }
     else{

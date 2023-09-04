@@ -1,12 +1,13 @@
 import { BaseComponent } from "../component/base";
+import { ChangesMonitor } from "../component/changes-monitor";
 import { DirectiveManager } from "../directive/manager";
 import { JournalTry } from "../journal/try";
 import { MagicManager } from "../magic/manager";
 import { MutationObserver } from "../observers/mutation";
+import { ResizeObserver } from "../observers/resize";
 import { ChildProxy } from "../proxy/child";
 import { Stack } from "../stack";
 import { IComponent } from "../types/component";
-import { ChangesMonitorType } from "../types/element-scope";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
 import { ComponentsMonitorType, IObjectRetrievalParams, IObjectStoreParams, IGlobal } from "../types/global";
@@ -19,13 +20,13 @@ import { Nothing } from "../values/nothing";
 import { Config } from "./config";
 import { NativeFetchConcept } from "./native-fetch";
 
-export class BaseGlobal implements IGlobal{
+export class BaseGlobal extends ChangesMonitor implements IGlobal{
     private nothing_ = new Nothing;
     
     private config_: IConfig;
     private storedObjects_: Record<string, any> = {};
+    private lastStoredObjectKey_ = '';
     
-    private changesMonitorList_ = new Array<ChangesMonitorType>();
     private componentsMonitorList_ = new Array<ComponentsMonitorType>();
 
     private components_: Record<string, IComponent> = {};
@@ -34,6 +35,8 @@ export class BaseGlobal implements IGlobal{
     private attributeProcessors_ = new Array<AttributeProcessorType>();
     private textContentProcessors_ = new Array<TextContentProcessorType>();
 
+    private customElements_: Record<string, CustomElementConstructor> = {};
+
     private managers_ = {
         directive: new DirectiveManager(),
         magic: new MagicManager(),
@@ -41,22 +44,20 @@ export class BaseGlobal implements IGlobal{
     
     private uniqueMarkers_ = GetDefaultUniqueMarkers();
     private mutationObserver_ = new MutationObserver();
+    private resizeObserver_ = new ResizeObserver();
 
     private nativeFetch_ = new NativeFetchConcept();
     private fetchConcept_: IFetchConcept | null = null;
     private concepts_: Record<string, any> = {};
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
+        super();
         this.config_ = new Config(configOptions || {});
         this.uniqueMarkers_.level0 = (idOffset || 0);
     }
 
     public SwapConfig(config: IConfig){
-        this.config_ = config;
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'config',
-            object: () => config,
-        }), 'InlineJS.Global.ChangesMonitor::config'));
+        this.NotifyListeners_('config', (this.config_ = config));
     }
 
     public GetConfig(){
@@ -65,31 +66,25 @@ export class BaseGlobal implements IGlobal{
 
     public GenerateUniqueId(prefix?: string, suffix?: string){
         const generated = GenerateUniqueId(this.uniqueMarkers_, '', prefix, suffix);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'markers',
-            object: () => { return { ...this.uniqueMarkers_ } },
-        }), 'InlineJS.Global.ChangesMonitor::markers'));
+        this.NotifyListeners_('unique-markers', this.uniqueMarkers_);
         return generated;
     }
 
     public StoreObject({ object, componentId, contextElement }: IObjectStoreParams){
-        const key = `@!@${RandomString(18)}@!@`;
+        this.lastStoredObjectKey_ = `@!@${RandomString(18)}@!@`;
 
         if (contextElement){
             let scope = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement))?.FindElementScope(contextElement);
             if (scope){
-                scope.SetLocal(key, object);
-                return key;
+                scope.SetLocal(this.lastStoredObjectKey_, object);
+                return this.lastStoredObjectKey_;
             }
         }
 
-        this.storedObjects_[key] = object;
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'stored-objects',
-            object: () => { return { ...this.storedObjects_ } },
-        }), 'InlineJS.Global.ChangesMonitor::stored-objects'));
+        this.storedObjects_[this.lastStoredObjectKey_] = object;
+        this.NotifyListeners_('stored-objects', this.storedObjects_);
         
-        return key;
+        return this.lastStoredObjectKey_;
     }
 
     public RetrieveObject(params: IObjectRetrievalParams){
@@ -100,38 +95,19 @@ export class BaseGlobal implements IGlobal{
         return this.RetrieveObject_(params, false);
     }
 
-    public AddChangesMonitor(monitor: ChangesMonitorType){
-        this.changesMonitorList_.push(monitor);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'changes-monitor',
-            object: () => { return { ...this.changesMonitorList_ } },
-        }), 'InlineJS.Global.ChangesMonitor::changes-monitor'));
-    }
-
-    public RemoveChangesMonitor(monitor: ChangesMonitorType){
-        let len = this.changesMonitorList_.length;
-        this.changesMonitorList_ = this.changesMonitorList_.filter(m => (m !== monitor));
-        (len != this.changesMonitorList_.length) && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'changes-monitor',
-            object: () => { return { ...this.changesMonitorList_ } },
-        }), 'InlineJS.Global.ChangesMonitor::changes-monitor'));
+    public GetLastObjectKey(){
+        return this.lastStoredObjectKey_;
     }
 
     public AddComponentMonitor(monitor: ComponentsMonitorType){
         this.componentsMonitorList_.push(monitor);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'components-monitor',
-            object: () => { return { ...this.componentsMonitorList_ } },
-        }), 'InlineJS.Global.ChangesMonitor::components-monitor'));
+        this.NotifyListeners_('components-monitors', this.componentsMonitorList_);
     }
 
     public RemoveComponentMonitor(monitor: ComponentsMonitorType){
         let len = this.componentsMonitorList_.length;
         this.componentsMonitorList_ = this.componentsMonitorList_.filter(m => (m !== monitor));
-        (len != this.componentsMonitorList_.length) && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'components-monitor',
-            object: () => { return { ...this.componentsMonitorList_ } },
-        }), 'InlineJS.Global.ChangesMonitor::components-monitor'));
+        (len != this.componentsMonitorList_.length) && this.NotifyListeners_('components-monitors', this.componentsMonitorList_);
     }
     
     public CreateComponent(root: HTMLElement){
@@ -144,10 +120,7 @@ export class BaseGlobal implements IGlobal{
         this.components_[component.GetId()] = component;
 
         this.componentsMonitorList_.forEach(monitor => JournalTry(() => monitor({ action: 'add', component }), 'InlineJS.Global.CreateComponent'));
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'components',
-            object: () => { return { ...this.components_ } },
-        }), 'InlineJS.Global.ChangesMonitor::components'));
+        this.NotifyListeners_('components', this.components_);
 
         return component;
     }
@@ -159,10 +132,7 @@ export class BaseGlobal implements IGlobal{
             delete this.components_[key];
 
             this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'remove', component }), 'InlineJS.Global.RemoveComponent'));
-            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                target: 'components',
-                object: () => { return { ...this.components_ } },
-            }), 'InlineJS.Global.ChangesMonitor::components'));
+            this.NotifyListeners_('components', this.components_);
         }
     }
 
@@ -184,18 +154,12 @@ export class BaseGlobal implements IGlobal{
 
     public PushCurrentComponent(componentId: string){
         this.currentComponent_.Push(componentId);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'current-component',
-            object: () => this.currentComponent_,
-        }), 'InlineJS.Global.ChangesMonitor::current-component'));
+        this.NotifyListeners_('current-component', this.currentComponent_);
     }
 
     public PopCurrentComponent(){
         let isEmpty = this.currentComponent_.IsEmpty(), popped = this.currentComponent_.Pop();
-        !isEmpty && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'current-component',
-            object: () => this.currentComponent_,
-        }), 'InlineJS.Global.ChangesMonitor::current-component'));
+        !isEmpty && this.NotifyListeners_('current-component', this.currentComponent_);
         return popped;
     }
 
@@ -221,10 +185,7 @@ export class BaseGlobal implements IGlobal{
 
     public AddAttributeProcessor(processor: AttributeProcessorType){
         this.attributeProcessors_.push(processor);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'attribute-processors',
-            object: () => { return [ ...this.attributeProcessors_ ] },
-        }), 'InlineJS.Global.ChangesMonitor::attribute-processors'));
+        this.NotifyListeners_('attribute-processors', this.attributeProcessors_);
     }
 
     public DispatchAttributeProcessing(params: IAttributeProcessorParams){
@@ -233,10 +194,7 @@ export class BaseGlobal implements IGlobal{
 
     public AddTextContentProcessor(processor: TextContentProcessorType){
         this.textContentProcessors_.push(processor);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'text-content-processors',
-            object: () => { return [ ...this.textContentProcessors_ ] },
-        }), 'InlineJS.Global.ChangesMonitor::text-content-processors'));
+        this.NotifyListeners_('text-content-processors', this.textContentProcessors_);
     }
 
     public DispatchTextContentProcessing(params: ITextContentProcessorParams){
@@ -247,12 +205,13 @@ export class BaseGlobal implements IGlobal{
         return this.mutationObserver_;
     }
 
+    public GetResizeObserver(){
+        return this.resizeObserver_;
+    }
+
     public SetFetchConcept(concept: IFetchConcept | null){
         this.fetchConcept_ = concept;
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'fetch-concept',
-            object: () => this.fetchConcept_,
-        }), 'InlineJS.Global.ChangesMonitor::fetch-concept'));
+        this.NotifyListeners_('fetch-concept', this.fetchConcept_);
     }
 
     public GetFetchConcept(): IFetchConcept{
@@ -261,22 +220,30 @@ export class BaseGlobal implements IGlobal{
 
     public SetConcept<T>(name: string, concept: T){
         this.concepts_[name] = concept;
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'concepts',
-            object: () => { return { ...this.concepts_ } },
-        }), 'InlineJS.Global.ChangesMonitor::concepts'));
+        this.NotifyListeners_('concepts', this.concepts_);
     }
 
     public RemoveConcept(name: string){
         delete this.concepts_[name];
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'concepts',
-            object: () => { return { ...this.concepts_ } },
-        }), 'InlineJS.Global.ChangesMonitor::concepts'));
+        this.NotifyListeners_('concepts', this.concepts_);
     }
 
     public GetConcept<T>(name: string){
         return (this.concepts_.hasOwnProperty(name) ? <T>this.concepts_[name] : null);
+    }
+
+    public AddCustomElement(name: string, constructor: CustomElementConstructor){
+        if (this.customElements_.hasOwnProperty(name)){//Already exists
+            return;
+        }
+
+        this.customElements_[name] = constructor;
+        customElements.define(this.config_.GetElementName(name), constructor);
+        this.NotifyListeners_('custom-elements', this.customElements_);
+    }
+
+    public FindCustomElement(name: string){
+        return (this.customElements_.hasOwnProperty(name) ? this.customElements_[name] : null);
     }
 
     public CreateChildProxy(owner: IProxy, name: string, target: any): IProxy{
@@ -305,21 +272,22 @@ export class BaseGlobal implements IGlobal{
             if (component){
                 let found = component.FindElementLocal(contextElement, key, true);
                 if (found){
-                    let value = found.GetLocal(key);
-                    remove && found.DeleteLocal(key);
+                    const value = found.GetLocal(key);
+                    if (remove){
+                        found.DeleteLocal(key);
+                        (key === this.lastStoredObjectKey_) && (this.lastStoredObjectKey_ = '');
+                    }
                     return value;
                 }
             }
         }
 
         if (this.storedObjects_.hasOwnProperty(key)){
-            let value = this.storedObjects_[key];
+            const value = this.storedObjects_[key];
             if (remove){
+                (key === this.lastStoredObjectKey_) && (this.lastStoredObjectKey_ = '');
                 delete this.storedObjects_[key];
-                this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                    target: 'stored-objects',
-                    object: () => { return { ...this.storedObjects_ } },
-                }), 'InlineJS.Global.ChangesMonitor::stored-objects'));
+                this.NotifyListeners_('stored-objects', this.storedObjects_);
             }
             return value;
         }

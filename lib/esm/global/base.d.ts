@@ -1,8 +1,9 @@
+import { ChangesMonitor } from "../component/changes-monitor";
 import { DirectiveManager } from "../directive/manager";
 import { MagicManager } from "../magic/manager";
 import { MutationObserver } from "../observers/mutation";
+import { ResizeObserver } from "../observers/resize";
 import { IComponent } from "../types/component";
-import { ChangesMonitorType } from "../types/element-scope";
 import { IConfig, IConfigOptions } from "../types/config";
 import { IFetchConcept } from "../types/fetch";
 import { ComponentsMonitorType, IObjectRetrievalParams, IObjectStoreParams, IGlobal } from "../types/global";
@@ -10,19 +11,21 @@ import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcesso
 import { IProxy } from "../types/proxy";
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
-export declare class BaseGlobal implements IGlobal {
+export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     private nothing_;
     private config_;
     private storedObjects_;
-    private changesMonitorList_;
+    private lastStoredObjectKey_;
     private componentsMonitorList_;
     private components_;
     private currentComponent_;
     private attributeProcessors_;
     private textContentProcessors_;
+    private customElements_;
     private managers_;
     private uniqueMarkers_;
     private mutationObserver_;
+    private resizeObserver_;
     private nativeFetch_;
     private fetchConcept_;
     private concepts_;
@@ -33,8 +36,7 @@ export declare class BaseGlobal implements IGlobal {
     StoreObject({ object, componentId, contextElement }: IObjectStoreParams): string;
     RetrieveObject(params: IObjectRetrievalParams): any;
     PeekObject(params: IObjectRetrievalParams): any;
-    AddChangesMonitor(monitor: ChangesMonitorType): void;
-    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
+    GetLastObjectKey(): string;
     AddComponentMonitor(monitor: ComponentsMonitorType): void;
     RemoveComponentMonitor(monitor: ComponentsMonitorType): void;
     CreateComponent(root: HTMLElement): IComponent;
@@ -55,11 +57,14 @@ export declare class BaseGlobal implements IGlobal {
     AddTextContentProcessor(processor: TextContentProcessorType): void;
     DispatchTextContentProcessing(params: ITextContentProcessorParams): void;
     GetMutationObserver(): MutationObserver;
+    GetResizeObserver(): ResizeObserver;
     SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;
     SetConcept<T>(name: string, concept: T): void;
     RemoveConcept(name: string): void;
     GetConcept<T>(name: string): T | null;
+    AddCustomElement(name: string, constructor: CustomElementConstructor): void;
+    FindCustomElement(name: string): CustomElementConstructor | null;
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
     CreateFuture(callback: () => any): Future;
     IsFuture(value: any): boolean;

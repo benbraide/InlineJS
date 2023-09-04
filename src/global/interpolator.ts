@@ -1,13 +1,17 @@
 import { FindComponentById } from "../component/find";
 import { EvaluateLater } from "../evaluator/evaluate-later";
+import { GeneratedFunctionType } from "../evaluator/generate-function";
 import { JournalTry } from "../journal/try";
 import { UseEffect } from "../reactive/effect";
+import { EncodeValue } from "../utilities/encode-value";
 
 export interface IInterpolateParams{
     componentId: string;
     contextElement: HTMLElement;
     text?: string;
     handler?: (value: string) => void;
+    matchRegex?: RegExp;
+    testRegex?: RegExp;
 }
 
 export interface IInterpolateTextParams{
@@ -15,6 +19,9 @@ export interface IInterpolateTextParams{
     contextElement: HTMLElement;
     text: string;
     handler: (value: string) => void;
+    matchRegex?: RegExp;
+    testRegex?: RegExp;
+    storeObject?: boolean;
 }
 
 const InterpolateInlineRegex = /\{\{\s*(.+?)\s*\}\}/g;
@@ -38,29 +45,46 @@ export interface IInterpolateTextNode{
     evaluated: string;
 }
 
-export function ReplaceText({ componentId, contextElement, text, handler }: IInterpolateTextParams){
-    let evaluate = EvaluateLater({ componentId, contextElement,
-        expression: "let output = " + JSON.stringify(text).replace(InterpolateInlineRegex, '"+($1)+"') + "; return output;",
-    });
+export function ReplaceText({ componentId, contextElement, text, handler, testRegex, matchRegex, storeObject }: IInterpolateTextParams){
+    let evaluate: GeneratedFunctionType | null = null, injectedHandler: ((value: any) => void) | null = null;
+    if (storeObject){
+        const trimmedtext = text.trim();
+        let match = (trimmedtext.match(testRegex || InterpolateInlineTestRegex) || [])[0];
+        if (match && match === trimmedtext){
+            match = match.replace((matchRegex || InterpolateInlineRegex), '$1').trim();
+            evaluate = match ? EvaluateLater({ componentId, contextElement,
+                expression: `return (${match});`,
+                voidOnly: true,
+            }) : (handler => (handler && handler('')));
+            injectedHandler = value => handler(EncodeValue(value, componentId, contextElement));
+        }
+    }
+    
+    if (!evaluate){
+        text = JSON.stringify(text).replace((matchRegex || InterpolateInlineRegex), '"+($1)+"').replace(/"\+\(\s*\)\+"/g, '');
+        evaluate = EvaluateLater({ componentId, contextElement,
+            expression: `let output = ${text}; return output;`,
+        });
+    }
 
     FindComponentById(componentId)?.CreateElementScope(contextElement);
     UseEffect({ componentId, contextElement,
-        callback: () => evaluate(handler),
+        callback: () => evaluate!(injectedHandler || handler),
     });
 }
 
-export function InterpolateText({ text, ...rest }: IInterpolateTextParams){
-    if (InterpolateInlineTestRegex.test(text)){
-        ReplaceText({ text, ...rest });
+export function InterpolateText({ text, testRegex, matchRegex, ...rest }: IInterpolateTextParams){
+    if ((testRegex || matchRegex || InterpolateInlineTestRegex).test(text)){
+        ReplaceText({ text, testRegex, matchRegex, ...rest });
     }
 }
 
-export function Interpolate({ componentId, contextElement, text, handler }: IInterpolateParams){
+export function Interpolate({ componentId, contextElement, text, handler, testRegex, matchRegex }: IInterpolateParams){
     if (typeof text === 'string'){
-        return (handler && InterpolateText({ componentId, contextElement, text, handler }));
+        return (handler && InterpolateText({ componentId, contextElement, text, handler, testRegex, matchRegex }));
     }
     
-    if (!InterpolateInlineTestRegex.test(contextElement.textContent || '')){
+    if (!(testRegex || matchRegex || InterpolateInlineTestRegex).test(contextElement.textContent || '')){
         return;
     }
 
@@ -83,6 +107,16 @@ export function Interpolate({ componentId, contextElement, text, handler }: IInt
         });
     };
 
+    let refreshRequested = false, requestRefresh = () => {
+        if (!refreshRequested){
+            refreshRequested = true;
+            queueMicrotask(() => {
+                refreshRequested = false;
+                JournalTry(() => refresh(), 'InlineJS.Interpolate', contextElement);
+            });
+        }
+    };
+
     [...contextElement.childNodes].forEach((child) => {
         if (child.nodeType == 3 && child.textContent && InterpolateInlineTestRegex.test(child.textContent)){
             let textNode: IInterpolateTextNode = { text: (child.textContent || ''), evaluated: (child.textContent || '') };
@@ -94,8 +128,9 @@ export function Interpolate({ componentId, contextElement, text, handler }: IInt
                 text: textNode.text,
                 handler: (value) => {
                     textNode.evaluated = value;
-                    refresh();
+                    requestRefresh();
                 },
+                testRegex, matchRegex,
             }));
         }
         else if (child.nodeType == 3){

@@ -4,4 +4,5 @@ export interface IEvaluateOptions {
     expression: string;
     disableFunctionCall?: boolean;
     waitPromise?: 'none' | 'default' | 'recursive';
+    voidOnly?: boolean;
 }

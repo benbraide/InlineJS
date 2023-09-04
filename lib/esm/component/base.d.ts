@@ -1,18 +1,18 @@
 import { IComponent, IComponentBackend } from "../types/component";
 import { ReactiveStateType } from "../types/config";
-import { IElementScope, ChangesMonitorType } from "../types/element-scope";
+import { IElementScope } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
 import { IMutationObserverAttributeInfo } from "../types/mutation";
 import { IProxy } from "../types/proxy";
 import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
 import { ISelectionStackEntry } from "../types/selection";
-export declare class BaseComponent implements IComponent {
+import { ChangesMonitor } from "./changes-monitor";
+export declare class BaseComponent extends ChangesMonitor implements IComponent {
     private id_;
     private root_;
     private reactiveState_;
     private name_;
-    private changesMonitorList_;
     private context_;
     private changes_;
     private scopes_;
@@ -32,8 +32,6 @@ export declare class BaseComponent implements IComponent {
     GenerateUniqueId(prefix?: string, suffix?: string): string;
     SetName(name: string): void;
     GetName(): string;
-    AddChangesMonitor(monitor: ChangesMonitorType): void;
-    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     CreateScope(root: HTMLElement): IScope | null;
     RemoveScope(scope: IScope | string): void;
     FindScopeById(id: string): IScope | null;
@@ -47,7 +45,7 @@ export declare class BaseComponent implements IComponent {
     PopSelectionScope(): ISelectionStackEntry | null;
     PeekSelectionScope(): ISelectionStackEntry | null;
     GetRoot(): HTMLElement;
-    FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null;
+    FindElement(target: HTMLElement, predicate: (element: HTMLElement) => boolean): HTMLElement | null;
     FindAncestor(target: HTMLElement, index?: number): HTMLElement | null;
     CreateElementScope(element: HTMLElement): IElementScope | null;
     RemoveElementScope(id: string): void;
@@ -62,6 +60,7 @@ export declare class BaseComponent implements IComponent {
     FindProxy(path: string): IProxy | null;
     AddRefElement(ref: string, element: HTMLElement): void;
     FindRefElement(ref: string): HTMLElement | null;
+    GetRefElements(): Record<string, HTMLElement>;
     AddAttributeChangeCallback(element: HTMLElement, callback: (list: Array<IMutationObserverAttributeInfo>) => void): void;
     RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void): void;
     AddIntersectionObserver(observer: IIntersectionObserver): void;

@@ -1,1 +1,1 @@
-export declare function RandomString(length: number): string;
+export declare function RandomString(length?: number, charset?: string): string;

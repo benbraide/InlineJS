@@ -24,10 +24,15 @@ export interface IAnimationEaseCollection{
     Find(name: string): AnimationEaseCallbackType | null;
 }
 
-export interface IAnimationActorParams{
-    fraction: number;
+export type AnimationStageType = 'start' | 'middle' | 'end';
+export type AnimationAllowedType = 'normal' | 'reversed' | 'both';
+
+export interface IAnimationActorParams extends IAnimationEaseParams{
+    elapsedFraction: number;
     target: HTMLElement;
-    stage: 'start' | 'middle' | 'end';
+    stage: AnimationStageType;
+    reverse: boolean;
+    restore?: boolean;
 }
 
 export type AnimationActorCallbackType = (params: IAnimationActorParams) => void;
@@ -77,5 +82,5 @@ export interface IAnimationTransition{
     duration: number;
     delay: number;
     repeats: number;
-    allowed?: 'normal' | 'reversed' | 'both';
+    allowed?: AnimationAllowedType;
 }

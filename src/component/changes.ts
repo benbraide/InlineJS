@@ -1,9 +1,9 @@
-import { JournalError } from "../journal/error";
 import { JournalTry } from "../journal/try";
 import { Stack } from "../stack";
 import { ChangeCallbackType, IBubbledChange, IChange } from "../types/change";
 import { IChanges, IGetAccessDetails, IGetAccessStorage, IGetAccessStorageDetails, ISubscriberInfo } from "../types/changes";
 import { DeepCopy } from "../utilities/deep-copy";
+import { ChangesMonitor } from "./changes-monitor";
 import { PeekCurrentComponent } from "./current";
 import { FindComponentById } from "./find";
 
@@ -12,7 +12,7 @@ interface IChangeBatchInfo{
     changes: Array<IChange | IBubbledChange>;
 }
 
-export class Changes implements IChanges{
+export class Changes extends ChangesMonitor implements IChanges{
     private nextTickHandlers_ = new Array<() => void>();
     private nextIdleHandlers_ = new Array<() => void>();
     private nextNonIdleHandlers_ = new Array<() => void>();
@@ -27,7 +27,9 @@ export class Changes implements IChanges{
     private getAccessStorages_ = new Stack<IGetAccessStorage>();
     private origins_ = new Stack<ChangeCallbackType>();
     
-    public constructor(private componentId_: string){}
+    public constructor(private componentId_: string){
+        super();
+    }
     
     public GetComponentId(){
         return this.componentId_;
@@ -36,16 +38,19 @@ export class Changes implements IChanges{
     public AddNextTickHandler(handler: () => void){
         this.nextTickHandlers_.push(handler);
         this.Schedule();
+        this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
     }
 
     public AddNextIdleHandler(handler: () => void){
         this.nextIdleHandlers_.push(handler);
         this.Schedule();
+        this.NotifyListeners_('next-idle-handlers', this.nextIdleHandlers_);
     }
 
     public AddNextNonIdleHandler(handler: () => void){
         this.nextNonIdleHandlers_.push(handler);
         this.Schedule();
+        this.NotifyListeners_('next-non-idle-handlers', this.nextNonIdleHandlers_);
     }
 
     public Schedule(){
@@ -88,11 +93,14 @@ export class Changes implements IChanges{
                 this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
             }
         });
+
+        this.NotifyListeners_('scheduled', this.isScheduled_);
     }
     
     public Add(change: IChange | IBubbledChange){
         this.list_.push(change);
         this.Schedule();
+        this.NotifyListeners_('list', this.list_);
     }
     
     public AddComposed(prop: string, prefix?: string, targetPath?: string){
@@ -123,7 +131,7 @@ export class Changes implements IChanges{
         let targetObject = (<Changes>FindComponentById(PeekCurrentComponent() || '')?.GetBackend().changes || this);
         
         let lastPointIndex = path.lastIndexOf('.');
-        this.lastAccessContext_ = ((lastPointIndex == -1) ? '' : path.substring(0, lastPointIndex));
+        targetObject.lastAccessContext_ = ((lastPointIndex == -1) ? '' : path.substring(0, lastPointIndex));
         
         let storage = targetObject.getAccessStorages_.Peek();
         if (!storage?.details){
@@ -150,6 +158,8 @@ export class Changes implements IChanges{
         }
 
         storage.lastAccessPath = path; //Update last access path
+        this.NotifyListeners_('last-access-context', this.list_);
+        targetObject.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
 
     public GetLastAccessContext(){
@@ -158,6 +168,7 @@ export class Changes implements IChanges{
 
     public ResetLastAccessContext(){
         this.lastAccessContext_ = '';
+        this.NotifyListeners_('last-access-context', this.lastAccessContext_);
     }
     
     public PushGetAccessStorage(storage?: IGetAccessStorageDetails){
@@ -174,16 +185,20 @@ export class Changes implements IChanges{
             }),
             lastAccessPath: '',
         });
+        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
     
     public PopGetAccessStorage(): IGetAccessStorageDetails | null{
-        return (this.getAccessStorages_.Pop()?.details || null);
+        let details = (this.getAccessStorages_.Pop()?.details || null);
+        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
+        return details;
     }
 
     public SwapOptimizedGetAccessStorage(){
         let storage = this.getAccessStorages_.Peek();
         if (storage?.details.optimized && storage.details.raw){
             storage.details.optimized.entries = storage.details.raw.entries;
+            this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
         }
     }
 
@@ -191,17 +206,20 @@ export class Changes implements IChanges{
         let storage = this.getAccessStorages_.Peek();
         if (storage?.details.optimized && storage.details.optimized.entries === storage.details.raw?.entries){
             storage.details.optimized.entries = storage.details.raw.entries.slice(0);
+            this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
         }
     }
 
     public FlushRawGetAccessStorage(){
         this.getAccessStorages_.Peek()?.details.raw?.entries.splice(0);
+        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
 
     public PushGetAccessStorageSnapshot(){
         let storage = this.getAccessStorages_.Peek();
         storage?.details.optimized?.snapshots.Push(storage.details.optimized.entries.slice(0).map(entry => ({ ...entry })));
         storage?.details.raw?.snapshots.Push(storage.details.raw.entries.slice(0).map(entry => ({ ...entry })));
+        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
 
     public PopGetAccessStorageSnapshot(discard?: boolean){
@@ -216,6 +234,8 @@ export class Changes implements IChanges{
         if (!discard && rawSnapshot && storage?.details.raw?.entries){
             storage.details.raw.entries = rawSnapshot;
         }
+
+        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
     
     public PopAllGetAccessStorageSnapshots(discard?: boolean){
@@ -238,10 +258,13 @@ export class Changes implements IChanges{
         if (!discard && rawSnapshot && storage?.details.raw?.entries){
             storage.details.raw.entries = rawSnapshot;
         }
+
+        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
 
     public PushOrigin(origin: ChangeCallbackType){
         this.origins_.Push(origin);
+        this.NotifyListeners_('origins', this.origins_);
     }
 
     public PeekOrigin(): ChangeCallbackType | null{
@@ -249,7 +272,9 @@ export class Changes implements IChanges{
     }
 
     public PopOrigin(): ChangeCallbackType | null{
-        return this.origins_.Pop();
+        let origin = this.origins_.Pop();
+        this.NotifyListeners_('origins', this.origins_);
+        return origin;
     }
 
     public Subscribe(path: string, handler: ChangeCallbackType){
@@ -259,6 +284,7 @@ export class Changes implements IChanges{
                 path: path,
                 callback: handler,
             };
+            this.NotifyListeners_('subscribers', this.subscribers_);
         }
         
         return (id || '');
@@ -273,6 +299,8 @@ export class Changes implements IChanges{
         else if (subscribed in this.subscribers_){
             this.Unsubscribe_(subscribed);
         }
+
+        this.NotifyListeners_('subscribers', this.subscribers_);
     }
 
     private Unsubscribe_(id: string){

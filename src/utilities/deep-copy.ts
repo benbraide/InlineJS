@@ -11,8 +11,8 @@ export function DeepCopy<T>(target: T){
         return target.map(item => DeepCopy(item));
     }
 
-    let copy = {};
-    Object.entries(target).forEach(([key, value]) => (copy[key] = DeepCopy(value)));
+    let copy: Record<string, any> = {};
+    Object.entries(<Record<string, any>>target).forEach(([key, value]) => (copy[key] = DeepCopy(value)));
 
     return copy;
 }

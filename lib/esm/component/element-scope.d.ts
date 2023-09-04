@@ -1,6 +1,7 @@
 import { IDirectiveManager } from "../types/directive";
-import { IElementScope, TreeChangeCallbackType, ChangesMonitorType } from "../types/element-scope";
-export declare class ElementScope implements IElementScope {
+import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
+import { ChangesMonitor } from "./changes-monitor";
+export declare class ElementScope extends ChangesMonitor implements IElementScope {
     private componentId_;
     private id_;
     private element_;
@@ -8,9 +9,9 @@ export declare class ElementScope implements IElementScope {
     private isInitialized_;
     private scopeId_;
     private key_;
-    private changesMonitorList_;
     private locals_;
     private data_;
+    private queuedAttributeChanges_;
     private managers_;
     private callbacks_;
     private state_;
@@ -20,8 +21,6 @@ export declare class ElementScope implements IElementScope {
     GetComponentId(): string;
     GetScopeId(): string;
     GetId(): string;
-    AddChangesMonitor(monitor: ChangesMonitorType): void;
-    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     SetKey(key: string): void;
     GetKey(): string;
     GetElement(): HTMLElement;

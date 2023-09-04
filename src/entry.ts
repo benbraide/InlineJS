@@ -15,14 +15,24 @@ import { IsEqual } from './utilities/is-equal';
 import { IsObject } from './utilities/is-object';
 import { ToString } from './utilities/to-string';
 import { DeepCopy } from './utilities/deep-copy';
+import { IsBooleanAttribute } from './utilities/is-boolean-attribute';
+import { RandomString } from './utilities/random-string';
+import { MeasureCallback } from './utilities/measure-callback';
 import { TidyPath, PathToRelative, SplitPath, JoinPath } from './utilities/path';
+import { EncodeAttribute } from './utilities/encode-attribute';
+import { DecodeAttribute } from './utilities/decode-attribute';
+import { InitializeGlobalScope } from './utilities/get-global-scope';
+import { EncodeValue } from './utilities/encode-value';
+import { DecodeValue } from './utilities/decode-value';
+import { ToSnakeCase } from './utilities/snake-case';
+import { FindAncestor } from './utilities/find-ancestor';
 
 import { Future } from './values/future';
 import { Loop } from './values/loop';
 import { Nothing } from './values/nothing';
 import { Stack } from './stack';
-import { IsBooleanAttribute } from './utilities/is-boolean-attribute';
-import { RandomString } from './utilities/random-string';
+
+import { InsertHtml } from './component/insert-html';
 
 export function InlineJS(){
     AutoBootstrap();
@@ -30,15 +40,18 @@ export function InlineJS(){
     GetGlobal().AddAttributeProcessor(AttributeInterpolator);
     GetGlobal().AddTextContentProcessor(TextContentInterpolator);
 
-    let inlineScope = (globalThis['InlineJS'] = (globalThis['InlineJS'] || {}));
+    InitializeGlobalScope('', {
+        waitForGlobal: WaitForGlobal,
+        bootstrap: BootstrapAndAttach,
+    });
 
-    inlineScope['waitForGlobal'] = WaitForGlobal;
-    inlineScope['bootstrap'] = BootstrapAndAttach;
-
-    inlineScope['utilities'] = {
+    InitializeGlobalScope('utilities', {
         beginsWith: BeginsWith,
         endsWith: EndsWith,
         toCamelCase: ToCamelCase,
+        toSnakeCase: ToSnakeCase,
+        insertHtml: InsertHtml,
+        findAncestor: FindAncestor,
         getAttribute: GetAttribute,
         findFirstAttribute: FindFirstAttribute,
         findFirstAttributeValue: FindFirstAttributeValue,
@@ -56,21 +69,29 @@ export function InlineJS(){
         splitPath: SplitPath,
         joinPath: JoinPath,
         getRandomString: RandomString,
-    };
+        measureCallback: MeasureCallback,
+        encodeAttribute: EncodeAttribute,
+        decodeAttribute: DecodeAttribute,
+        encodeValue: EncodeValue,
+        decodeValue: DecodeValue,
+    });
 
-    inlineScope['values'] = {
+    InitializeGlobalScope('values', {
         future: Future,
         loop: Loop,
         nothing: Nothing,
         stack: Stack,
-    };
+    });
 
-    inlineScope['version'] = {
+    InitializeGlobalScope('version', {
         major: 1,
-        minor: 0,
-        patch: 37,
+        minor: 1,
+        patch: 0,
         get value(){
             return `${this.major}.${this.minor}.${this.patch}`;
         },
-    };
+        toString(){
+            return this.value;
+        },
+    });
 }

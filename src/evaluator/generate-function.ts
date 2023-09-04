@@ -3,60 +3,49 @@ import { FindComponentById } from "../component/find";
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { IEvaluateOptions } from "../types/evaluate-options";
+import { FindCacheValue, SetCacheValue } from "../utilities/cache";
 import { ContextKeys } from "../utilities/context-keys";
 import { WaitPromise } from "./wait-promise";
 
 const InlineJSContextKey = '__InlineJS_Context__';
 
-let InlineJSValueFunctions: Record<string, any> = {};
-let InlineJSVoidFunctions: Record<string, any> = {};
+const cacheKey = 'InlineJS_Func_Cache';
+function GetDefaultCacheValue(): Record<string, Function>{
+    return {};
+}
 
-export function GenerateValueReturningFunction(expression: string, componentId?: string){
-    if (InlineJSValueFunctions.hasOwnProperty(expression)){
-        return InlineJSValueFunctions[expression];
+function GenerateFunction(body: (expression: string) => string, expression: string, componentId?: string, alertAlways = false){
+    let cached = FindCacheValue<Function>(cacheKey, expression);
+    if (cached){
+        return cached;
     }
 
-    if (InlineJSVoidFunctions.hasOwnProperty(expression)){
-        return null;//Prevent retries when a void version exists
-    }
-    
     try{
         let newFunction = (new Function(InlineJSContextKey, `
             with (${InlineJSContextKey}){
-                return (${expression});
+                ${body(expression)};
             };
         `));
 
-        return (InlineJSValueFunctions[expression] = newFunction);
+        SetCacheValue(cacheKey, expression, newFunction, GetDefaultCacheValue());
+        return newFunction;
     }
     catch (err){
-        if (!(err instanceof SyntaxError)){
-            JournalError(err, `InlineJs.Region<${componentId || 'NIL'}>.GenerateValueReturningFunction`);
+        if (alertAlways || !(err instanceof SyntaxError)){
+            JournalError(err, `InlineJs.Region<${componentId || 'NIL'}>.GenerateFunction`);
+            return undefined;
         }
     }
 
     return null;
 }
 
-export function GenerateVoidFunction(expression: string, componentId?: string){
-    if (InlineJSVoidFunctions.hasOwnProperty(expression)){
-        return InlineJSVoidFunctions[expression];
-    }
-    
-    try{
-        let newFunction = (new Function(InlineJSContextKey, `
-            with (${InlineJSContextKey}){
-                ${expression};
-            };
-        `));
+export function GenerateValueReturningFunction(expression: string, componentId?: string, alertAlways = false){
+    return GenerateFunction(expression => `return (${expression})`, expression, componentId, alertAlways);
+}
 
-        return (InlineJSVoidFunctions[expression] = newFunction);
-    }
-    catch (err){
-        JournalError(err, `InlineJs.Region<${componentId || 'NIL'}>.GenerateVoidFunction`);
-    }
-
-    return null;
+export function GenerateVoidFunction(expression: string, componentId?: string, alertAlways = false){
+    return GenerateFunction(expression => expression, expression, componentId, alertAlways);
 }
 
 export function CallIfFunction(value: any, handler?: (value: any) => void, componentId?: string, params: Array<any> = []){
@@ -71,13 +60,25 @@ export function CallIfFunction(value: any, handler?: (value: any) => void, compo
 
 export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Array<any>, contexts?: Record<string, any>) => any;
 
-export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive' }: IEvaluateOptions): GeneratedFunctionType{
+export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive', voidOnly }: IEvaluateOptions): GeneratedFunctionType{
+    let nullHandler = (handler?: (value: any) => void) => {
+        handler && handler(null);
+        return null;
+    };
+    
     expression = expression.trim();
     if (!expression){
-        return (handler?: (value: any) => void) => {
-            handler && handler(null);
-            return null;
-        };
+        return nullHandler;
+    }
+
+    let func = (voidOnly ? null : GenerateValueReturningFunction(expression, componentId)), voidGenerated = false;
+    if (func === undefined){//Not a syntax error
+        return nullHandler;
+    }
+
+    !func && (voidGenerated = true);
+    if (!func && !(func = GenerateVoidFunction(expression, componentId, true))){//Failed to generate function
+        return nullHandler;
     }
 
     let runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true, waitMessage?: string) => {
@@ -135,33 +136,26 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
             context?.Pop(ContextKeys.self);
         }
     };
-
-    let valueReturnFunction = GenerateValueReturningFunction(expression, componentId), voidFunction: any = null;
-    if (!valueReturnFunction){
-        voidFunction = GenerateVoidFunction(expression, componentId);
-    }
     
     return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>, waitMessage?: string) => {
-        if (!voidFunction && valueReturnFunction){
-            try{
-                return runFunction(handler, valueReturnFunction.bind(contextElement), (params || []), (contexts || {}), undefined, waitMessage);
+        try{
+            return runFunction(handler, func!.bind(contextElement), (params || []), (contexts || {}), undefined, waitMessage);
+        }
+        catch (err){
+            if (err instanceof SyntaxError && !voidGenerated){
+                voidGenerated = true;
+                func = GenerateVoidFunction(expression, componentId, true);
+                if (!func){
+                    return nullHandler(handler);
+                }
+
+                return runFunction(handler, func!.bind(contextElement), (params || []), (contexts || {}), false);
             }
-            catch (err){
-                if (err instanceof SyntaxError){
-                    voidFunction = GenerateVoidFunction(expression, componentId);
-                }
-                else{
-                    throw err;
-                }
+            else{
+                JournalError(err, `InlineJs.Region<${componentId}>.RunFunction('${expression}')`);
             }
         }
-        
-        if (voidFunction){
-            return (runFunction(handler, voidFunction.bind(contextElement), (params || []), (contexts || {}), false) || null);
-        }
 
-        handler && handler(null);
-
-        return null;
+        return nullHandler(handler);
     };
 }

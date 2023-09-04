@@ -17,11 +17,34 @@ export interface IProcessDetails{
     options?: IProcessOptions;
 }
 
+export function IsTemplate(element: Element){
+    if (element instanceof HTMLTemplateElement){
+        return true;
+    }
+
+    if ('IsTemplate' in element && typeof (element as any).IsTemplate === 'function'){
+        return !!(element as any).IsTemplate();
+    }
+
+    return false;
+}
+
+export function IsInsideTemplate(element: Element){
+    for (let parent = element.parentNode; parent; parent = parent.parentNode){
+        if (parent instanceof Element && IsTemplate(parent)){
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function CheckElement(element: Element, { checkTemplate = true, checkDocument = true }: IProcessOptions){
     return (
         element?.nodeType === 1 &&
         (!checkDocument || document.contains(element)) &&
-        (!checkTemplate || element instanceof HTMLTemplateElement || !element.closest('template')));
+        (!checkTemplate || !IsInsideTemplate(element))
+    );
 }
 
 export function ProcessDirectives({ component, element, options = {} }: IProcessDetails){
@@ -63,11 +86,27 @@ export function ProcessDirectives({ component, element, options = {} }: IProcess
     let elementScope = resolvedComponent.FindElementScope(<HTMLElement>element);
     elementScope?.ExecutePostAttributesProcessCallbacks();
 
-    if (!options.ignoreChildren && !(element instanceof HTMLTemplateElement)){//Process children
+    if (!options.ignoreChildren && !IsTemplate(element)){//Process children
         resolvedComponent.PushSelectionScope();
-        Array.from(element.children).filter(child => !child.contains(element)).forEach(child => ProcessDirectives({ component, options,
+
+        let childOptions = {
+            checkTemplate: false,
+            checkDocument: false,
+        };
+
+        let processChildDirectives = (child: Element, ignoreChildren: boolean) => ProcessDirectives({
+            component,
+            options: { ...childOptions, ignoreChildren },
             element: child,
-        }));
+        });
+
+        if ('TraverseChildren' in element && typeof (element as any).TraverseChildren === 'function'){
+            (element as any).TraverseChildren((child: Element) => processChildDirectives(child, child.contains(element)));
+        }
+        else{
+            Array.from(element.children).forEach(child => processChildDirectives(child, child.contains(element)));
+        }
+        
         resolvedComponent.PopSelectionScope();
     }
 

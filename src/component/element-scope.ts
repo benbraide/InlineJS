@@ -3,7 +3,8 @@ import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
 import { IDirectiveManager } from "../types/directive";
-import { IElementScope, TreeChangeCallbackType, ChangesMonitorType } from "../types/element-scope";
+import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
+import { ChangesMonitor } from "./changes-monitor";
 import { PeekCurrentScope } from "./current-scope";
 import { ElementScopeKey } from "./element-scope-id";
 import { UnbindOutsideEvent } from "./event";
@@ -14,16 +15,16 @@ interface AttributeChangeCallbackInfo{
     whitelist: Array<string>;
 }
 
-export class ElementScope implements IElementScope{
+export class ElementScope extends ChangesMonitor implements IElementScope{
     private isInitialized_ = false;
     
     private scopeId_ = '';
     private key_ = '';
 
-    private changesMonitorList_ = new Array<ChangesMonitorType>();
-    
     private locals_: Record<string, any> = {};
     private data_: Record<string, any> = {};
+
+    private queuedAttributeChanges_: Array<string> | null = null;
 
     private managers_ = {
         directive: <IDirectiveManager | null>null,
@@ -43,6 +44,7 @@ export class ElementScope implements IElementScope{
     };
     
     public constructor(private componentId_: string, private id_: string, private element_: HTMLElement, private isRoot_: boolean){
+        super();
         this.scopeId_ = (PeekCurrentScope(this.componentId_) || '');
     }
 
@@ -66,29 +68,8 @@ export class ElementScope implements IElementScope{
         return this.id_;
     }
 
-    public AddChangesMonitor(monitor: ChangesMonitorType){
-        this.changesMonitorList_.push(monitor);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'changes-monitor',
-            object: () => { return { ...this.changesMonitorList_ } },
-        })));
-    }
-
-    public RemoveChangesMonitor(monitor: ChangesMonitorType){
-        let len = this.changesMonitorList_.length;
-        this.changesMonitorList_ = this.changesMonitorList_.filter(m => (m !== monitor));
-        (len != this.changesMonitorList_.length) && this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'changes-monitor',
-            object: () => { return { ...this.changesMonitorList_ } },
-        })));
-    }
-
     public SetKey(key: string){
-        this.key_ = key;
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'key',
-            object: () => key,
-        })));
+        this.NotifyListeners_('key', (this.key_ = key));
     }
 
     public GetKey(){
@@ -106,19 +87,13 @@ export class ElementScope implements IElementScope{
     public SetLocal(key: string, value: any){
         if (!this.state_.isMarked){
             this.locals_[key] = value;
-            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                target: 'locals',
-                object: () => { return { ...this.locals_ } },
-            })));
+            this.NotifyListeners_('locals', this.locals_);
         }
     }
 
     public DeleteLocal(key: string){
         delete this.locals_[key];
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'locals',
-            object: () => { return { ...this.locals_ } },
-        })));
+        this.NotifyListeners_('locals', this.locals_);
     }
 
     public HasLocal(key: string){
@@ -136,10 +111,7 @@ export class ElementScope implements IElementScope{
     public SetData(key: string, value: any){
         if (!this.state_.isMarked){
             this.data_[key] = value;
-            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                target: 'data',
-                object: () => { return { ...this.data_ } },
-            })));
+            this.NotifyListeners_('data', this.data_);
         }
     }
 
@@ -150,10 +122,7 @@ export class ElementScope implements IElementScope{
     public AddPostProcessCallback(callback: () => void){
         if (!this.state_.isMarked){
             this.callbacks_.post.push(callback);
-            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                target: 'post-process-callbacks',
-                object: () => { return [ ...this.callbacks_.post ] },
-            })));
+            this.NotifyListeners_('post-process-callbacks', this.callbacks_.post);
         }
     }
 
@@ -164,10 +133,7 @@ export class ElementScope implements IElementScope{
     public AddPostAttributesProcessCallback(callback: () => void){
         if (!this.state_.isMarked){
             this.callbacks_.postAttributes.push(callback);
-            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                target: 'post-attributes-process-callbacks',
-                object: () => { return [ ...this.callbacks_.postAttributes ] },
-            })));
+            this.NotifyListeners_('post-attributes-process-callbacks', this.callbacks_.postAttributes);
         }
     }
 
@@ -178,35 +144,23 @@ export class ElementScope implements IElementScope{
     public AddUninitCallback(callback: () => void){
         if (!this.state_.isMarked){
             this.callbacks_.uninit.push(callback);
-            this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-                target: 'uninit-callbacks',
-                object: () => { return [ ...this.callbacks_.uninit ] },
-            })));
+            this.NotifyListeners_('uninit-callbacks', this.callbacks_.uninit);
         }
     }
 
     public RemoveUninitCallback(callback: () => void){
         this.callbacks_.uninit = this.callbacks_.uninit.filter(c => (c !== callback));
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'uninit-callbacks',
-            object: () => { return [ ...this.callbacks_.uninit ] },
-        })));
+        this.NotifyListeners_('uninit-callbacks', this.callbacks_.uninit);
     }
 
     public AddTreeChangeCallback(callback: TreeChangeCallbackType){
         this.callbacks_.treeChange.push(callback);
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'tree-change-callbacks',
-            object: () => { return [ ...this.callbacks_.treeChange ] },
-        })));
+        this.NotifyListeners_('tree-change-callbacks', this.callbacks_.treeChange);
     }
 
     public RemoveTreeChangeCallback(callback: TreeChangeCallbackType){
         this.callbacks_.treeChange = this.callbacks_.treeChange.filter(c => (c !== callback));
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'tree-change-callbacks',
-            object: () => { return [ ...this.callbacks_.treeChange ] },
-        })));
+        this.NotifyListeners_('tree-change-callbacks', this.callbacks_.treeChange);
     }
     
     public ExecuteTreeChangeCallbacks(added: Array<Node>, removed: Array<Node>){
@@ -229,10 +183,7 @@ export class ElementScope implements IElementScope{
             existing.whitelist.push(...(whitelist || []));
         }
 
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'attribute-callbacks',
-            object: () => { return [ ...this.callbacks_.attributeChange ] },
-        })));
+        this.NotifyListeners_('attribute-change-callbacks', this.callbacks_.attributeChange);
     }
 
     public RemoveAttributeChangeCallback(callback: (name?: string) => void, whitelist?: string | Array<string>){
@@ -255,15 +206,29 @@ export class ElementScope implements IElementScope{
             this.callbacks_.attributeChange.splice(index, 1);
         }
 
-        this.changesMonitorList_.forEach(monitor => JournalTry(() => monitor({
-            target: 'attribute-callbacks',
-            object: () => { return [ ...this.callbacks_.attributeChange ] },
-        })));
+        this.NotifyListeners_('attribute-change-callbacks', this.callbacks_.attributeChange);
     }
 
     public ExecuteAttributeChangeCallbacks(name: string){
-        (this.callbacks_.attributeChange || []).filter(info => ((info.whitelist || []).length == 0 || info.whitelist.includes(name)))
-            .forEach(info => JournalTry(() => info.callback(name)));
+        if (!this.queuedAttributeChanges_){
+            this.queuedAttributeChanges_ = [name];
+            queueMicrotask(() => {
+                if (!this.queuedAttributeChanges_){
+                    return;
+                }
+                
+                const queue = this.queuedAttributeChanges_;
+                this.queuedAttributeChanges_ = null;
+
+                queue.forEach((name) => {
+                    (this.callbacks_.attributeChange || []).filter(info => ((info.whitelist || []).length == 0 || info.whitelist.includes(name)))
+                        .forEach(info => JournalTry(() => info.callback(name)));
+                });
+            });
+        }
+        else{
+            this.queuedAttributeChanges_.push(name);
+        }
     }
 
     public Destroy(markOnly?: boolean){

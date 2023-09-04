@@ -14,8 +14,6 @@ export interface IElementScope {
     GetComponentId(): string;
     GetScopeId(): string;
     GetId(): string;
-    AddChangesMonitor(monitor: ChangesMonitorType): void;
-    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
     SetKey(key: string): void;
     GetKey(): string;
     GetElement(): HTMLElement;

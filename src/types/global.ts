@@ -1,7 +1,6 @@
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { IComponent } from "./component";
-import { ChangesMonitorType } from "./element-scope";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directive";
 import { IFetchConcept } from "./fetch";
@@ -9,6 +8,7 @@ import { IMagicManager } from "./magic";
 import { IMutationObserver } from "./mutation";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
+import { IResizeObserver } from "./resize-observer";
 
 export interface IComponentsMonitorParams{
     action: 'add' | 'remove';
@@ -38,9 +38,7 @@ export interface IGlobal{
     StoreObject(params: IObjectStoreParams): string;
     RetrieveObject(params: IObjectRetrievalParams): any;
     PeekObject(params: IObjectRetrievalParams): any;
-
-    AddChangesMonitor(monitor: ChangesMonitorType): void;
-    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
+    GetLastObjectKey(): string;
 
     AddComponentMonitor(monitor: ComponentsMonitorType): void;
     RemoveComponentMonitor(monitor: ComponentsMonitorType): void;
@@ -70,6 +68,7 @@ export interface IGlobal{
     DispatchTextContentProcessing(params: ITextContentProcessorParams): void;
 
     GetMutationObserver(): IMutationObserver;
+    GetResizeObserver(): IResizeObserver;
 
     SetFetchConcept(concept: IFetchConcept | null): void;
     GetFetchConcept(): IFetchConcept;
@@ -77,6 +76,9 @@ export interface IGlobal{
     SetConcept<T>(name: string, concept: T): void;
     RemoveConcept(name: string): void;
     GetConcept<T>(name: string): T | null;
+
+    AddCustomElement(name: string, constructor: CustomElementConstructor): void;
+    FindCustomElement(name: string): CustomElementConstructor | null;
 
     CreateChildProxy(owner: IProxy, name: string, target: any): IProxy;
 

@@ -9,4 +9,6 @@ export interface IProcessDetails {
     element: Element;
     options?: IProcessOptions;
 }
+export declare function IsTemplate(element: Element): boolean;
+export declare function IsInsideTemplate(element: Element): boolean;
 export declare function ProcessDirectives({ component, element, options }: IProcessDetails): false | undefined;

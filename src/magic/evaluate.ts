@@ -1,4 +1,4 @@
-import { FindComponentById } from "../component/find";
+import { FindComponentById, FindComponentByName } from "../component/find";
 import { InferComponent } from "../component/infer";
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
@@ -12,13 +12,32 @@ export function EvaluateMagicProperty(component: IComponent | string, contextEle
         return GetGlobal().CreateNothing();
     }
 
-    let handler = GetGlobal().GetMagicManager().FindHandler((prefix && name.startsWith(prefix)) ? name.substring(prefix.length) : name, { contextElement,
+    let nonPrefixedName = ((prefix && name.startsWith(prefix)) ? name.substring(prefix.length) : name);
+    let handler = GetGlobal().GetMagicManager().FindHandler(nonPrefixedName, { contextElement,
         componentId: resolvedComponent.GetId(),
         component: resolvedComponent,
     });//Find handler and report access
 
     if (!handler){
-        if (checkExternal && prefix && name.startsWith(`${prefix}${prefix}`)){//External access
+        if (!checkExternal){
+            return GetGlobal().CreateNothing();
+        }
+        
+        let isExternal = ((prefix && name.startsWith(`${prefix}${prefix}`)) || false);
+
+        nonPrefixedName = (isExternal ? nonPrefixedName.substring(prefix.length) : nonPrefixedName);
+        
+        let foundScope = resolvedComponent.FindScopeByName(nonPrefixedName);
+        if (foundScope){
+            return (isExternal ? foundScope.GetRoot() : foundScope.GetProxy().GetNative());
+        }
+
+        let foundComponent = FindComponentByName(nonPrefixedName);
+        if (foundComponent){
+            return (isExternal ? foundComponent.GetRoot() : foundComponent.GetRootProxy().GetNative());
+        }
+        
+        if (isExternal){//External access
             let componentId = resolvedComponent.GetId();
             return (target: HTMLElement) => {
                 let component = (InferComponent(target) || FindComponentById(componentId));

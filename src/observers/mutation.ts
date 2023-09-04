@@ -49,18 +49,14 @@ export class MutationObserver implements IMutationObserver{
                             entry.removedNodes.forEach(pushRemovedNode);
 
                             let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
-                            if (key){
-                                getInfo(key).added.push(...Array.from(entry.addedNodes));
-                            }
+                            key && getInfo(key).added.push(...Array.from(entry.addedNodes));
                         }
                         else if (entry?.type === 'attributes' && entry.attributeName){
                             let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
-                            if (key){
-                                getInfo(key).attributes.push({
-                                    name: entry.attributeName,
-                                    target: entry.target,
-                                });
-                            }
+                            key && getInfo(key).attributes.push({
+                                name: entry.attributeName,
+                                target: entry.target,
+                            });
                         }
                     });
 

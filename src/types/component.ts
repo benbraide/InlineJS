@@ -1,7 +1,7 @@
 import { IChanges } from "./changes";
 import { ReactiveStateType } from "./config";
 import { IContext } from "./context";
-import { IElementScope, ChangesMonitorType } from "./element-scope";
+import { IElementScope } from "./element-scope";
 import { IGlobal } from "./global";
 import { IIntersectionObserver } from "./intersection";
 import { IMutationObserverAttributeInfo } from "./mutation";
@@ -25,9 +25,6 @@ export interface IComponent{
     SetName(name: string): void;
     GetName(): string;
 
-    AddChangesMonitor(monitor: ChangesMonitorType): void;
-    RemoveChangesMonitor(monitor: ChangesMonitorType): void;
-
     CreateScope(root: HTMLElement): IScope | null;
     RemoveScope(scope: IScope | string): void;
 
@@ -46,7 +43,7 @@ export interface IComponent{
     PeekSelectionScope(): ISelectionStackEntry | null;
 
     GetRoot(): HTMLElement;
-    FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null;
+    FindElement(deepestElement: HTMLElement, predicate: (element: HTMLElement) => boolean): HTMLElement | null;
     FindAncestor(target: HTMLElement, index?: number): HTMLElement | null;
 
     CreateElementScope(element: HTMLElement): IElementScope | null;
@@ -67,6 +64,7 @@ export interface IComponent{
 
     AddRefElement(ref: string, element: HTMLElement): void;
     FindRefElement(ref: string): HTMLElement | null;
+    GetRefElements(): Record<string, HTMLElement>;
 
     AddAttributeChangeCallback(element: HTMLElement, callback: (list: Array<IMutationObserverAttributeInfo>) => void): void;
     RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void): void;

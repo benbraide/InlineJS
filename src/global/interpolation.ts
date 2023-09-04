@@ -1,10 +1,11 @@
 import { IAttributeProcessorParams, ITextContentProcessorParams } from "../types/process";
-import { Interpolate } from "./interpolator";
+import { Interpolate, InterpolateText } from "./interpolator";
 
 export function AttributeInterpolator({ componentId, contextElement, name, value }: IAttributeProcessorParams){
-    Interpolate({ componentId, contextElement,
+    InterpolateText({ componentId, contextElement,
         text: value,
         handler: value => contextElement.setAttribute(name, value),
+        storeObject: true,
     });
 }
 

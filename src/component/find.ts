@@ -1,5 +1,6 @@
 import { GetGlobal } from "../global/get";
 import { IComponent } from "../types/component";
+import { GetCache, InitCache } from "../utilities/cache";
 
 const cacheKey = 'InlineJS_Comp_Cache';
 
@@ -8,15 +9,19 @@ interface ICacheInfo{
     component: IComponent | null;
 }
 
-export function InitComponentCache(){
-    return globalThis[cacheKey] = {
+function GetDefaultCacheValue(): ICacheInfo{
+    return {
         id: '',
-        component: <IComponent | null>null
+        component: <IComponent | null>null,
     };
 }
 
+export function InitComponentCache(){
+    InitCache(cacheKey, GetDefaultCacheValue());
+}
+
 export function FindComponentById(id: string){
-    let cache = <ICacheInfo>(globalThis[cacheKey] = (globalThis[cacheKey] || InitComponentCache()));
+    let cache = GetCache<ICacheInfo>(cacheKey, GetDefaultCacheValue());
     if (id === cache.id){
         return cache.component;
     }

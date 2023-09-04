@@ -1,6 +1,7 @@
 import { ChangeCallbackType, IBubbledChange, IChange } from "../types/change";
 import { IChanges, IGetAccessStorageDetails } from "../types/changes";
-export declare class Changes implements IChanges {
+import { ChangesMonitor } from "./changes-monitor";
+export declare class Changes extends ChangesMonitor implements IChanges {
     private componentId_;
     private nextTickHandlers_;
     private nextIdleHandlers_;

@@ -19,7 +19,7 @@ export class MagicManager implements IMagicManager{
             callback = (params) => handler.Handle(params);
         }
 
-        if (computedName && callback){
+        if (computedName){
             this.handlers_[computedName] = { callback, onAccess };
         }
     }
