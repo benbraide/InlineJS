@@ -10,3 +10,9 @@ export interface IProxy {
     RemoveChild(child: IProxy | string): void;
     FindChild(name: string): IProxy | null;
 }
+export interface IProxyAccessHandler {
+    Get?(key: string | number, target: object): any;
+    Set?(key: string | number, value: any, target: object): any;
+    Delete?(key: string | number, target: object): any;
+    Has?(key: string | number, target: object): boolean;
+}

@@ -1,4 +1,4 @@
-export declare type ProxyLookupType = Array<string> | ((prop: string, target?: any) => boolean);
+export type ProxyLookupType = Array<string> | ((prop: string, target?: any) => boolean);
 export interface IProxyAlertOptions {
     componentId: string;
     id: string;

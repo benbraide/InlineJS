@@ -11,7 +11,7 @@ import { IsObject } from "../utilities/is-object";
 export function AddDirectiveHandler(handler: IDirectiveHandler | IDirectiveHandlerCallbackDetails | FunctionDirectiveHandlerType | WrappedFunctionDirectiveHandlerType, target?: string){
     let name = '', callback: DirectiveHandlerCallbackType | null = null;
     if (typeof handler === 'function'){
-        let response = handler();
+        const response = handler();
         if (!response){//Query name and callback
             name = <string>(handler as WrappedFunctionDirectiveHandlerType)('name');
             callback = <DirectiveHandlerCallbackType>(handler as WrappedFunctionDirectiveHandlerType)('callback');

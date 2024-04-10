@@ -3,6 +3,8 @@ export type DirectiveNameBuilderType = (name: string, addDataPrefix?: boolean) =
 
 export interface IConfigOptions{
     appName?: string;
+    useGlobalWindow?: boolean;
+    wrapScopedFunctions?: boolean;
     reactiveState?: ReactiveStateType;
     directivePrefix?: string;
     elementPrefix?: string;
@@ -33,4 +35,10 @@ export interface IConfig{
 
     SetReactiveState(state: ReactiveStateType): void;
     GetReactiveState(): ReactiveStateType;
+
+    SetUseGlobalWindow(value: boolean): void;
+    GetUseGlobalWindow(): boolean;
+
+    SetWrapScopedFunctions(value: boolean): void;
+    GetWrapScopedFunctions(): boolean;
 }

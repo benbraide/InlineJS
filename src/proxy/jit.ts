@@ -11,12 +11,12 @@ function GetJITProxyGlobalBlock(): JITProxyGlobalType{
 }
 
 export function InitJITProxy(key: string, component: IComponent | null, element: HTMLElement): [string, any, JITProxyInstanceType | null]{
-    let elementScope = component?.FindElementScope(element), elementKey = elementScope?.GetId();
+    const elementScope = component?.FindElementScope(element), elementKey = elementScope?.GetId();
     if (!elementKey){
         return ['', null, null];
     }
 
-    let global = GetJITProxyGlobalBlock(), scope = (global[key] = (global[key] || {}));
+    const global = GetJITProxyGlobalBlock(), scope = (global[key] = (global[key] || {}));
     if (elementKey in scope){
         return [elementKey, scope[elementKey], scope];
     }

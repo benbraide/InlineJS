@@ -1,10 +1,11 @@
 import { GetConfig } from "../component/get-config";
-import { IDirective, IDirectiveMeta } from "../types/directive";
+import { IDirective, IDirectiveMeta, IDirectiveProxyAccessHandler } from "../types/directive";
+import { IProxyAccessHandler } from "../types/proxy";
 import { ApplyDirectiveExpansionRules } from "./expand";
 
 let cachedMetas: Record<string, IDirectiveMeta> = {};
 
-export function CreateDirective(name: string, value: string): IDirective | null{
+export function CreateDirective(name: string, value: string, proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null): IDirective | null{
     if (!name || !(name = name.trim())){
         return null;
     }
@@ -17,15 +18,16 @@ export function CreateDirective(name: string, value: string): IDirective | null{
         return {
             meta: cachedMetas[name],
             value: value,
+            proxyAccessHandler,
         };
     }
 
-    let expandedName = ApplyDirectiveExpansionRules(name), matches = expandedName.match(GetConfig().GetDirectiveRegex());
+    const expandedName = ApplyDirectiveExpansionRules(name), matches = expandedName.match(GetConfig().GetDirectiveRegex());
     if (!matches || matches.length != 3 || !matches[2]){//Not a directive
         return null;
     }
 
-    let colonIndex = matches[2].indexOf(':');
+    const colonIndex = matches[2].indexOf(':');
     let parts = ((colonIndex == -1) ? [matches[2]] : [matches[2].substring(0, colonIndex), matches[2].substring(colonIndex + 1)]), nameValue = '', arg = '';
     
     if (parts.length > 1){
@@ -44,7 +46,7 @@ export function CreateDirective(name: string, value: string): IDirective | null{
     }
 
     argParts.splice(0, 1);//Delete first entry
-    let nameParts = nameValue.split('-'), meta: IDirectiveMeta = {
+    const nameParts = nameValue.split('-'), meta: IDirectiveMeta = {
         view: {
             original: name,
             expanded: expandedName,
@@ -61,5 +63,5 @@ export function CreateDirective(name: string, value: string): IDirective | null{
     };
 
     cachedMetas[name]  = meta;
-    return { meta, value };
+    return { meta, value, proxyAccessHandler };
 }

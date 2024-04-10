@@ -9,6 +9,7 @@ import { IsEqual } from '../utilities/is-equal';
 import { IsObject } from '../utilities/is-object';
 import { ToString } from '../utilities/to-string';
 import { DeepCopy } from '../utilities/deep-copy';
+import { MergeObjects } from '../utilities/merge-objects';
 import { IsBooleanAttribute } from '../utilities/is-boolean-attribute';
 import { RandomString } from '../utilities/random-string';
 import { MeasureCallback } from '../utilities/measure-callback';
@@ -22,6 +23,7 @@ import { ToSnakeCase } from '../utilities/snake-case';
 import { FindAncestor } from '../utilities/find-ancestor';
 
 import { InsertHtml } from '../component/insert-html';
+import { IsInsideTemplate, IsTemplate } from '../utilities/template';
 
 export function InitializeUtilities(){
     InitializeGlobalScope('utilities', {
@@ -43,6 +45,7 @@ export function InitializeUtilities(){
         isObject: IsObject,
         toString: ToString,
         deepCopy: DeepCopy,
+        mergeObjects: MergeObjects,
         tidyPath: TidyPath,
         pathToRelative: PathToRelative,
         splitPath: SplitPath,
@@ -53,5 +56,7 @@ export function InitializeUtilities(){
         decodeAttribute: DecodeAttribute,
         encodeValue: EncodeValue,
         decodeValue: DecodeValue,
+        isTemplate: IsTemplate,
+        isInsideTemplate: IsInsideTemplate,
     });
 }

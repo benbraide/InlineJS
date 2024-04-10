@@ -26,7 +26,7 @@ export class MutationObserver implements IMutationObserver{
         if (globalThis.MutationObserver){
             try{
                 this.observer_ = new globalThis.MutationObserver((entries) => {
-                    let mutations: Record<string, IMutatedInfo> = {}, getInfo = (key: string) => {
+                    const mutations: Record<string, IMutatedInfo> = {}, getInfo = (key: string) => {
                         return (mutations[key] = mutations[key] || {
                             added: new Array<Node>(),
                             removed: new Array<Node>(),
@@ -36,8 +36,8 @@ export class MutationObserver implements IMutationObserver{
 
                     entries.forEach((entry) => {
                         if (entry?.type === 'childList'){
-                            let pushRemovedNode = (node: Node) => {
-                                let key = GetElementScopeId(InferComponent(<HTMLElement>node)?.GetRoot() || null);
+                            const pushRemovedNode = (node: Node) => {
+                                const key = GetElementScopeId(InferComponent(<HTMLElement>node)?.GetRoot() || null);
                                 if (key){
                                     getInfo(key).removed.push(node);
                                 }
@@ -48,11 +48,11 @@ export class MutationObserver implements IMutationObserver{
                             
                             entry.removedNodes.forEach(pushRemovedNode);
 
-                            let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
+                            const key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
                             key && getInfo(key).added.push(...Array.from(entry.addedNodes));
                         }
                         else if (entry?.type === 'attributes' && entry.attributeName){
-                            let key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
+                            const key = ((entry.target instanceof HTMLElement) ? GetElementScopeId(InferComponent(entry.target)?.GetRoot() || null) : '');
                             key && getInfo(key).attributes.push({
                                 name: entry.attributeName,
                                 target: entry.target,
@@ -65,17 +65,17 @@ export class MutationObserver implements IMutationObserver{
                     }
 
                     Object.entries(this.handlers_).forEach(([id, info]) => {
-                        let key = ((info.target instanceof HTMLElement) ? GetElementScopeId(info.target) : '');
+                        const key = ((info.target instanceof HTMLElement) ? GetElementScopeId(info.target) : '');
                         if (!key || !(key in mutations)){
                             return;
                         }
 
-                        let getList = <T>(type: IMutationType, info: IMutationObserverHandlerInfo, list: T) => {
+                        const getList = <T>(type: IMutationType, info: IMutationObserverHandlerInfo, list: T) => {
                             return ((!info.whitelist || info.whitelist.includes(type)) ? list : undefined);
                         };
                         
-                        let added = getList('add', info, mutations[key].added), removed = getList('remove', info, mutations[key].removed);
-                        let attributes = getList('attribute', info, mutations[key].attributes);
+                        const added = getList('add', info, mutations[key].added), removed = getList('remove', info, mutations[key].removed);
+                        const attributes = getList('attribute', info, mutations[key].attributes);
 
                         if (added || removed || attributes){
                             JournalTry(() => info.handler({ id, added, removed, attributes }), 'InlineJS.MutationObserver');
@@ -101,7 +101,7 @@ export class MutationObserver implements IMutationObserver{
     }
 
     public Observe(target: Node, handler: MutationObserverHandlerType, whitelist?: Array<IMutationType>){
-        let id = GenerateUniqueId(this.uniqueMarkers_);
+        const id = GenerateUniqueId(this.uniqueMarkers_);
         this.handlers_[id] = { target, handler, whitelist };
         return id;
     }

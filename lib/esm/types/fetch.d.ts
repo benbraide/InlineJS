@@ -5,7 +5,7 @@ export interface IFetchPathHandlerParams {
     input: RequestInfo;
     init?: RequestInit;
 }
-export declare type FetchPathHandlerType = (params: IFetchPathHandlerParams) => Promise<Response> | null;
+export type FetchPathHandlerType = (params: IFetchPathHandlerParams) => Promise<Response> | null;
 export interface IFetchMockResponseParams {
     response: any;
     delay?: number;

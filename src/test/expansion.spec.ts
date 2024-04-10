@@ -10,28 +10,28 @@ describe('expansion', () => {
     it('can be created from strings and regexes', () => {
         CreateGlobal();
 
-        AddDirectiveExpansionRule(CreateDirectiveExpansionRule('@', 'x-on:'));
-        AddDirectiveExpansionRule(CreateDirectiveExpansionRule(BeginsWith(':'), 'x-attr:'));
+        AddDirectiveExpansionRule(CreateDirectiveExpansionRule('@', 'hx-on:'));
+        AddDirectiveExpansionRule(CreateDirectiveExpansionRule(BeginsWith(':'), 'hx-attr:'));
         AddDirectiveExpansionRule(CreateDirectiveExpansionRule(EndsWith('\\.'), '.default'));
 
-        expect(ApplyDirectiveExpansionRules('x-data')).equal('x-data');
-        expect(ApplyDirectiveExpansionRules(':name')).equal('x-attr:name');
-        expect(ApplyDirectiveExpansionRules(':name:key')).equal('x-attr:name:key');
-        expect(ApplyDirectiveExpansionRules('@click')).equal('x-on:click');
-        expect(ApplyDirectiveExpansionRules('x-dir:key.opt.')).equal('x-dir:key.opt.default');
+        expect(ApplyDirectiveExpansionRules('hx-data')).equal('hx-data');
+        expect(ApplyDirectiveExpansionRules(':name')).equal('hx-attr:name');
+        expect(ApplyDirectiveExpansionRules(':name:key')).equal('hx-attr:name:key');
+        expect(ApplyDirectiveExpansionRules('@click')).equal('hx-on:click');
+        expect(ApplyDirectiveExpansionRules('hx-dir:key.opt.')).equal('hx-dir:key.opt.default');
     });
 
     it('can be added directly', () => {
         CreateGlobal();
 
-        AddDirectiveExpansionRule(name => (name.startsWith('@') ? name.replace('@', 'x-on:') : null));
-        AddDirectiveExpansionRule(name => (name.startsWith(':') ? name.replace(':', 'x-attr:') : null));
+        AddDirectiveExpansionRule(name => (name.startsWith('@') ? name.replace('@', 'hx-on:') : null));
+        AddDirectiveExpansionRule(name => (name.startsWith(':') ? name.replace(':', 'hx-attr:') : null));
         AddDirectiveExpansionRule(name => (EndsWith('\\.').test(name) ? name.replace(EndsWith('\\.'), '.default') : null));
 
-        expect(ApplyDirectiveExpansionRules('x-data')).equal('x-data');
-        expect(ApplyDirectiveExpansionRules(':name')).equal('x-attr:name');
-        expect(ApplyDirectiveExpansionRules(':name:key')).equal('x-attr:name:key');
-        expect(ApplyDirectiveExpansionRules('@click')).equal('x-on:click');
-        expect(ApplyDirectiveExpansionRules('x-dir:key.opt.')).equal('x-dir:key.opt.default');
+        expect(ApplyDirectiveExpansionRules('hx-data')).equal('hx-data');
+        expect(ApplyDirectiveExpansionRules(':name')).equal('hx-attr:name');
+        expect(ApplyDirectiveExpansionRules(':name:key')).equal('hx-attr:name:key');
+        expect(ApplyDirectiveExpansionRules('@click')).equal('hx-on:click');
+        expect(ApplyDirectiveExpansionRules('hx-dir:key.opt.')).equal('hx-dir:key.opt.default');
     });
 });

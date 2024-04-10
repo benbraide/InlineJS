@@ -1,14 +1,10 @@
 import { IConfig, IConfigOptions, ReactiveStateType } from "../types/config";
 export declare class Config implements IConfig {
-    private appName_;
-    private reactiveState_;
-    private directivePrefix_;
-    private elementPrefix_;
-    private directiveRegex_;
-    private directiveNameBuilder_;
+    protected options_: IConfigOptions;
+    protected defaultOptions_: IConfigOptions;
     private keyMap_;
     private booleanAttributes_;
-    constructor({ appName, reactiveState, directivePrefix, elementPrefix, directiveRegex, directiveNameBuilder }?: IConfigOptions);
+    constructor(options_: IConfigOptions);
     GetAppName(): string;
     SetDirectivePrefix(value: string): void;
     GetDirectivePrefix(): string;
@@ -25,4 +21,9 @@ export declare class Config implements IConfig {
     IsBooleanAttribute(name: string): boolean;
     SetReactiveState(state: ReactiveStateType): void;
     GetReactiveState(): ReactiveStateType;
+    SetUseGlobalWindow(value: boolean): void;
+    GetUseGlobalWindow(): boolean;
+    protected UpdateDirectiveRegex_(): RegExp;
+    SetWrapScopedFunctions(value: boolean): void;
+    GetWrapScopedFunctions(): boolean;
 }

@@ -14,7 +14,7 @@ export class ChangesMonitor{
     }
 
     public RemoveChangesMonitor(monitor: ChangesMonitorType){
-        let len = this.listeners_.length;
+        const len = this.listeners_.length;
         this.listeners_ = this.listeners_.filter(m => (m !== monitor));
         (len != this.listeners_.length) && this.listeners_.forEach(monitor => JournalTry(() => monitor({
             target: 'changes-monitor',

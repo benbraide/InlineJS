@@ -28,12 +28,12 @@ const InterpolateInlineRegex = /\{\{\s*(.+?)\s*\}\}/g;
 const InterpolateInlineTestRegex = /\{\{.+?\}\}/;
 
 export function GetElementContent(el: Element){
-    let computeContent = (node: Element) => {
+    const computeContent = (node: Element) => {
         return [...node.childNodes].reduce((prev, child) => `${prev}${((child.nodeType != 3) ? computeText(<Element>child) : (child.textContent || ''))}`, '');
     }
 
-    let computeText = (node: Element) => {
-        let tag = ([...node.attributes].reduce((prev, attr) => `${prev} ${attr.name}="${attr.value}"`, `<${node.tagName.toLowerCase()}`) + '>');
+    const computeText = (node: Element) => {
+        const tag = ([...node.attributes].reduce((prev, attr) => `${prev} ${attr.name}="${attr.value}"`, `<${node.tagName.toLowerCase()}`) + '>');
         return `${tag}${computeContent(node)}</${node.tagName.toLowerCase()}>`;
     };
 
@@ -63,7 +63,7 @@ export function ReplaceText({ componentId, contextElement, text, handler, testRe
     if (!evaluate){
         text = JSON.stringify(text).replace((matchRegex || InterpolateInlineRegex), '"+($1)+"').replace(/"\+\(\s*\)\+"/g, '');
         evaluate = EvaluateLater({ componentId, contextElement,
-            expression: `let output = ${text}; return output;`,
+            expression: `const output = ${text}; return output;`,
         });
     }
 
@@ -88,14 +88,14 @@ export function Interpolate({ componentId, contextElement, text, handler, testRe
         return;
     }
 
-    let children = new Array<Element | IInterpolateTextNode | string>(), replaceCallers = new Array<() => void>(), refresh = () => {
+    const children = new Array<Element | IInterpolateTextNode | string>(), replaceCallers = new Array<() => void>(), refresh = () => {
         while (contextElement.firstChild){//Empty tree
             contextElement.firstChild.remove();
         }
         
         let previousElement: Element | Text | null = null;
         children.forEach((child) => {
-            let element = ((child instanceof Element) ? child : document.createTextNode((typeof child === 'string') ? child : child.evaluated));
+            const element = ((child instanceof Element) ? child : document.createTextNode((typeof child === 'string') ? child : child.evaluated));
             if (previousElement){
                 contextElement.insertBefore(element, previousElement);
             }
@@ -119,7 +119,7 @@ export function Interpolate({ componentId, contextElement, text, handler, testRe
 
     [...contextElement.childNodes].forEach((child) => {
         if (child.nodeType == 3 && child.textContent && InterpolateInlineTestRegex.test(child.textContent)){
-            let textNode: IInterpolateTextNode = { text: (child.textContent || ''), evaluated: (child.textContent || '') };
+            const textNode: IInterpolateTextNode = { text: (child.textContent || ''), evaluated: (child.textContent || '') };
 
             children.push(textNode);
             replaceCallers.push(() => ReplaceText({

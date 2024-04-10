@@ -6,7 +6,7 @@ export function AddChanges(type: ChangeType, path: string, prop: string, changes
         return;
     }
     
-    let change: IChange = {
+    const change: IChange = {
         componentId: changes.GetComponentId(),
         type: type,
         path: path,
@@ -19,7 +19,7 @@ export function AddChanges(type: ChangeType, path: string, prop: string, changes
         return;
     }
 
-    let parts = path.split('.');
+    const parts = path.split('.');
     while (parts.length > 2){//Skip root
         parts.pop();
         changes.Add({

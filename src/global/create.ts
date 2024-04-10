@@ -1,17 +1,21 @@
-import { InitComponentCache } from "../component/find";
+import { InitComponentCache } from "../component/cache";
 import { IConfigOptions } from "../types/config";
 import { IGlobal } from "../types/global";
+import { InitializeGlobalScope } from "../utilities/get-global-scope";
 import { BaseGlobal } from "./base";
-import { GetGlobal, GlobalCreatedEvent } from "./get";
-
-export const InlineJSGlobalKey = '__InlineJS_GLOBAL_KEY__';
+import { GetGlobal } from "./get";
+import { GlobalCreatedEvent } from "./key";
 
 export function CreateGlobal(configOptions?: IConfigOptions, idOffset = 0): IGlobal{
+    const global = new BaseGlobal(configOptions, idOffset);
+    
     InitComponentCache();
-    globalThis[InlineJSGlobalKey] = new BaseGlobal(configOptions, idOffset);
-    (globalThis['InlineJS'] = (globalThis['InlineJS'] || {}))['global'] = globalThis[InlineJSGlobalKey];
+    InitializeGlobalScope('global', {
+        base: global,
+    });
     window.dispatchEvent(new CustomEvent(GlobalCreatedEvent));
-    return globalThis[InlineJSGlobalKey];
+
+    return global;
 }
 
 export function GetOrCreateGlobal(configOptions?: IConfigOptions, idOffset = 0): IGlobal{

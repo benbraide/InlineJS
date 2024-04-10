@@ -17,8 +17,6 @@ interface AttributeChangeCallbackInfo{
 
 export class ElementScope extends ChangesMonitor implements IElementScope{
     private isInitialized_ = false;
-    
-    private scopeId_ = '';
     private key_ = '';
 
     private locals_: Record<string, any> = {};
@@ -45,7 +43,6 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
     
     public constructor(private componentId_: string, private id_: string, private element_: HTMLElement, private isRoot_: boolean){
         super();
-        this.scopeId_ = (PeekCurrentScope(this.componentId_) || '');
     }
 
     public SetInitialized(){
@@ -58,10 +55,6 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
     
     public GetComponentId(){
         return this.componentId_;
-    }
-
-    public GetScopeId(){
-        return this.scopeId_;
     }
 
     public GetId(){
@@ -172,7 +165,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
             return;
         }
 
-        let existing = this.callbacks_.attributeChange.find(info => (info.callback === callback));
+        const existing = this.callbacks_.attributeChange.find(info => (info.callback === callback));
         if (!existing){
             this.callbacks_.attributeChange.push({
                 callback: callback,
@@ -187,12 +180,12 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
     }
 
     public RemoveAttributeChangeCallback(callback: (name?: string) => void, whitelist?: string | Array<string>){
-        let index = this.callbacks_.attributeChange.findIndex(info => (info.callback === callback));
+        const index = this.callbacks_.attributeChange.findIndex(info => (info.callback === callback));
         if (index == -1){
             return;
         }
 
-        let computedWhitelist = ((typeof whitelist === 'string') ? [whitelist] : (whitelist || []));
+        const computedWhitelist = ((typeof whitelist === 'string') ? [whitelist] : (whitelist || []));
         if (computedWhitelist.length != 0 && this.callbacks_.attributeChange[index].whitelist.length != 0){
             computedWhitelist.forEach((item) => {//Filter specified whitelist from existing
                 this.callbacks_.attributeChange[index].whitelist = this.callbacks_.attributeChange[index].whitelist.filter(eItem => (eItem !== item));
@@ -227,7 +220,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
             });
         }
         else{
-            this.queuedAttributeChanges_.push(name);
+            !this.queuedAttributeChanges_.includes(name) && this.queuedAttributeChanges_.push(name);
         }
     }
 
@@ -238,7 +231,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
         
         this.state_.isMarked = true;
         if (!(this.element_ instanceof HTMLTemplateElement)){
-            let component = FindComponentById(this.componentId_);
+            const component = FindComponentById(this.componentId_);
             if (component){
                 this.DestroyChildren_(component, this.element_, (markOnly || false));
             }
@@ -266,12 +259,12 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
         UnbindOutsideEvent(this.element_);
         GetGlobal().GetMutationObserver().Unobserve(this.element_);
 
-        let component = FindComponentById(this.componentId_);
+        const component = FindComponentById(this.componentId_);
         component?.RemoveElementScope(this.id_);//Remove from component
 
         delete this.element_[ElementScopeKey];//Remove id value on element
         if (this.isRoot_){//Remove component -- wait for changes to finalize
-            let componentId = this.componentId_;
+            const componentId = this.componentId_;
             component?.GetBackend().changes.AddNextTickHandler(() => GetGlobal().RemoveComponent(componentId));
         }
     }
@@ -290,7 +283,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
 
     private DestroyChildren_(component: IComponent, target: HTMLElement, markOnly: boolean){
         Array.from(target.children).filter(child => !child.contains(target)).forEach((child) => {
-            let childScope = component.FindElementScope(<HTMLElement>child);
+            const childScope = component.FindElementScope(<HTMLElement>child);
             if (childScope){//Destroy element scope
                 childScope.Destroy(markOnly);
             }

@@ -10,8 +10,8 @@ import { ProxyKeys } from '../utilities/proxy-keys';
 
 describe('proxy', () => {
     it('should be able to be created as root or child', () => {
-        let global = CreateGlobal(), component = global.CreateComponent(document.createElement('div'));
-        let root = component.GetRootProxy(), child = CreateChildProxy(root, 'one', {})!, proxyName = `Proxy<${component.GetId()}>`;
+        const global = CreateGlobal(), component = global.CreateComponent(document.createElement('div'));
+        const root = component.GetRootProxy(), child = CreateChildProxy(root, 'one', {})!, proxyName = `Proxy<${component.GetId()}>`;
 
         expect(root.IsRoot()).equal(true);
         expect(child.IsRoot()).equal(false);
@@ -26,8 +26,8 @@ describe('proxy', () => {
     });
 
     it('should respond to queries', () => {
-        let global = CreateGlobal(), component = global.CreateComponent(document.createElement('div'));
-        let root = component.GetRootProxy(), target = {}, child = CreateChildProxy(root, 'one', target)!, proxyName = `Proxy<${component.GetId()}>`;
+        const global = CreateGlobal(), component = global.CreateComponent(document.createElement('div'));
+        const root = component.GetRootProxy(), target = {}, child = CreateChildProxy(root, 'one', target)!, proxyName = `Proxy<${component.GetId()}>`;
 
         expect(root.GetNative()[ProxyKeys.componentId]).equal(component.GetId());
         expect(root.GetNative()[ProxyKeys.name]).equal(proxyName);
@@ -43,7 +43,7 @@ describe('proxy', () => {
     });
 
     it('should set, retrieve, and delete values', () => {
-        let global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
+        const global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
 
         root.GetNative()['state'] = true;
         root.GetNative()['quantity'] = 72;
@@ -69,7 +69,7 @@ describe('proxy', () => {
     });
 
     it('should alert accesses on get operations', () => {
-        let global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
+        const global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
 
         global.GetConfig().SetReactiveState('optimized');
         
@@ -127,8 +127,8 @@ describe('proxy', () => {
     });
 
     it('should report changes', () => {
-        let global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
-        let proxyName = `Proxy<${component.GetId()}>`;
+        const global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
+        const proxyName = `Proxy<${component.GetId()}>`;
 
         root.GetNative()['state'] = true;
         expect(IsEqual(component.GetBackend().changes.GetLastChange(), <IChange>{

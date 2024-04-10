@@ -1,35 +1,17 @@
 import { GetGlobal } from "../global/get";
 import { IComponent } from "../types/component";
-import { GetCache, InitCache } from "../utilities/cache";
-
-const cacheKey = 'InlineJS_Comp_Cache';
-
-interface ICacheInfo{
-    id: string;
-    component: IComponent | null;
-}
-
-function GetDefaultCacheValue(): ICacheInfo{
-    return {
-        id: '',
-        component: <IComponent | null>null,
-    };
-}
-
-export function InitComponentCache(){
-    InitCache(cacheKey, GetDefaultCacheValue());
-}
+import { UseCache } from "../utilities/cache";
+import { GetDefaultCacheValue, IComponentCacheInfo } from "./cache";
+import { ComponentCacheKey } from "./key";
 
 export function FindComponentById(id: string){
-    let cache = GetCache<ICacheInfo>(cacheKey, GetDefaultCacheValue());
-    if (id === cache.id){
-        return cache.component;
-    }
-
-    cache.component = GetGlobal().FindComponentById(id);
-    cache.id = (cache.component ? id : '');
-    
-    return cache.component;
+    return UseCache<IComponentCacheInfo, IComponent | null>(() => {
+        const component = GetGlobal().FindComponentById(id);
+        return {
+            id: (component ? id : ''),
+            component: component,
+        };
+    }, ComponentCacheKey, id, GetDefaultCacheValue, cache => [cache.id, cache.component]);
 }
 
 export function FindComponentByName(name: string){

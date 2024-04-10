@@ -1,4 +1,5 @@
 import { IComponent } from "./component";
+import { IProxyAccessHandler } from "./proxy";
 export interface IDirectiveView {
     original: string;
     expanded: string;
@@ -17,9 +18,13 @@ export interface IDirectiveMeta {
     name: IDirectiveName;
     arg: IDirectiveArg;
 }
+export interface IDirectiveProxyAccessHandler {
+    handler?: IProxyAccessHandler | null;
+}
 export interface IDirective {
     meta: IDirectiveMeta;
     value: string;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }
 export interface IFlatDirective {
     originalView: string;
@@ -30,21 +35,22 @@ export interface IFlatDirective {
     argKey: string;
     argOptions: Array<string>;
     expression: string;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }
 export interface IDirectiveHandlerParams extends IFlatDirective {
     contextElement: HTMLElement;
     componentId: string;
     component?: IComponent;
 }
-export declare type DirectiveHandlerCallbackType = ((params: IDirectiveHandlerParams) => void) | (() => void);
+export type DirectiveHandlerCallbackType = ((params: IDirectiveHandlerParams) => void) | (() => void);
 export interface IDirectiveHandlerCallbackDetails {
     name: string;
     callback: DirectiveHandlerCallbackType;
 }
-export declare type FunctionDirectiveHandlerType = () => IDirectiveHandlerCallbackDetails;
-export declare type WrappedFunctionQueryType = 'nop' | 'name' | 'callback';
-export declare type WrappedFunctionDirectiveHandlerType = (query?: WrappedFunctionQueryType) => DirectiveHandlerCallbackType | string | null;
-export declare type DirectiveExpansionRuleType = (name: string) => string | null;
+export type FunctionDirectiveHandlerType = () => IDirectiveHandlerCallbackDetails;
+export type WrappedFunctionQueryType = 'nop' | 'name' | 'callback';
+export type WrappedFunctionDirectiveHandlerType = (query?: WrappedFunctionQueryType) => DirectiveHandlerCallbackType | string | null;
+export type DirectiveExpansionRuleType = (name: string) => string | null;
 export interface IDirectiveHandler {
     GetName(): string;
     Handle: DirectiveHandlerCallbackType;
@@ -58,4 +64,10 @@ export interface IDirectiveManager {
     FindHandler(name: string): DirectiveHandlerCallbackType | null;
     AddHandlerExtension(target: string, handler: IDirectiveHandler | DirectiveHandlerCallbackType, name?: string): void;
     RemoveHandlerExtension(target: string, name: string): void;
+}
+export interface ITraverseDirectivesParams {
+    element: Element;
+    callback: (directive: IDirective) => void;
+    attributeCallback?: (name: string, value: string) => void;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }

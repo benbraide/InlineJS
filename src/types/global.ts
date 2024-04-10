@@ -9,6 +9,7 @@ import { IMutationObserver } from "./mutation";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
 import { IResizeObserver } from "./resize-observer";
+import { IScope } from "./scope";
 
 export interface IComponentsMonitorParams{
     action: 'add' | 'remove';
@@ -57,6 +58,10 @@ export interface IGlobal{
 
     GetCurrentComponent(): IComponent | null;
     InferComponentFrom(element: HTMLElement | null): IComponent | null;
+
+    PushScopeContext(scope: IScope): void;
+    PopScopeContext(): IScope | null;
+    PeekScopeContext(): IScope | null;
 
     GetDirectiveManager(): IDirectiveManager;
     GetMagicManager(): IMagicManager;

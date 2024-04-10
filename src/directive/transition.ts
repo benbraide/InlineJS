@@ -30,7 +30,7 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
         return null;
     }
 
-    let concept = GetGlobal().GetConcept<IAnimationConcept>('animation');
+    const concept = GetGlobal().GetConcept<IAnimationConcept>('animation');
     return {
         ease: (info.ease || concept?.GetEaseCollection().Find('default') || null),
         actor: (info.actor || concept?.GetActorCollection().Find('default') || null),
@@ -42,27 +42,28 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
 }
 
 export function WaitTransition({ componentId, contextElement, target, callback, onAbort, onPass, reverse, allowRepeats, restore }: ITransitionParams): (() => void) | null{
-    let resolvedTarget = (target || contextElement);
+    const resolvedTarget = (target || contextElement);
     if ('WaitTransition' in resolvedTarget && typeof resolvedTarget['WaitTransition'] === 'function'){
         return (resolvedTarget['WaitTransition'] as any)({ componentId, contextElement, target, callback, onAbort, reverse, allowRepeats });
     }
     
-    let info = ResolveTransition((FindComponentById(componentId)?.FindElementScope(contextElement)?.GetData('transition') || null), (reverse || false));
+    const info = ResolveTransition((FindComponentById(componentId)?.FindElementScope(contextElement)?.GetData('transition') || null), (reverse || false));
     if (!info || !info.actor || !info.ease || typeof info.duration !== 'number' || info.duration <= 0){
         return ((callback(false) && false) || null);
     }
 
-    let callActor = (params: IAnimationActorParams) => ((typeof info?.actor === 'function') ? info?.actor(params) : (info && info.actor?.Handle(params)));
-    let callEase = (params: IAnimationEaseParams) => ((typeof info!.ease === 'function') ? info!.ease(params) : ((info && info.ease?.Handle(params)) || 0));
+    const callActor = (params: IAnimationActorParams) => ((typeof info?.actor === 'function') ? info?.actor(params) : (info && info.actor?.Handle(params)));
+    const callEase = (params: IAnimationEaseParams) => ((typeof info!.ease === 'function') ? info!.ease(params) : ((info && info.ease?.Handle(params)) || 0));
 
-    let aborted = false, abort = () => (aborted = true), steps = 0, getFraction = (fraction: number) => (reverse ? (1 - fraction) : fraction), onAborted = () => {
+    let aborted = false, steps = 0;
+    const abort = () => (aborted = true), getFraction = (fraction: number) => (reverse ? (1 - fraction) : fraction), onAborted = () => {
         FindComponentById(componentId)?.FindElementScope(contextElement)?.RemoveUninitCallback(abort);
         resolvedTarget.dispatchEvent(new CustomEvent('transition.canceled'));
         onAbort && JournalTry(() => onAbort());
         return false;
     };
 
-    let callOnPass = (stage: AnimationStageType, elapsed: number, fraction: number) => {
+    const callOnPass = (stage: AnimationStageType, elapsed: number, fraction: number) => {
         onPass && JournalTry(() => onPass({ duration: info!.duration, elapsed, fraction, target: resolvedTarget, stage }));
     };
 

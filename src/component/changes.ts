@@ -67,7 +67,7 @@ export class Changes extends ChangesMonitor implements IChanges{
                 this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
             }
 
-            let batches = new Array<IChangeBatchInfo>(), addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
+            const batches = new Array<IChangeBatchInfo>(), addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
                 let batch = batches.find(info => (info.callback === callback));
                 if (!batch){
                     batches.push({
@@ -80,7 +80,7 @@ export class Changes extends ChangesMonitor implements IChanges{
                 }
             };
 
-            let getOrigin = (change: IChange | IBubbledChange) => (('original' in change) ? change.original.origin : change.origin);
+            const getOrigin = (change: IChange | IBubbledChange) => (('original' in change) ? change.original.origin : change.origin);
             this.list_.splice(0).forEach((change) => {//Process changes into batches
                 Object.values(this.subscribers_).filter(sub => (sub.path === change.path && sub.callback !== getOrigin(change))).forEach(sub => addBatch(change, sub.callback));
             });
@@ -104,7 +104,7 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
     
     public AddComposed(prop: string, prefix?: string, targetPath?: string){
-        let change: IChange = {
+        const change: IChange = {
             componentId: this.componentId_,
             type: 'set',
             path: (prefix ? `${prefix}.${prop}` : prop),
@@ -128,12 +128,12 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
 
     public AddGetAccess(path: string){
-        let targetObject = (<Changes>FindComponentById(PeekCurrentComponent() || '')?.GetBackend().changes || this);
+        const targetObject = (<Changes>FindComponentById(PeekCurrentComponent() || '')?.GetBackend().changes || this);
         
-        let lastPointIndex = path.lastIndexOf('.');
+        const lastPointIndex = path.lastIndexOf('.');
         targetObject.lastAccessContext_ = ((lastPointIndex == -1) ? '' : path.substring(0, lastPointIndex));
         
-        let storage = targetObject.getAccessStorages_.Peek();
+        const storage = targetObject.getAccessStorages_.Peek();
         if (!storage?.details){
             return;
         }
@@ -189,13 +189,13 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
     
     public PopGetAccessStorage(): IGetAccessStorageDetails | null{
-        let details = (this.getAccessStorages_.Pop()?.details || null);
+        const details = (this.getAccessStorages_.Pop()?.details || null);
         this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
         return details;
     }
 
     public SwapOptimizedGetAccessStorage(){
-        let storage = this.getAccessStorages_.Peek();
+        const storage = this.getAccessStorages_.Peek();
         if (storage?.details.optimized && storage.details.raw){
             storage.details.optimized.entries = storage.details.raw.entries;
             this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
@@ -203,7 +203,7 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
 
     public RestoreOptimizedGetAccessStorage(){
-        let storage = this.getAccessStorages_.Peek();
+        const storage = this.getAccessStorages_.Peek();
         if (storage?.details.optimized && storage.details.optimized.entries === storage.details.raw?.entries){
             storage.details.optimized.entries = storage.details.raw.entries.slice(0);
             this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
@@ -216,21 +216,21 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
 
     public PushGetAccessStorageSnapshot(){
-        let storage = this.getAccessStorages_.Peek();
+        const storage = this.getAccessStorages_.Peek();
         storage?.details.optimized?.snapshots.Push(storage.details.optimized.entries.slice(0).map(entry => ({ ...entry })));
         storage?.details.raw?.snapshots.Push(storage.details.raw.entries.slice(0).map(entry => ({ ...entry })));
         this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
     }
 
     public PopGetAccessStorageSnapshot(discard?: boolean){
-        let storage = this.getAccessStorages_.Peek();
+        const storage = this.getAccessStorages_.Peek();
 
-        let optimizedSnapshot = storage?.details.optimized?.snapshots.Pop();
+        const optimizedSnapshot = storage?.details.optimized?.snapshots.Pop();
         if (!discard && optimizedSnapshot && storage?.details.optimized?.entries){
             storage.details.optimized.entries = optimizedSnapshot;
         }
 
-        let rawSnapshot = storage?.details.raw?.snapshots.Pop();
+        const rawSnapshot = storage?.details.raw?.snapshots.Pop();
         if (!discard && rawSnapshot && storage?.details.raw?.entries){
             storage.details.raw.entries = rawSnapshot;
         }
@@ -239,7 +239,7 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
     
     public PopAllGetAccessStorageSnapshots(discard?: boolean){
-        let storage = this.getAccessStorages_.Peek();
+        const storage = this.getAccessStorages_.Peek();
 
         let optimizedSnapshot = storage?.details.optimized?.snapshots.Pop();
         while (storage?.details.optimized?.snapshots && !storage.details.optimized.snapshots.IsEmpty()){
@@ -272,13 +272,13 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
 
     public PopOrigin(): ChangeCallbackType | null{
-        let origin = this.origins_.Pop();
+        const origin = this.origins_.Pop();
         this.NotifyListeners_('origins', this.origins_);
         return origin;
     }
 
     public Subscribe(path: string, handler: ChangeCallbackType){
-        let id = FindComponentById(this.componentId_)?.GenerateUniqueId('sub_');
+        const id = FindComponentById(this.componentId_)?.GenerateUniqueId('sub_');
         if (id){//Add new subscription
             this.subscribers_[id] = {
                 path: path,

@@ -78,12 +78,12 @@ describe('is-object|are-objects utility', () => {
 
 describe('deep-copy utility', () => {
     it('should work with arrays', () => {
-        let array1 = [0, 2, 3, 4], copy1 = DeepCopy(array1);
+        const array1 = [0, 2, 3, 4], copy1 = DeepCopy(array1);
 
         expect(array1 === copy1).equal(false);
         expect(IsEqual(array1, copy1)).equal(true);
 
-        let array2 = [{
+        const array2 = [{
             one: 1,
             two: 'two',
             state: true,
@@ -95,7 +95,7 @@ describe('deep-copy utility', () => {
     });
 
     it('should work with objects', () => {
-        let obj1 = {
+        const obj1 = {
             one: 1,
             two: 'two',
             state: true,
@@ -137,7 +137,7 @@ describe('unique-markers utility', () => {
     });
 
     it('should generate IDs', () => {
-        let markers = GetDefaultUniqueMarkers();
+        const markers = GetDefaultUniqueMarkers();
         expect(GenerateUniqueId(markers) === '0_0_1').equal(true);
         expect(GenerateUniqueId(markers) === '0_0_2').equal(true);
         expect(GenerateUniqueId(markers) === '0_0_3').equal(true);
@@ -145,7 +145,7 @@ describe('unique-markers utility', () => {
     });
 
     it('should embed modifiers to generated IDs', () => {
-        let markers = GetDefaultUniqueMarkers();
+        const markers = GetDefaultUniqueMarkers();
         expect(GenerateUniqueId(markers, 'comp.') === 'comp.0_0_1').equal(true);
         expect(GenerateUniqueId(markers, 'comp.', 'scope_') === 'comp.scope_0_0_2').equal(true);
         expect(GenerateUniqueId(markers, 'comp.', 'scope_', '_ms') === 'comp.scope_0_0_3_ms').equal(true);

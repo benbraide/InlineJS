@@ -18,7 +18,6 @@ export interface IElementScope{
     IsInitialized(): boolean;
     
     GetComponentId(): string;
-    GetScopeId(): string;
     GetId(): string;
 
     SetKey(key: string): void;

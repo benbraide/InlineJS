@@ -1,5 +1,6 @@
 import { BaseComponent } from "../component/base";
 import { ChangesMonitor } from "../component/changes-monitor";
+import { SetProxyAccessHandler } from "../component/set-proxy-access-handler";
 import { DirectiveManager } from "../directive/manager";
 import { JournalTry } from "../journal/try";
 import { MagicManager } from "../magic/manager";
@@ -13,6 +14,7 @@ import { IFetchConcept } from "../types/fetch";
 import { ComponentsMonitorType, IObjectRetrievalParams, IObjectStoreParams, IGlobal } from "../types/global";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "../types/process";
 import { IProxy } from "../types/proxy";
+import { IScope } from "../types/scope";
 import { RandomString } from "../utilities/random-string";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Future } from "../values/future";
@@ -21,34 +23,36 @@ import { Config } from "./config";
 import { NativeFetchConcept } from "./native-fetch";
 
 export class BaseGlobal extends ChangesMonitor implements IGlobal{
-    private nothing_ = new Nothing;
+    protected nothing_ = new Nothing;
     
-    private config_: IConfig;
-    private storedObjects_: Record<string, any> = {};
-    private lastStoredObjectKey_ = '';
+    protected config_: IConfig;
+    protected storedObjects_: Record<string, any> = {};
+    protected lastStoredObjectKey_ = '';
     
-    private componentsMonitorList_ = new Array<ComponentsMonitorType>();
+    protected componentsMonitorList_ = new Array<ComponentsMonitorType>();
 
-    private components_: Record<string, IComponent> = {};
-    private currentComponent_ = new Stack<string>();
+    protected components_: Record<string, IComponent> = {};
+    protected currentComponent_ = new Stack<string>();
 
-    private attributeProcessors_ = new Array<AttributeProcessorType>();
-    private textContentProcessors_ = new Array<TextContentProcessorType>();
+    protected scopeContext_ = new Stack<IScope>();
 
-    private customElements_: Record<string, CustomElementConstructor> = {};
+    protected attributeProcessors_ = new Array<AttributeProcessorType>();
+    protected textContentProcessors_ = new Array<TextContentProcessorType>();
 
-    private managers_ = {
+    protected customElements_: Record<string, CustomElementConstructor> = {};
+
+    protected managers_ = {
         directive: new DirectiveManager(),
         magic: new MagicManager(),
     };
     
-    private uniqueMarkers_ = GetDefaultUniqueMarkers();
-    private mutationObserver_ = new MutationObserver();
-    private resizeObserver_ = new ResizeObserver();
+    protected uniqueMarkers_ = GetDefaultUniqueMarkers();
+    protected mutationObserver_ = new MutationObserver();
+    protected resizeObserver_ = new ResizeObserver();
 
-    private nativeFetch_ = new NativeFetchConcept();
-    private fetchConcept_: IFetchConcept | null = null;
-    private concepts_: Record<string, any> = {};
+    protected nativeFetch_ = new NativeFetchConcept();
+    protected fetchConcept_: IFetchConcept | null = null;
+    protected concepts_: Record<string, any> = {};
     
     public constructor(configOptions?: IConfigOptions, idOffset = 0){
         super();
@@ -74,7 +78,7 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         this.lastStoredObjectKey_ = `@!@${RandomString(18)}@!@`;
 
         if (contextElement){
-            let scope = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement))?.FindElementScope(contextElement);
+            const scope = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement))?.FindElementScope(contextElement);
             if (scope){
                 scope.SetLocal(this.lastStoredObjectKey_, object);
                 return this.lastStoredObjectKey_;
@@ -105,18 +109,18 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
     }
 
     public RemoveComponentMonitor(monitor: ComponentsMonitorType){
-        let len = this.componentsMonitorList_.length;
+        const len = this.componentsMonitorList_.length;
         this.componentsMonitorList_ = this.componentsMonitorList_.filter(m => (m !== monitor));
         (len != this.componentsMonitorList_.length) && this.NotifyListeners_('components-monitors', this.componentsMonitorList_);
     }
     
     public CreateComponent(root: HTMLElement){
-        let existing = this.InferComponentFrom(root);
+        const existing = this.InferComponentFrom(root);
         if (existing){
             return existing;
         }
 
-        let component = new BaseComponent(this.GenerateUniqueId(), root);
+        const component = new BaseComponent(this.GenerateUniqueId(), root);
         this.components_[component.GetId()] = component;
 
         this.componentsMonitorList_.forEach(monitor => JournalTry(() => monitor({ action: 'add', component }), 'InlineJS.Global.CreateComponent'));
@@ -126,9 +130,9 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
     }
 
     public RemoveComponent(component: IComponent | string){
-        let key = ((typeof component === 'string') ? component : component.GetId());
+        const key = ((typeof component === 'string') ? component : component.GetId());
         if (this.components_.hasOwnProperty(key)){
-            let component = this.components_[key];
+            const component = this.components_[key];
             delete this.components_[key];
 
             this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'remove', component }), 'InlineJS.Global.RemoveComponent'));
@@ -158,7 +162,7 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
     }
 
     public PopCurrentComponent(){
-        let isEmpty = this.currentComponent_.IsEmpty(), popped = this.currentComponent_.Pop();
+        const isEmpty = this.currentComponent_.IsEmpty(), popped = this.currentComponent_.Pop();
         !isEmpty && this.NotifyListeners_('current-component', this.currentComponent_);
         return popped;
     }
@@ -175,6 +179,21 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         return ((element && Object.values(this.components_).find(component => (component.GetRoot() === element || component.GetRoot().contains(element)))) || null);
     }
 
+    public PushScopeContext(scope: IScope){
+        this.scopeContext_.Push(scope);
+        this.NotifyListeners_('scope-context', this.scopeContext_);
+    }
+
+    public PopScopeContext(){
+        const isEmpty = this.scopeContext_.IsEmpty(), popped = this.scopeContext_.Pop();
+        !isEmpty && this.NotifyListeners_('scope-context', this.scopeContext_);
+        return popped;
+    }
+
+    public PeekScopeContext(){
+        return this.scopeContext_.Peek();
+    }
+
     public GetDirectiveManager(){
         return this.managers_.directive;
     }
@@ -188,8 +207,12 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         this.NotifyListeners_('attribute-processors', this.attributeProcessors_);
     }
 
-    public DispatchAttributeProcessing(params: IAttributeProcessorParams){
-        this.attributeProcessors_.forEach(processor => JournalTry(() => processor(params), 'InlineJS.Global.DispatchAttribute', params.contextElement));
+    public DispatchAttributeProcessing({ componentId, component, contextElement, proxyAccessHandler, ...rest }: IAttributeProcessorParams){
+        const resolvedComponent = (component || this.FindComponentById(componentId)), pahCallback = SetProxyAccessHandler(resolvedComponent, (proxyAccessHandler || null));
+        this.attributeProcessors_.forEach((processor) => {
+            JournalTry(() => processor({ componentId, component, contextElement, proxyAccessHandler, ...rest }), 'InlineJS.Global.DispatchAttribute', contextElement);
+        });
+        pahCallback();
     }
 
     public AddTextContentProcessor(processor: TextContentProcessorType){
@@ -197,8 +220,12 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         this.NotifyListeners_('text-content-processors', this.textContentProcessors_);
     }
 
-    public DispatchTextContentProcessing(params: ITextContentProcessorParams){
-        this.textContentProcessors_.forEach(processor => JournalTry(() => processor(params), 'InlineJS.Global.DispatchTextContent', params.contextElement));
+    public DispatchTextContentProcessing({ componentId, component, contextElement, proxyAccessHandler, ...rest }: ITextContentProcessorParams){
+        const resolvedComponent = (component || this.FindComponentById(componentId)), pahCallback = SetProxyAccessHandler(resolvedComponent, (proxyAccessHandler || null));
+        this.textContentProcessors_.forEach((processor) => {
+            JournalTry(() => processor({ componentId, component, contextElement, proxyAccessHandler, ...rest }), 'InlineJS.Global.DispatchTextContent', contextElement);
+        });
+        pahCallback();
     }
 
     public GetMutationObserver(){
@@ -266,11 +293,11 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         return (value instanceof Nothing);
     }
 
-    private RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean){
+    protected RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean){
         if (contextElement){
-            let component = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement));
+            const component = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement));
             if (component){
-                let found = component.FindElementLocal(contextElement, key, true);
+                const found = component.FindElementLocal(contextElement, key, true);
                 if (found){
                     const value = found.GetLocal(key);
                     if (remove){

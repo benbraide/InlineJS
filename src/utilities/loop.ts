@@ -18,10 +18,10 @@ function CreateLoop_(requestNextLoop: (callback: FrameRequestCallback) => void, 
             return;
         }
 
-        let elapsed = (timestamp - startTimestamp);
+        const elapsed = (timestamp - startTimestamp);
         if (duration && elapsed >= duration){//Finished
             if (repeats && (repeats < 0 || repeated < repeats)){//Repeat
-                let offset = (elapsed - duration);
+                const offset = (elapsed - duration);
                 if (repeatDelay > 0 && offset < repeatDelay){//Continue after delay
                     setTimeout(() => {
                         startTimestamp = performance.now();//Reset start timestamp
@@ -43,7 +43,7 @@ function CreateLoop_(requestNextLoop: (callback: FrameRequestCallback) => void, 
         else{//Continue
             requestNextLoop(pass.bind(null, doWhile, doFinal));
 
-            let progress = (timestamp - lastTimestamp);
+            const progress = (timestamp - lastTimestamp);
             if (progress >= delay){//Call
                 lastTimestamp = (timestamp + (delay ? (progress % delay) : progress));//Update last timestamp
                 JournalTry(() => doWhile({ repeats: repeated, steps: computeSteps(elapsed), elapsed, duration, abort }));
@@ -60,14 +60,14 @@ const knownPeriods = [50, 40, 30, 25, 20, 15, 10, 5, 4, 3, 2, 1, 0];
 
 export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0, vsync = true){
     let period = 0, suitableDelay = Math.floor(delay / 2.2);
-    for (let knownPeriod of knownPeriods){
+    for (const knownPeriod of knownPeriods){
         if (knownPeriod <= suitableDelay){
             period = knownPeriod;
             break;
         }
     }
     
-    let requestNextLoop = (callback: FrameRequestCallback) => setTimeout(() => {
+    const requestNextLoop = (callback: FrameRequestCallback) => setTimeout(() => {
         vsync ? requestAnimationFrame(callback) : callback(performance.now());
     }, period);
 

@@ -11,7 +11,7 @@ import { IsObject } from "../utilities/is-object";
 export function AddMagicHandler(handler: IMagicHandler | IMagicHandlerCallbackDetails | FunctionMagicHandlerType | WrappedFunctionMagicHandlerType){
     let name = '', callback: MagicHandlerCallbackType | null = null, onAccess: MagicHandlerCallbackType | undefined = undefined;
     if (typeof handler === 'function'){
-        let response = handler();
+        const response = handler();
         if (!response){//Query name and callback
             name = <string>(handler as WrappedFunctionMagicHandlerType)('name');
             callback = <MagicHandlerCallbackType>(handler as WrappedFunctionMagicHandlerType)('callback');

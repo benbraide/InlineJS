@@ -1,5 +1,5 @@
 import { IComponent } from "../types/component";
-export declare type InsertionType = 'replace' | 'append' | 'prepend';
+export type InsertionType = 'replace' | 'append' | 'prepend';
 export interface InsertionOptions {
     element: HTMLElement;
     html: string;

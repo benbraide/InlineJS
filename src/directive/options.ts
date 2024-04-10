@@ -27,11 +27,11 @@ export function ExtractDuration(value: string, defaultValue = 0){
 }
 
 export function ResolveOptions<T>({ options, list, defaultNumber, callback, unknownCallback }: IResolveOptionsParams<T>){
-    let resolvedOptions = (Array.isArray(options) ? options : [options]);
-    let getDefaultNumber = (opt: string) => (((typeof defaultNumber === 'number') ? defaultNumber : (defaultNumber && defaultNumber(opt))) || 0);
+    const resolvedOptions = (Array.isArray(options) ? options : [options]);
+    const getDefaultNumber = (opt: string) => (((typeof defaultNumber === 'number') ? defaultNumber : (defaultNumber && defaultNumber(opt))) || 0);
 
     list.forEach((option, index) => {
-        let matched = resolvedOptions.find(opt => (opt && option in opt));
+        const matched = resolvedOptions.find(opt => (opt && option in opt));
         if (!matched){//Not found
             return (unknownCallback && unknownCallback({ options, list, option, index }));
         }

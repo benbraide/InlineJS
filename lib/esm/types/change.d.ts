@@ -1,4 +1,4 @@
-export declare type ChangeType = 'set' | 'delete';
+export type ChangeType = 'set' | 'delete';
 export interface IChange {
     componentId: string;
     type: ChangeType;
@@ -10,4 +10,4 @@ export interface IBubbledChange {
     original: IChange;
     path: string;
 }
-export declare type ChangeCallbackType = (changes?: Array<IChange | IBubbledChange>) => void;
+export type ChangeCallbackType = (changes?: Array<IChange | IBubbledChange>) => void;

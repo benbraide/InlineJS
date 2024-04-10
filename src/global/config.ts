@@ -1,15 +1,13 @@
 import { IConfig, IConfigOptions, ReactiveStateType, DirectiveNameBuilderType } from "../types/config";
+import { GetGlobalScope } from "../utilities/get-global-scope";
 import { IsObject } from "../utilities/is-object";
+import { MergeObjects } from "../utilities/merge-objects";
 
 export class Config implements IConfig{
-    private appName_: string;
-    private reactiveState_: ReactiveStateType;
-
-    private directivePrefix_: string;
-    private elementPrefix_: string;
-    
-    private directiveRegex_: RegExp;
-    private directiveNameBuilder_: DirectiveNameBuilderType;
+    protected defaultOptions_: IConfigOptions = {
+        reactiveState: 'unoptimized',
+        directivePrefix: 'hx',
+    };
 
     private keyMap_: Record<string, string | Array<string>> = {
         'return': 'enter',
@@ -33,55 +31,50 @@ export class Config implements IConfig{
         'nomodule', 'novalidate', 'open', 'playsinline', 'readonly', 'required', 'reversed', 'selected',
     );
     
-    public constructor({ appName = '', reactiveState = 'unoptimized', directivePrefix = 'x', elementPrefix, directiveRegex, directiveNameBuilder }: IConfigOptions = {}){
-        globalThis['InlineJS'] = (globalThis['InlineJS'] || {});
+    public constructor(protected options_: IConfigOptions){
+        this.options_ = MergeObjects({ ...GetGlobalScope('config', true) }, MergeObjects(this.options_, this.defaultOptions_));
+        this.UpdateDirectiveRegex_();
 
-        let config = (globalThis['InlineJS'].config || {});
-        config = (IsObject(config) ? config : {});
-        
-        this.appName_ = (config.appName || appName);
-        this.reactiveState_ = (config.reactiveState || reactiveState);
-
-        this.directivePrefix_ = (config.directivePrefix || directivePrefix);
-        this.elementPrefix_ = (config.elementPrefix || elementPrefix || directivePrefix);
-        
-        this.directiveRegex_ = (directiveRegex || new RegExp(`^(data-)?${directivePrefix || 'x'}-(.+)$`));
-        this.directiveNameBuilder_ = (directiveNameBuilder || ((name: string, addDataPrefix = false) => {
-            return (addDataPrefix ? `data-${this.directivePrefix_ || 'x'}-${name}` : `${this.directivePrefix_ || 'x'}-${name}`);
-        }));
+        if (!this.options_.directiveNameBuilder){
+            const options = this.options_;
+            options.directiveNameBuilder = ((name: string, addDataPrefix = false) => {
+                const prefix = options.directivePrefix || options.directivePrefix || 'hx';
+                return (addDataPrefix ? `data-${prefix}-${name}` : `${prefix}-${name}`);
+            });
+        }
     }
     
     public GetAppName(){
-        return this.appName_;
+        return this.options_.appName || '';
     }
 
     public SetDirectivePrefix(value: string){
-        this.directivePrefix_ = value;
-        this.directiveRegex_ = new RegExp(`^(data-)?${value || 'x'}-(.+)$`);
+        this.options_.directivePrefix = value;
+        this.UpdateDirectiveRegex_();
     }
 
     public GetDirectivePrefix(){
-        return this.directivePrefix_;
+        return this.options_.directivePrefix || this.defaultOptions_.directivePrefix || 'hx';
     }
 
     public SetElementPrefix(value: string){
-        this.elementPrefix_ = value;
+        this.options_.elementPrefix = value;
     }
 
     public GetElementPrefix(){
-        return this.elementPrefix_;
+        return this.options_.elementPrefix || this.GetDirectivePrefix();
     }
     
     public GetDirectiveRegex(){
-        return this.directiveRegex_;
+        return this.options_.directiveRegex || this.UpdateDirectiveRegex_();
     }
 
     public GetDirectiveName(name: string, addDataPrefix?: boolean){
-        return this.directiveNameBuilder_(name, addDataPrefix);
+        return (this.options_.directiveNameBuilder ? this.options_.directiveNameBuilder(name, addDataPrefix) : name);
     }
 
     public GetElementName(name: string){
-        return `${this.elementPrefix_ || this.directivePrefix_ || 'x'}-${name}`;
+        return `${this.GetElementPrefix()}-${name}`;
     }
 
     public AddKeyEventMap(key: string, target: string){
@@ -109,10 +102,30 @@ export class Config implements IConfig{
     }
 
     public SetReactiveState(state: ReactiveStateType){
-        this.reactiveState_ = state;
+        this.options_.reactiveState = state;
     }
 
     public GetReactiveState(){
-        return this.reactiveState_;
+        return this.options_.reactiveState || this.defaultOptions_.reactiveState || 'unoptimized';
+    }
+
+    public SetUseGlobalWindow(value: boolean){
+        this.options_.useGlobalWindow = value;
+    }
+
+    public GetUseGlobalWindow(){
+        return this.options_.useGlobalWindow || false;
+    }
+
+    protected UpdateDirectiveRegex_(){
+        return (this.options_.directiveRegex = (this.options_.directiveRegex || new RegExp(`^(data-)?${this.GetDirectivePrefix()}-(.+)$`)));
+    }
+
+    public SetWrapScopedFunctions(value: boolean){
+        this.options_.wrapScopedFunctions = value;
+    }
+
+    public GetWrapScopedFunctions(){
+        return this.options_.wrapScopedFunctions || false;
     }
 }

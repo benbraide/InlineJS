@@ -1,10 +1,9 @@
 import { IGlobal } from "../types/global";
-import { InlineJSGlobalKey } from "./create";
-
-export const GlobalCreatedEvent = 'inlinejs.global.created';
+import { GetGlobalScope } from "../utilities/get-global-scope";
+import { GlobalCreatedEvent } from "./key";
 
 export function GetGlobal(): IGlobal{
-    return globalThis[InlineJSGlobalKey];
+    return (GetGlobalScope('global')['base'] || null);
 }
 
 export function WaitForGlobal(){

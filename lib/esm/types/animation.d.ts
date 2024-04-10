@@ -3,12 +3,12 @@ export interface IAnimationEaseParams {
     duration: number;
     fraction: number;
 }
-export declare type AnimationEaseCallbackType = (params: IAnimationEaseParams) => number;
+export type AnimationEaseCallbackType = (params: IAnimationEaseParams) => number;
 export interface IAnimationEaseCallbackDetails {
     name: string;
     callback: AnimationEaseCallbackType;
 }
-export declare type FunctionAnimationEaseType = () => IAnimationEaseCallbackDetails;
+export type FunctionAnimationEaseType = () => IAnimationEaseCallbackDetails;
 export interface IAnimationEase {
     GetName(): string;
     Handle: AnimationEaseCallbackType;
@@ -18,8 +18,8 @@ export interface IAnimationEaseCollection {
     Remove(name: string): void;
     Find(name: string): AnimationEaseCallbackType | null;
 }
-export declare type AnimationStageType = 'start' | 'middle' | 'end';
-export declare type AnimationAllowedType = 'normal' | 'reversed' | 'both';
+export type AnimationStageType = 'start' | 'middle' | 'end';
+export type AnimationAllowedType = 'normal' | 'reversed' | 'both';
 export interface IAnimationActorParams extends IAnimationEaseParams {
     elapsedFraction: number;
     target: HTMLElement;
@@ -27,12 +27,12 @@ export interface IAnimationActorParams extends IAnimationEaseParams {
     reverse: boolean;
     restore?: boolean;
 }
-export declare type AnimationActorCallbackType = (params: IAnimationActorParams) => void;
+export type AnimationActorCallbackType = (params: IAnimationActorParams) => void;
 export interface IAnimationActorCallbackDetails {
     name: string;
     callback: AnimationActorCallbackType;
 }
-export declare type FunctionAnimationActorType = () => IAnimationActorCallbackDetails;
+export type FunctionAnimationActorType = () => IAnimationActorCallbackDetails;
 export interface IAnimationActor {
     GetName(): string;
     Handle: AnimationActorCallbackType;
@@ -42,7 +42,7 @@ export interface IAnimationActorCollection {
     Remove(name: string): void;
     Find(name: string): AnimationActorCallbackType | null;
 }
-export declare type AnimationCreatorCallbackType = (...args: any[]) => AnimationEaseCallbackType | AnimationActorCallbackType;
+export type AnimationCreatorCallbackType = (...args: any[]) => AnimationEaseCallbackType | AnimationActorCallbackType;
 export interface IAnimationCreatorCollection {
     Add(name: string, creator: AnimationCreatorCallbackType): void;
     Remove(name: string): void;

@@ -4,15 +4,15 @@ export interface IMagicHandlerParams {
     componentId: string;
     component?: IComponent;
 }
-export declare type MagicHandlerCallbackType = ((params: IMagicHandlerParams) => any) | (() => any);
+export type MagicHandlerCallbackType = ((params: IMagicHandlerParams) => any) | (() => any);
 export interface IMagicHandlerCallbackDetails {
     name: string;
     callback: MagicHandlerCallbackType;
     onAccess?: MagicHandlerCallbackType;
 }
-export declare type FunctionMagicHandlerType = () => IMagicHandlerCallbackDetails;
-export declare type WrappedMagicFunctionQueryType = 'nop' | 'name' | 'callback' | 'access';
-export declare type WrappedFunctionMagicHandlerType = (query?: WrappedMagicFunctionQueryType) => MagicHandlerCallbackType | string | null;
+export type FunctionMagicHandlerType = () => IMagicHandlerCallbackDetails;
+export type WrappedMagicFunctionQueryType = 'nop' | 'name' | 'callback' | 'access';
+export type WrappedFunctionMagicHandlerType = (query?: WrappedMagicFunctionQueryType) => MagicHandlerCallbackType | string | null;
 export interface IMagicHandler {
     GetName(): string;
     Handle: MagicHandlerCallbackType;

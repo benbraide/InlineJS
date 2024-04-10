@@ -7,7 +7,6 @@ export declare class ElementScope extends ChangesMonitor implements IElementScop
     private element_;
     private isRoot_;
     private isInitialized_;
-    private scopeId_;
     private key_;
     private locals_;
     private data_;
@@ -19,7 +18,6 @@ export declare class ElementScope extends ChangesMonitor implements IElementScop
     SetInitialized(): void;
     IsInitialized(): boolean;
     GetComponentId(): string;
-    GetScopeId(): string;
     GetId(): string;
     SetKey(key: string): void;
     GetKey(): string;

@@ -1,6 +1,8 @@
 import { FindComponentById } from "../component/find";
+import { SetProxyAccessHandler } from "../component/set-proxy-access-handler";
 import { EvaluateLater } from "../evaluator/evaluate-later";
 import { WaitPromise } from "../evaluator/wait-promise";
+import { JournalTry } from "../journal/try";
 import { IntersectionObserver } from "../observers/intersection";
 import { UseEffect } from "../reactive/effect";
 import { IDirectiveHandlerParams } from "../types/directive";
@@ -35,18 +37,24 @@ export function LazyCheck({ componentId, component, contextElement, expression, 
     }));
 
     if (resolvedOptions.lazy){//Wait until element is visible
-        let resolvedComponent = (component || FindComponentById(componentId)), intersectionOptions = {
+        const resolvedComponent = (component || FindComponentById(componentId)), intersectionOptions = {
             root: ((resolvedOptions.ancestor < 0) ? null : resolvedComponent?.FindAncestor(contextElement, resolvedOptions.ancestor)),
             threshold: ((resolvedOptions.threshold < 0) ? 0 : resolvedOptions.threshold),
         };
 
-        let observer = (resolvedComponent ? new IntersectionObserver(resolvedComponent.GenerateUniqueId('intob_'), intersectionOptions) : null);
+        const observer = (resolvedComponent ? new IntersectionObserver(resolvedComponent.GenerateUniqueId('intob_'), intersectionOptions) : null);
         if (observer){
+            const proxyAccessHandler = resolvedComponent?.GetProxyAccessHandler()
+            
             resolvedComponent?.AddIntersectionObserver(observer);
             observer.Observe(contextElement, ({ id, entry } = {}) => {
                 if (entry?.isIntersecting){//Element is visible
+                    const pahCallback =  SetProxyAccessHandler(componentId, (proxyAccessHandler || null));//Use captured proxyAccessHandler
+
                     FindComponentById(componentId)?.RemoveIntersectionObserver(id!);
-                    effect();
+                    JournalTry(effect);
+
+                    pahCallback();
                 }
             });
         }

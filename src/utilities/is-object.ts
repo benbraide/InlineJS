@@ -3,7 +3,7 @@ import { ProxyKeys } from "./proxy-keys";
 
 function IsObject_<T>(target: T){
     target = GetTarget(target);
-    return (target && typeof target === 'object' && ((ProxyKeys.target in target) || ('__proto__' in target && target['__proto__'].constructor.name === 'Object')));
+    return (target && typeof target === 'object' && ((ProxyKeys.target in target) || ('__proto__' in target && (target as any)['__proto__'].constructor.name === 'Object')));
 }
 
 export function IsObject<T>(target: T){

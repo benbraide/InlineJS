@@ -21,7 +21,7 @@ function CreateComposedDirectiveHandler(handler: DirectiveHandlerCallbackType){
 }
 
 function AddDirectiveHandlerExtension(ref: DirectiveHandlerCallbackType | IDirectiveHandlerComposition, name: string, handler: DirectiveHandlerCallbackType){
-    let info = ((typeof ref === 'function') ? CreateComposedDirectiveHandler(ref) : ref);
+    const info = ((typeof ref === 'function') ? CreateComposedDirectiveHandler(ref) : ref);
     info.extensions[name] = handler;
     return info;
 }
@@ -51,7 +51,7 @@ export class DirectiveManager implements IDirectiveManager{
     private handlers_: Record<string, DirectiveHandlerCallbackType | IDirectiveHandlerComposition> = {};
 
     public AddExpansionRule(rule: DirectiveExpansionRuleType){
-        let id = GetGlobal().GenerateUniqueId('exrule_');
+        const id = GetGlobal().GenerateUniqueId('exrule_');
         this.expansionRules_[id] = rule;
         return id;
     }
@@ -67,8 +67,8 @@ export class DirectiveManager implements IDirectiveManager{
             return name;
         }
 
-        for (let id in this.expansionRules_){
-            let expanded = this.expansionRules_[id](name);
+        for (const id in this.expansionRules_){
+            const expanded = this.expansionRules_[id](name);
             if (expanded){
                 return expanded;
             }
@@ -78,7 +78,7 @@ export class DirectiveManager implements IDirectiveManager{
     }
 
     public AddHandler(handler: IDirectiveHandler | DirectiveHandlerCallbackType, name?: string){
-        let { computedName, callback } = ComputeNameAndCallback(handler, name);
+        const { computedName, callback } = ComputeNameAndCallback(handler, name);
         if (computedName && callback){
             this.handlers_[computedName] = callback;
         }
@@ -95,24 +95,24 @@ export class DirectiveManager implements IDirectiveManager{
             return null;
         }
 
-        let info = this.handlers_[name];
+        const info = this.handlers_[name];
         return ((typeof info === 'function') ? info : info.handler.bind(info));
     }
 
     public AddHandlerExtension(target: string, handler: IDirectiveHandler | DirectiveHandlerCallbackType, name?: string){
-        let info = (this.handlers_.hasOwnProperty(target) ? this.handlers_[target] : null);
+        const info = (this.handlers_.hasOwnProperty(target) ? this.handlers_[target] : null);
         if (!info){
             return;
         }
         
-        let { computedName, callback } = ComputeNameAndCallback(handler, name);
+        const { computedName, callback } = ComputeNameAndCallback(handler, name);
         if (computedName && callback){
             this.handlers_[target] =AddDirectiveHandlerExtension(info, computedName, callback);
         }
     }
 
     public RemoveHandlerExtension(target: string, name: string){
-        let info = (this.handlers_.hasOwnProperty(target) ? this.handlers_[target] : null);
+        const info = (this.handlers_.hasOwnProperty(target) ? this.handlers_[target] : null);
         if (info){
             RemoveDirectiveHandlerExtension(info, name);
         }

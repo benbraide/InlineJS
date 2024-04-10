@@ -8,8 +8,8 @@ export interface IMutationObserverHandlerParams {
     removed?: Array<Node>;
     attributes?: Array<IMutationObserverAttributeInfo>;
 }
-export declare type MutationObserverHandlerType = (params: IMutationObserverHandlerParams) => void;
-export declare type IMutationType = 'add' | 'remove' | 'attribute';
+export type MutationObserverHandlerType = (params: IMutationObserverHandlerParams) => void;
+export type IMutationType = 'add' | 'remove' | 'attribute';
 export interface IMutationObserver {
     GetNative(): globalThis.MutationObserver | null;
     Observe(target: Node, handler: MutationObserverHandlerType, whitelist?: Array<IMutationType>): string;

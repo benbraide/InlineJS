@@ -1,5 +1,7 @@
 import { FindComponentById } from "../component/find";
+import { SetProxyAccessHandler, StoreProxyHandler } from "../component/set-proxy-access-handler";
 import { JournalError } from "../journal/error";
+import { JournalTry } from "../journal/try";
 import { SubscribeCallbackType, SubscribeToChanges, SubscriptionsCallbackType } from "./subscribe";
 
 export interface IUseEffectOptions{
@@ -15,17 +17,18 @@ export interface IUseEffectInfo{
 }
 
 export function UseEffect({ componentId, callback, contextElement, options, subscriptionsCallback } : IUseEffectInfo){
-    let watch = () => {
-        let component = FindComponentById(componentId);
+    const storedProxyHandler = StoreProxyHandler(componentId), watch = () => {
+        const component = FindComponentById(componentId);
         if (!component){
             return;
         }
 
-        let { changes } = component.GetBackend(), canceled = false, elScope = (contextElement ? component.FindElementScope(contextElement) : null), cancel = () => {
+        let canceled = false;
+        const { changes } = component.GetBackend(), elScope = (contextElement ? component.FindElementScope(contextElement) : null), cancel = () => {
             canceled = true;
         };
 
-        let element = elScope?.GetElement();
+        const element = elScope?.GetElement();
         try{
             changes.PushGetAccessStorage();//Push new storage onto the stack
             callback({
@@ -44,7 +47,7 @@ export function UseEffect({ componentId, callback, contextElement, options, subs
             return;
         }
 
-        SubscribeToChanges({ componentId, changes, callback, subscriptionsCallback, contextElement: element });
+        SubscribeToChanges({ componentId, changes, callback: details => storedProxyHandler(() => callback(details)), subscriptionsCallback, contextElement: element });
     };
 
     if (options?.nextTick){

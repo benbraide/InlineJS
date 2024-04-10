@@ -1,21 +1,22 @@
 import { FindComponentById } from "../component/find";
+import { SetProxyAccessHandler } from "../component/set-proxy-access-handler";
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { JournalTry } from "../journal/try";
 import { JournalWarn } from "../journal/warn";
 import { IComponent } from "../types/component";
-import { IDirective } from "../types/directive";
-import { DirectiveHandlerCallbackType } from "../types/directive";
+import { DirectiveHandlerCallbackType, IDirective } from "../types/directive";
+import { IProxyAccessHandler } from "../types/proxy";
 import { FlattenDirective } from "./flatten";
 
 export function DispatchDirective(component: IComponent | string, element: HTMLElement, directive: IDirective, repeats = 0){
-    let resolvedComponent = ((typeof component === 'string') ? FindComponentById(component) : component);
+    const resolvedComponent = ((typeof component === 'string') ? FindComponentById(component) : component);
     if (!resolvedComponent){
         JournalError(`Failed to find component for '${directive.meta.view.original}'`, 'InlineJS.DispatchDirective', element);
         return false;
     }
 
-    let handler: DirectiveHandlerCallbackType | null = null, elementScope = resolvedComponent.FindElementScope(element);
+    let handler: DirectiveHandlerCallbackType | null = null, elementScope = resolvedComponent.FindElementScope(element), proxyAccessHandler: IProxyAccessHandler | null = null;
     if (elementScope){//Check element scope
         handler = elementScope.GetDirectiveManager().FindHandler(directive.meta.name.joined);
         ++repeats;
@@ -23,11 +24,9 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
     
     handler = (handler || GetGlobal().GetDirectiveManager().FindHandler(directive.meta.name.joined));
     if (!handler){//Try user defined handler
-        let camelCaseName = directive.meta.name.parts.reduce((prev, part) => (prev ? `${prev}${part.substring(0, 1).toUpperCase()}${part.substring(1)}` : part), '');
-        let key = `${camelCaseName}DirectiveHandler`;
-        if (key in globalThis && typeof globalThis[key] === 'function'){
-            handler = globalThis[key];
-        }
+        const camelCaseName = directive.meta.name.parts.reduce((prev, part) => (prev ? `${prev}${part.substring(0, 1).toUpperCase()}${part.substring(1)}` : part), '');
+        const key = `${camelCaseName}DirectiveHandler`;
+        (key in globalThis && typeof globalThis[key] === 'function') && (handler = globalThis[key]);
     }
     
     if (!handler){
@@ -35,9 +34,8 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
         return false;
     }
 
-    if (repeats == 0 && !elementScope){//Initialize element scope
-        resolvedComponent.CreateElementScope(element);
-    }
+    const pahCallback = SetProxyAccessHandler(resolvedComponent, (directive.proxyAccessHandler || null));
+    (repeats == 0 && !elementScope) && resolvedComponent.CreateElementScope(element);//Initialize element scope
     
     JournalTry(() => {//Catch errors
         handler!({ ...FlattenDirective(directive),
@@ -46,6 +44,8 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
             contextElement: element,
         });
     }, 'InlineJS.DispatchDirective', element);
+
+    pahCallback();
 
     return true;
 }

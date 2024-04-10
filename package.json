@@ -1,6 +1,6 @@
 {
   "name": "@benbraide/inlinejs",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Run javascript code by embedding them in your HTML using the element as context.",
   "main": "./lib/common/index.js",
   "module": "./lib/esm/index.js",
@@ -16,7 +16,7 @@
     "compile": "tsc -p ./tsconfig.json && tsc -p ./tsconfig.esm.json",
     "prepublishOnly": "npm run compile",
     "build": "webpack -c ./webpack.config.js && webpack -c ./webpack2.config.js",
-    "upload": "npm audit fix && npm run build && npm publish --access=public"
+    "upload": "npm install && npm audit fix && npm run build && npm publish --access=public"
   },
   "repository": {
     "type": "git",

@@ -1,11 +1,12 @@
 import { GetOrCreateGlobal } from "../global/create";
+import { GetGlobalScope } from "../utilities/get-global-scope";
 import { BootstrapAndAttach } from "./attach";
 
 export function AutoBootstrap(mount?: HTMLElement){
     GetOrCreateGlobal();
 
-    globalThis['InlineJS'] = (globalThis['InlineJS'] || {});
-    if (globalThis['InlineJS'].hasOwnProperty('disableAutoBootstrap') && globalThis['InlineJS']['disableAutoBootstrap']){
+    const globalScope = GetGlobalScope();
+    if (globalScope.hasOwnProperty('disableAutoBootstrap') && globalScope['disableAutoBootstrap']){
         return;
     }
 

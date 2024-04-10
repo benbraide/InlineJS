@@ -23,7 +23,7 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
     changes.PopAllGetAccessStorageSnapshots(false);//Remove all outstanding checkpoints
     changes.RestoreOptimizedGetAccessStorage();//Restore previously swapped optimized storage
 
-    let { optimized, raw } = changes.PopGetAccessStorage()!;
+    const { optimized, raw } = changes.PopGetAccessStorage()!;
     if (((optimized || raw)?.entries.length || 0) == 0){
         if (subscriptionsCallback){//Alert no subscriptions
             subscriptionsCallback({});
@@ -33,7 +33,7 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
 
     let subscriptionIds: Record<string, Array<string>> = {}, unsubscribeAll = () => {
         Object.keys(subscriptionIds).map(componentId => FindComponentById(componentId)).filter(component => !!component).forEach((component) => {
-            let { changes } = component!.GetBackend();
+            const { changes } = component!.GetBackend();
             subscriptionIds[component!.GetId()].forEach(subscriptionId => changes.Unsubscribe(subscriptionId));
         });
         subscriptionIds = {};
@@ -43,14 +43,14 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
         canceled = true;
     };
 
-    let onChange = (list?: Array<IChange | IBubbledChange>) => {
-        let component = FindComponentById(componentId);
+    const onChange = (list?: Array<IChange | IBubbledChange>) => {
+        const component = FindComponentById(componentId);
         if (!component || canceled){
             unsubscribeAll();
             return;
         }
         
-        let { changes } = component.GetBackend();
+        const { changes } = component.GetBackend();
         changes.PushOrigin(onChange);
 
         try{
@@ -69,7 +69,7 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
         }
     };
 
-    let uniqueEntries: Record<string, Record<string, boolean>> = {};//Extract unique path-componentId pairs
+    const uniqueEntries: Record<string, Record<string, boolean>> = {};//Extract unique path-componentId pairs
     (optimized || raw)?.entries.forEach(details => ((uniqueEntries[details.path] = (uniqueEntries[details.path] || {}))[details.compnentId] = true));
 
     Object.entries(uniqueEntries).forEach(([path, compnentIds]) => {

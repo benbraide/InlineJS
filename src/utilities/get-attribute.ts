@@ -5,8 +5,8 @@ function GetAttribute_(target: any, attribute: string | null){
 }
 
 export function GetAttribute(target: any, attributes: Array<string | null> | string | null){
-    for (let attr of (Array.isArray(attributes) ? attributes : [attributes])){
-        let value = GetAttribute_(target, attr);
+    for (const attr of (Array.isArray(attributes) ? attributes : [attributes])){
+        const value = GetAttribute_(target, attr);
         if (value){
             return value;
         }
@@ -20,7 +20,7 @@ export function FindFirstAttribute(target: any, attributes: Array<string>): { na
         return null;
     }
 
-    for (let attribute of attributes){
+    for (const attribute of attributes){
         if (target.hasAttribute(attribute)){
             return {
                 name: attribute,
@@ -33,6 +33,6 @@ export function FindFirstAttribute(target: any, attributes: Array<string>): { na
 }
 
 export function FindFirstAttributeValue(target: any, attributes: Array<string>): string | null{
-    let info = FindFirstAttribute(target, attributes);
+    const info = FindFirstAttribute(target, attributes);
     return (info ? info.value : null);
 }

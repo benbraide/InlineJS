@@ -8,7 +8,7 @@ export function CreateChildProxy(owner: IProxy | null, name: string, target: any
         return null;
     }
 
-    let child = owner.FindChild(name);
+    const child = owner.FindChild(name);
     if (child){
         return child;
     }
@@ -17,7 +17,7 @@ export function CreateChildProxy(owner: IProxy | null, name: string, target: any
         return null;
     }
 
-    let proxy = GetGlobal().CreateChildProxy(owner, name, target);
+    const proxy = GetGlobal().CreateChildProxy(owner, name, target);
     if (component){//Register to component
         component.AddProxy(proxy);
     }

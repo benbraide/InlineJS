@@ -19,9 +19,8 @@ export function BootstrapAndAttach(mount?: HTMLElement){
                 return;
             }
 
-            let component = global.CreateComponent(<HTMLElement>element);
             ProcessDirectives({
-                component: component,
+                component: global.CreateComponent(<HTMLElement>element),
                 element: <HTMLElement>element,
                 options: {
                     checkTemplate: true,

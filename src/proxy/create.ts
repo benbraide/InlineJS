@@ -19,13 +19,13 @@ export interface IProxyOptions{
 }
 
 export function CreateInplaceProxy({ target, getter, setter, deleter, lookup, alert }: IProxyOptions){
-    let handler = {
+    const handler = {
         get(target: object, prop: string | number | symbol): any{
             if (typeof prop === 'symbol' || (typeof prop === 'string' && prop === 'prototype')){
                 return Reflect.get(target, prop);
             }
 
-            let value = (getter ? getter(prop.toString(), target) : target[prop]);
+            const value = (getter ? getter(prop.toString(), target) : target[prop]);
             if (!GetGlobal().IsNothing(value)){
                 if (alert && (!alert.list || prop in alert.list)){
                     FindComponentById(alert.componentId)?.GetBackend().changes.AddGetAccess(`${alert.id}.${prop}`);

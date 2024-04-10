@@ -7,7 +7,7 @@ export interface IIntersectionOptions extends IntersectionObserverInit{
 const IntersectionThresholds = Array.from(Array(100).keys()).map(i => (i / 100));
 
 export function BuildIntersectionOptions(data: IIntersectionOptions){
-    let options: IntersectionObserverInit = {
+    const options: IntersectionObserverInit = {
         root: null,
         rootMargin: '0px',
         threshold: 0,

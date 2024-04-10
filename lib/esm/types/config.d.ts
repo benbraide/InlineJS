@@ -1,7 +1,9 @@
-export declare type ReactiveStateType = 'default' | 'optimized' | 'unoptimized' | 'disabled';
-export declare type DirectiveNameBuilderType = (name: string, addDataPrefix?: boolean) => string;
+export type ReactiveStateType = 'default' | 'optimized' | 'unoptimized' | 'disabled';
+export type DirectiveNameBuilderType = (name: string, addDataPrefix?: boolean) => string;
 export interface IConfigOptions {
     appName?: string;
+    useGlobalWindow?: boolean;
+    wrapScopedFunctions?: boolean;
     reactiveState?: ReactiveStateType;
     directivePrefix?: string;
     elementPrefix?: string;
@@ -25,4 +27,8 @@ export interface IConfig {
     IsBooleanAttribute(name: string): boolean;
     SetReactiveState(state: ReactiveStateType): void;
     GetReactiveState(): ReactiveStateType;
+    SetUseGlobalWindow(value: boolean): void;
+    GetUseGlobalWindow(): boolean;
+    SetWrapScopedFunctions(value: boolean): void;
+    GetWrapScopedFunctions(): boolean;
 }

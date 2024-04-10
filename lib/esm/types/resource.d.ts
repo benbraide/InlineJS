@@ -1,4 +1,4 @@
-export declare type ResourceType = 'link' | 'script' | 'data';
+export type ResourceType = 'link' | 'script' | 'data';
 export interface IResourceOptions {
     type: ResourceType;
     attribute: 'href' | 'src' | 'json' | 'text';

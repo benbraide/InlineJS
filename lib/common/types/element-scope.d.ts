@@ -7,12 +7,11 @@ export interface IChangesMonitorParams {
     target: string;
     object: () => any;
 }
-export declare type ChangesMonitorType = (params: IChangesMonitorParams) => void;
-export declare type TreeChangeCallbackType = (params: ITreeChangeCallbackParams) => void;
+export type ChangesMonitorType = (params: IChangesMonitorParams) => void;
+export type TreeChangeCallbackType = (params: ITreeChangeCallbackParams) => void;
 export interface IElementScope {
     IsInitialized(): boolean;
     GetComponentId(): string;
-    GetScopeId(): string;
     GetId(): string;
     SetKey(key: string): void;
     GetKey(): string;

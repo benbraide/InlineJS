@@ -1,9 +1,25 @@
 import { IComponent } from "./component";
+import { IDirectiveProxyAccessHandler } from "./directive";
+import { IProxyAccessHandler } from "./proxy";
+
+export interface IProcessOptions{
+    checkTemplate?: boolean;
+    checkDocument?: boolean;
+    ignoreChildren?: boolean;
+}
+
+export interface IProcessDetails{
+    component: IComponent | string;
+    element: Element;
+    options?: IProcessOptions;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
+}
 
 interface IProcessorParams{
     contextElement: HTMLElement;
     componentId: string;
     component?: IComponent;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }
 
 export interface IAttributeProcessorParams extends IProcessorParams{

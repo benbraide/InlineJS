@@ -1,4 +1,5 @@
 import { IComponent } from "./component";
+import { IProxyAccessHandler } from "./proxy";
 
 export interface IDirectiveView{
     original: string;
@@ -22,9 +23,14 @@ export interface IDirectiveMeta{
     arg: IDirectiveArg;
 }
 
+export interface IDirectiveProxyAccessHandler{
+    handler?: IProxyAccessHandler | null;
+}
+
 export interface IDirective{
     meta: IDirectiveMeta;
     value: string;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }
 
 export interface IFlatDirective{
@@ -36,6 +42,7 @@ export interface IFlatDirective{
     argKey: string;
     argOptions: Array<string>;
     expression: string;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }
 
 export interface IDirectiveHandlerParams extends IFlatDirective{
@@ -73,4 +80,11 @@ export interface IDirectiveManager{
     FindHandler(name: string): DirectiveHandlerCallbackType | null;
     AddHandlerExtension(target: string, handler: IDirectiveHandler | DirectiveHandlerCallbackType, name?: string): void;
     RemoveHandlerExtension(target: string, name: string): void;
+}
+
+export interface ITraverseDirectivesParams{
+    element: Element;
+    callback: (directive: IDirective) => void;
+    attributeCallback?: (name: string, value: string) => void;
+    proxyAccessHandler?: IProxyAccessHandler | IDirectiveProxyAccessHandler | null;
 }

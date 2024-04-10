@@ -9,7 +9,7 @@ import { GetGlobal } from '../global/get';
 
 describe('interpolation', () => {
     it('should replace texts', () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template'));
+        const component = CreateGlobal().CreateComponent(document.createElement('template'));
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
         component.GetRootProxy().GetNative()['age'] = 72;
@@ -26,7 +26,7 @@ describe('interpolation', () => {
     });
 
     it('should replace texts and be reactive', async () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template'));
+        const component = CreateGlobal().CreateComponent(document.createElement('template'));
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
         component.GetRootProxy().GetNative()['age'] = 72;
@@ -48,7 +48,7 @@ describe('interpolation', () => {
     });
 
     it('should store objects', () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template'));
+        const component = CreateGlobal().CreateComponent(document.createElement('template'));
 
         const info = {
             name: 'John Doe',
@@ -79,7 +79,7 @@ describe('interpolation', () => {
     });
 
     it('should replace elements\' text contents', async () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
+        const component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
         component.GetRootProxy().GetNative()['age'] = 72;
@@ -96,7 +96,7 @@ describe('interpolation', () => {
     });
 
     it('should replace elements\' text contents and be reactive', async () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
+        const component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
         component.GetRootProxy().GetNative()['age'] = 72;
@@ -118,7 +118,7 @@ describe('interpolation', () => {
     });
 
     it('should support nesting', async () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
+        const component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
         component.GetRootProxy().GetNative()['age'] = 72;
@@ -126,7 +126,7 @@ describe('interpolation', () => {
         component.GetRoot().append(el);
         el.innerHTML = 'I am {{ name }} and <span>{{ age }} years</span> old.';
 
-        let span = el.querySelector('span')!;
+        const span = el.querySelector('span')!;
         
         Interpolate({
             componentId: component.GetId(),
@@ -151,7 +151,7 @@ describe('interpolation', () => {
     });
 
     it('should support nesting and be reactive', async () => {
-        let component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
+        const component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
         component.GetRootProxy().GetNative()['age'] = 72;
@@ -159,7 +159,7 @@ describe('interpolation', () => {
         component.GetRoot().append(el);
         el.innerHTML = 'I am {{ name }} and <span>{{ age }} years</span> old.';
 
-        let span = el.querySelector('span')!;
+        const span = el.querySelector('span')!;
 
         Interpolate({
             componentId: component.GetId(),

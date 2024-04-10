@@ -20,8 +20,8 @@ export interface InsertionOptions{
 }
 
 export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, afterRemove, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions){
-    let componentId = ((typeof component === 'string') ? component : (component?.GetId() || '')), insert = () => {
-        let tmpl = document.createElement('template');
+    const componentId = ((typeof component === 'string') ? component : (component?.GetId() || '')), insert = () => {
+        const tmpl = document.createElement('template');
         tmpl.innerHTML = html;
 
         if (type === 'replace' || type === 'append'){
@@ -33,7 +33,7 @@ export function InsertHtml({ element, html, type = 'replace', component, process
 
         (afterInsert && JournalTry(afterInsert, 'InlineJS.InsertHtml', element));
 
-        let resolvedComponent = FindComponentById(componentId);
+        const resolvedComponent = FindComponentById(componentId);
         if (processDirectives && resolvedComponent){
             Array.from(element.children).forEach(child => ProcessDirectives({
                 component: resolvedComponent!,
@@ -60,8 +60,8 @@ export function InsertHtml({ element, html, type = 'replace', component, process
     };
 
     if (type === 'replace' && element.childNodes.length != 0){//Remove all child nodes
-        let destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
-            let resolvedComponent = FindComponentById(componentId), global = GetGlobal();
+        const destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
+            const resolvedComponent = FindComponentById(componentId), global = GetGlobal();
             Array.from(el.children).forEach((child) => {
                 let elementScope = resolvedComponent?.FindElementScope(child);
                 if (elementScope || (elementScope = global.InferComponentFrom(<HTMLElement>child)?.FindElementScope(child))){
@@ -73,7 +73,7 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             });
         };
 
-        let remove = () => {
+        const remove = () => {
             destroyOffspring(element);
             Array.from(element.childNodes).forEach(child => child.remove());
             (afterRemove && JournalTry(afterRemove, 'InlineJS.InsertHtml', element));

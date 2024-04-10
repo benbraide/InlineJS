@@ -5,7 +5,7 @@ import { IElementScope } from "./element-scope";
 import { IGlobal } from "./global";
 import { IIntersectionObserver } from "./intersection";
 import { IMutationObserverAttributeInfo } from "./mutation";
-import { IProxy } from "./proxy";
+import { IProxy, IProxyAccessHandler } from "./proxy";
 import { IRootElement } from "./root-element";
 import { IScope } from "./scope";
 import { ISelectionStackEntry } from "./selection";
@@ -20,6 +20,8 @@ export interface IComponent {
     GenerateUniqueId(prefix?: string, suffix?: string): string;
     SetName(name: string): void;
     GetName(): string;
+    SetProxyAccessHandler(handler: IProxyAccessHandler | null): IProxyAccessHandler | null;
+    GetProxyAccessHandler(): IProxyAccessHandler | null;
     CreateScope(root: HTMLElement): IScope | null;
     RemoveScope(scope: IScope | string): void;
     FindScopeById(id: string): IScope | null;

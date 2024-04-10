@@ -12,7 +12,7 @@ export class IntersectionObserver implements IIntersectionObserver{
     private handlers_ = new Array<IIntersectionObserverHandlerInfo>();
     
     public constructor(private id_: string, options: IIntersectionOptions){
-        let id = this.id_;
+        const id = this.id_;
         this.observer_ = new globalThis.IntersectionObserver((entries, observer) => {
             entries.forEach((entry) => {
                 this.handlers_.filter(({ target }) => (target === entry.target)).forEach((info) => {

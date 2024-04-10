@@ -12,11 +12,11 @@ describe('directives parser', () => {
     it('should parse a well-formed directive', () => {
         CreateGlobal();
         
-        let { meta, value } = (CreateDirective('x-text', '\'Hello world\'') || {});
+        let { meta, value } = (CreateDirective('hx-text', '\'Hello world\'') || {});
         expect(meta?.name.value).equal('text');
         expect(value).equal('\'Hello world\'');
 
-        ({ meta, value } = (CreateDirective('data-x-text', '\'Hello world\'') || {}));
+        ({ meta, value } = (CreateDirective('data-hx-text', '\'Hello world\'') || {}));
         expect(meta?.name.value).equal('text');
         expect(value).equal('\'Hello world\'');
     });
@@ -31,7 +31,7 @@ describe('directives parser', () => {
     it('should parse a directive with a specified argument key', () => {
         CreateGlobal();
         
-        let { meta, value } = (CreateDirective('x-text:key', '\'Hello world\'') || {});
+        const { meta, value } = (CreateDirective('hx-text:key', '\'Hello world\'') || {});
         expect(meta?.name.value).equal('text');
         expect(meta?.arg.key).equal('key');
         expect(value).equal('\'Hello world\'');
@@ -40,7 +40,7 @@ describe('directives parser', () => {
     it('should parse a directive with specified argument options', () => {
         CreateGlobal();
         
-        let { meta, value } = (CreateDirective('x-text.first.second', '\'Hello world\'') || {});
+        const { meta, value } = (CreateDirective('hx-text.first.second', '\'Hello world\'') || {});
         expect(meta?.name.value).equal('text');
         expect(meta?.arg.options.join(',')).equal('first,second');
         expect(value).equal('\'Hello world\'');
@@ -49,7 +49,7 @@ describe('directives parser', () => {
     it('should parse a directive with specified argument key and options', () => {
         CreateGlobal();
         
-        let { meta, value } = (CreateDirective('x-text:key.first.second', '\'Hello world\'') || {});
+        const { meta, value } = (CreateDirective('hx-text:key.first.second', '\'Hello world\'') || {});
         expect(meta?.name.value).equal('text');
         expect(meta?.arg.key).equal('key');
         expect(meta?.arg.options.join(',')).equal('first,second');
@@ -57,7 +57,7 @@ describe('directives parser', () => {
     });
 
     it('should expand shorthands', () => {
-        let global = CreateGlobal();
+        const global = CreateGlobal();
 
         global.GetDirectiveManager().AddExpansionRule(BindDirectiveExpansionRule);
         global.GetDirectiveManager().AddExpansionRule(ClassDirectiveExpansionRule);

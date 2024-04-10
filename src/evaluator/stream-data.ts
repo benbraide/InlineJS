@@ -2,7 +2,7 @@ import { Loop } from "../values/loop";
 import { WaitPromise } from "./wait-promise";
 
 export function StreamData(data: any, callback: (data: any) => any){
-    let wait = (target: any, callback: (data: any) => void) => WaitPromise(target, callback, true);
+    const wait = (target: any, callback: (data: any) => void) => WaitPromise(target, callback, true);
     if (data instanceof Loop){
         return new Loop((doWhile, doFinal) => {
             data.While((data) => {//For each iteration, wait if applicable, then do while

@@ -9,9 +9,9 @@ Run JavaScript code by embedding them in your HTML using the element as context.
 `InlineJS` works without creating shadow DOMs.
 
 > **Notes:**
-> - Directives are of the general form: `x-[DirectiveName]` or `data-x-[DirectiveName]`. Example: `x-effect` or `data-x-effect`.
-> - The `x-` prefix can be configured via the global `config` object.
-> - `InlineJS` binds to elements with the `x-data` directive present.
+> - Directives are of the general form: `hx-[DirectiveName]` or `data-hx-[DirectiveName]`. Example: `hx-effect` or `data-hx-effect`.
+> - The `hx-` prefix can be configured via the global `config` object.
+> - `InlineJS` binds to elements with the `hx-data` directive present.
 
 ## Install
 
@@ -43,9 +43,9 @@ BootstrapAndAttach();
 
 *Dropdown/Modal*
 ```html
-<div x-data="{ open: false }">
-    <button x-on:click="open = true">Open Dropdown</button>
-    <div x-show="open" x-on:click.outside="open = false">
+<div hx-data="{ open: false }">
+    <button hx-on:click="open = true">Open Dropdown</button>
+    <div hx-show="open" hx-on:click.outside="open = false">
         Dropdown Body
     </div>
 </div>
@@ -53,25 +53,25 @@ BootstrapAndAttach();
 
 *Tabs*
 ```html
-<div x-data="{ tab: 'foo' }">
-    <button x-class:active="tab === 'foo'" x-on:click="tab = 'foo'">Foo</button>
-    <button x-class:active="tab === 'bar'" x-on:click="tab = 'bar'">Bar</button>
+<div hx-data="{ tab: 'foo' }">
+    <button hx-class:active="tab === 'foo'" hx-on:click="tab = 'foo'">Foo</button>
+    <button hx-class:active="tab === 'bar'" hx-on:click="tab = 'bar'">Bar</button>
 
-    <div x-show="tab === 'foo'">Tab Foo</div>
-    <div x-show="tab === 'bar'">Tab Bar</div>
+    <div hx-show="tab === 'foo'">Tab Foo</div>
+    <div hx-show="tab === 'bar'">Tab Bar</div>
 </div>
 ```
 
 You can even use it for non-trivial things:
 *Pre-fetching a dropdown's HTML content on hover*
 ```html
-<div x-data="{ open: false, html: 'Loading Spinner...' }">
+<div hx-data="{ open: false, html: 'Loading Spinner...' }">
     <button
-        x-on:mouseenter.once="html = $fetch('/dropdown-partial.html')"
-        x-on:click="open = true"
+        hx-on:mouseenter.once="html = $fetch('/dropdown-partial.html')"
+        hx-on:click="open = true"
     >Show Dropdown</button>
 
-    <div x-show="open" x-html="html" x-on:click.outside="open = false"></div>
+    <div hx-show="open" hx-html="html" hx-on:click.outside="open = false"></div>
 </div>
 ```
 
@@ -82,7 +82,7 @@ You can even use it for non-trivial things:
 **Example**
 
 ```html
-<form x-data="{ btnText: 'Save', txtValue: 'Default value' }">
+<form hx-data="{ btnText: 'Save', txtValue: 'Default value' }">
     <input name="content" value="{{ txtValue }}">
     <button type="submit">{{ btnText }} Draft</button>
 </form>
@@ -92,7 +92,7 @@ You can even use it for non-trivial things:
 > - When using the compiled scripts in a `script` tag no initialization is necessary, as `InlineJS` will automatically initialize and bind to the document.
 > - If the result of an evaluated expression is a function, most directives will call that function.
 > - When evaluating an expression, `this` refers to the element that the directive is being executed on.
-> - Directives are executed accordingly from `left` to `right` as they appear on an element. There is no precedence.
+> - Directives are executed accordingly, from `left` to `right`, as they appear on an element. There is no precedence.
 > - This is the base `API` and it can be used for development and extension purposes.
 
 ## Extending InlineJS
@@ -107,7 +107,7 @@ const greeterDirective = CreateDirectiveHandlerCallback('greeter', (directiveDet
 
 AddDirectiveHandler(greeterDirective);
 ```
-> **Note:** The above directive will be referenced as `x-greeter`.
+> **Note:** The above directive will be referenced as `hx-greeter`.
 
 - Call the `CreateDirectiveHandlerCallback` to create the handler for your directive. The function requires a name for the directive and a callback as the handler.
 - Pass the returned directive details to `AddDirectiveHandler` to register your new directive.
@@ -117,9 +117,9 @@ AddDirectiveHandler(greeterDirective);
 > - `componentId` holds the `id` of the context/current component.
 > - `component` may hold the context/current component.
 > - `expression` value specified as the `attribute` value on the element.
-> E.g. `x-greeter="doSomething()"`. `doSomething()` is the expression.
-> - `argKey` if the directive followed by a `:`, then more text, this refers to the text after the `:`. E.g. `x-greeter:unique`.
-> - `argOptions` holds a list of texts supplied by the user delimited by a `.`. E.g. `x-greeter.new.transform`
+> E.g. `hx-greeter="doSomething()"`. `doSomething()` is the expression.
+> - `argKey` if the directive followed by a `:`, then more text, this refers to the text after the `:`. E.g. `hx-greeter:unique`.
+> - `argOptions` holds a list of texts supplied by the user delimited by a `.`. E.g. `hx-greeter.new.transform`
 > **Note:** the user is free to specify both `argKey` and `argOptions` in a single usage.
 
 If you would prefer using a class, then you could use:
@@ -189,15 +189,22 @@ AddMagicHandler(greeter);
 - [Animation](https://github.com/benbraide/inlinejs-animation)
 - [Screen](https://github.com/benbraide/inlinejs-screen)
 - [Alert](https://github.com/benbraide/inlinejs-alert)
+- [Swal Alert](https://github.com/benbraide/inlinejs-swal)
 - [Collections](https://github.com/benbraide/inlinejs-collections)
 - [Router](https://github.com/benbraide/inlinejs-router)
 - [Moment](https://github.com/benbraide/inlinejs-moment)
 - [Database](https://github.com/benbraide/inlinejs-database)
+- [Element](https://github.com/benbraide/inlinejs-element)
+- [Components](https://github.com/benbraide/inlinejs-components)
+- [Canvas](https://github.com/benbraide/inlinejs-canvas)
+- [Sketch](https://github.com/benbraide/inlinejs-sketch)
 - [Theme](https://github.com/benbraide/inlinejs-theme)
 - [Geolocation](https://github.com/benbraide/inlinejs-geolocation)
 - [Quill](https://github.com/benbraide/inlinejs-quill)
 - [Stripe](https://github.com/benbraide/inlinejs-stripe)
 - [Echo](https://github.com/benbraide/inlinejs-echo)
+- [Socket](https://github.com/benbraide/inlinejs-socket)
+- [Socket Server](https://github.com/benbraide/inlinejs-socket-server)
 
 ## Bundles
 - [Pack](https://github.com/benbraide/inlinejs-pack)
@@ -205,6 +212,7 @@ AddMagicHandler(greeter);
 
 ## Resources
 - [Demos](https://github.com/benbraide/inlinejs-demos)
+- [Hangman Game](https://github.com/benbraide/inlinejs-hangman)
 
 ## Utilities
 - [Intellisense](https://github.com/benbraide/inlinejs-intellisense)

@@ -44,7 +44,7 @@ export function PathToRelative(path: string, origin: string, prefix?: string){
 export function SplitPath(path: string, origin?: string, prefix?: string): ISplitPath{
     path = (origin ? PathToRelative(path, origin, prefix) : path);
 
-    let index = path.indexOf('?');
+    const index = path.indexOf('?');
     return {
         base: ((index == -1) ? path : path.substring(0, index)),
         query: ((index == -1) ? '' : path.substring(index + 1)),

@@ -75,7 +75,7 @@ export function AddOutsideEventListener(target: HTMLElement, events: string | Ar
 }
 
 export function RemoveOutsideEventListener(target: HTMLElement, events: string | Array<string>, handler: (event?: Event) => void){
-    let targetScope = GetOutsideEventGlobalBlock().targetScopes.find(scope => (scope.target === target));
+    const targetScope = GetOutsideEventGlobalBlock().targetScopes.find(scope => (scope.target === target));
     if (!targetScope){
         return;
     }
@@ -93,7 +93,7 @@ export function RemoveOutsideEventListener(target: HTMLElement, events: string |
 }
 
 export function AddOutsideEventExcept(target: HTMLElement, list: Record<string, Array<HTMLElement> | HTMLElement>, handler?: (event?: Event) => void){
-    let targetScope = GetOutsideEventGlobalBlock().targetScopes.find(scope => (scope.target === target));
+    const targetScope = GetOutsideEventGlobalBlock().targetScopes.find(scope => (scope.target === target));
     if (!targetScope){
         return;
     }
@@ -104,7 +104,7 @@ export function AddOutsideEventExcept(target: HTMLElement, list: Record<string, 
         }
 
         if (handler){
-            let info = targetScope!.listeners[event].handlers.find(item => (item.callback === handler));
+            const info = targetScope!.listeners[event].handlers.find(item => (item.callback === handler));
             if (info){
                 info.excepts = (info.excepts || new Array<HTMLElement>());
                 (Array.isArray(list[event]) ? (list[event] as Array<HTMLElement>) : [(list[event] as HTMLElement)]).forEach((item) => {

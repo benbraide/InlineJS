@@ -5,29 +5,24 @@ import { ProxyKeys } from "../utilities/proxy-keys";
 import { CreateChildProxy } from "./create-child";
 
 export function GetProxyProp(componentId: string, target: any, path: string, prop: string, noResultHandler?: (component?: IComponent, prop?: string) => any){
-    if (prop === ProxyKeys.target){
-        return target;
-    }
-    
-    if (prop === ProxyKeys.componentId){
-        return componentId;
-    }
-
-    if (prop === ProxyKeys.name){
-        return path.split('.').at(-1);
-    }
-
-    if (prop === ProxyKeys.path){
-        return path;
-    }
-
-    if (prop === ProxyKeys.parentPath){
-        return (path.split('.').slice(0, -1).join('.') || '');
+    switch (prop){
+        case ProxyKeys.target:
+            return target;
+        case ProxyKeys.componentId:
+            return componentId;
+        case ProxyKeys.name:
+            return path.split('.').at(-1);
+        case ProxyKeys.path:
+            return path;
+        case ProxyKeys.parentPath:
+            return (path.split('.').slice(0, -1).join('.') || '');
+        default:
+            break;
     }
 
-    let exists = (prop in target);
+    const exists = (prop in target);
     if (!exists && noResultHandler){
-        let value = noResultHandler((FindComponentById(componentId) || undefined), prop);
+        const value = noResultHandler((FindComponentById(componentId) || undefined), prop);
         if (!GetGlobal().IsNothing(value)){
             return (GetGlobal().IsFuture(value) ? value.Get() : value);
         }
@@ -37,12 +32,12 @@ export function GetProxyProp(componentId: string, target: any, path: string, pro
         return target[prop];
     }
 
-    let value: any = (exists ? target[prop] : null);
+    const value: any = (exists ? target[prop] : null);
     if (GetGlobal().IsFuture(value)){//No proxy representation
         return value.Get();
     }
 
-    let component = FindComponentById(componentId);
+    const component = FindComponentById(componentId);
     component?.GetBackend().changes.AddGetAccess(`${path}.${prop}`);//Alert GET access
     
     return (CreateChildProxy((component?.FindProxy(path) || null), prop, value, (component || undefined))?.GetNative() || value);

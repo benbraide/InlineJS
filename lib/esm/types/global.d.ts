@@ -9,6 +9,7 @@ import { IMutationObserver } from "./mutation";
 import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcessorParams, TextContentProcessorType } from "./process";
 import { IProxy } from "./proxy";
 import { IResizeObserver } from "./resize-observer";
+import { IScope } from "./scope";
 export interface IComponentsMonitorParams {
     action: 'add' | 'remove';
     component: IComponent;
@@ -23,7 +24,7 @@ export interface IObjectRetrievalParams {
     componentId?: string;
     contextElement?: HTMLElement;
 }
-export declare type ComponentsMonitorType = (params: IComponentsMonitorParams) => void;
+export type ComponentsMonitorType = (params: IComponentsMonitorParams) => void;
 export interface IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
@@ -45,6 +46,9 @@ export interface IGlobal {
     PeekCurrentComponent(): string | null;
     GetCurrentComponent(): IComponent | null;
     InferComponentFrom(element: HTMLElement | null): IComponent | null;
+    PushScopeContext(scope: IScope): void;
+    PopScopeContext(): IScope | null;
+    PeekScopeContext(): IScope | null;
     GetDirectiveManager(): IDirectiveManager;
     GetMagicManager(): IMagicManager;
     AddAttributeProcessor(processor: AttributeProcessorType): void;

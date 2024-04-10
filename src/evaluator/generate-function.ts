@@ -15,13 +15,13 @@ function GetDefaultCacheValue(): Record<string, Function>{
 }
 
 function GenerateFunction(body: (expression: string) => string, expression: string, componentId?: string, alertAlways = false){
-    let cached = FindCacheValue<Function>(cacheKey, expression);
+    const cached = FindCacheValue<Function>(cacheKey, expression);
     if (cached){
         return cached;
     }
 
     try{
-        let newFunction = (new Function(InlineJSContextKey, `
+        const newFunction = (new Function(InlineJSContextKey, `
             with (${InlineJSContextKey}){
                 ${body(expression)};
             };
@@ -50,8 +50,8 @@ export function GenerateVoidFunction(expression: string, componentId?: string, a
 
 export function CallIfFunction(value: any, handler?: (value: any) => void, componentId?: string, params: Array<any> = []){
     if (typeof value === 'function'){//Call function
-        let component = FindComponentById(componentId || ''), lastContext = component?.FindProxy(component?.GetBackend().changes.GetLastAccessContext());
-        let result = value.apply(((lastContext || component?.GetRootProxy())?.GetNative() || null), (params || []));
+        const component = FindComponentById(componentId || ''), lastContext = component?.FindProxy(component?.GetBackend().changes.GetLastAccessContext());
+        const result = value.apply(((lastContext || component?.GetRootProxy())?.GetNative() || null), (params || []));
         return (handler ? handler(result) : result);
     }
 
@@ -61,7 +61,7 @@ export function CallIfFunction(value: any, handler?: (value: any) => void, compo
 export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Array<any>, contexts?: Record<string, any>) => any;
 
 export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive', voidOnly }: IEvaluateOptions): GeneratedFunctionType{
-    let nullHandler = (handler?: (value: any) => void) => {
+    const nullHandler = (handler?: (value: any) => void) => {
         handler && handler(null);
         return null;
     };
@@ -81,13 +81,13 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         return nullHandler;
     }
 
-    let runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true, waitMessage?: string) => {
-        let component = FindComponentById(componentId), proxy = component?.GetRootProxy().GetNative();
+    const runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true, waitMessage?: string) => {
+        const component = FindComponentById(componentId), proxy = component?.GetRootProxy().GetNative();
         if (!proxy || component?.FindElementScope(contextElement)?.IsDestroyed()){
             return;
         }
 
-        let { context = null, changes = null } = (component?.GetBackend() || {});
+        const { context = null, changes = null } = (component?.GetBackend() || {});
 
         context?.Push(ContextKeys.self, contextElement);
         changes?.ResetLastAccessContext();
@@ -105,7 +105,7 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
                 return (disableFunctionCall ? result : CallIfFunction(result, handler, componentId, params));
             }
 
-            let handleResult = (value: any) => {
+            const handleResult = (value: any) => {
                 if (value && waitPromise !== 'none'){
                     WaitPromise(value, handler, waitPromise === 'recursive');
                     return (waitMessage || 'Loading data...');

@@ -4,8 +4,8 @@ export interface ISubscribeDetails {
     changes: Array<IChange | IBubbledChange>;
     cancel: () => void;
 }
-export declare type SubscriptionsCallbackType = (list: Record<string, Array<string>>) => void;
-export declare type SubscribeCallbackType = (details?: ISubscribeDetails) => void | boolean;
+export type SubscriptionsCallbackType = (list: Record<string, Array<string>>) => void;
+export type SubscribeCallbackType = (details?: ISubscribeDetails) => void | boolean;
 export interface ISubscribeToChangesParams {
     componentId: string;
     changes: IChanges;
