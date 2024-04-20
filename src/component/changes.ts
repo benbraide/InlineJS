@@ -61,14 +61,8 @@ export class Changes extends ChangesMonitor implements IChanges{
         this.isScheduled_ = true;
         queueMicrotask(() => {//Defer dispatches
             this.isScheduled_ = false;
-
-            if (this.isIdle_){
-                this.isIdle_ = false;
-                this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
-            }
-
             const batches = new Array<IChangeBatchInfo>(), addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
-                let batch = batches.find(info => (info.callback === callback));
+                const batch = batches.find(info => (info.callback === callback));
                 if (!batch){
                     batches.push({
                         callback: callback,
@@ -81,17 +75,40 @@ export class Changes extends ChangesMonitor implements IChanges{
             };
 
             const getOrigin = (change: IChange | IBubbledChange) => (('original' in change) ? change.original.origin : change.origin);
-            this.list_.splice(0).forEach((change) => {//Process changes into batches
-                Object.values(this.subscribers_).filter(sub => (sub.path === change.path && sub.callback !== getOrigin(change))).forEach(sub => addBatch(change, sub.callback));
-            });
+            if (this.list_.length != 0){
+                this.list_.splice(0).forEach((change) => {//Process changes into batches
+                    Object.values(this.subscribers_).filter(sub => (sub.path === change.path && sub.callback !== getOrigin(change))).forEach(sub => addBatch(change, sub.callback));
+                });
+                this.NotifyListeners_('list', this.list_);
+            }
+
+            if (batches.length == 0){
+                if (!this.isIdle_){
+                    this.isIdle_ = true;
+                    if (this.nextIdleHandlers_.length != 0){
+                        this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
+                        this.NotifyListeners_('next-idle-handlers', this.nextIdleHandlers_);
+                    }
+                }
+                return;
+            }
+
+            if (this.isIdle_){// Out of idle
+                this.isIdle_ = false;
+                if (this.nextNonIdleHandlers_.length != 0){
+                    this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
+                    this.NotifyListeners_('next-non-idle-handlers', this.nextNonIdleHandlers_);
+                }
+            }
 
             batches.forEach(batch => batch.callback(batch.changes));
-            this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
-            
-            if (!this.isScheduled_){
-                this.isIdle_ = true;
-                this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
+            if (this.nextTickHandlers_.length != 0){
+                this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
+                this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
             }
+
+            this.NotifyListeners_('scheduled', this.isScheduled_);
+            this.Schedule();// Defer idle check
         });
 
         this.NotifyListeners_('scheduled', this.isScheduled_);
