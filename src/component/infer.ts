@@ -1,7 +1,11 @@
 import { GetElementScopeId } from "./element-scope-id";
-import { FindComponentById } from "./find";
+import { FindComponentById, FindComponentByCallback } from "./find";
 
 export function InferComponent(element: HTMLElement | null){
     const matches = GetElementScopeId(element).match(/^Cmpnt\<([0-9_]+)\>/);
-    return (matches ? FindComponentById(matches[1]) : null);
+    if (matches){// Use extracted Component ID
+        return FindComponentById(matches[1]);
+    }
+
+    return FindComponentByCallback(component => component.GetRoot() === element || component.GetRoot().contains(element))
 }

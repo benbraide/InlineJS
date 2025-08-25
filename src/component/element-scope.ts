@@ -5,9 +5,9 @@ import { IComponent } from "../types/component";
 import { IDirectiveManager } from "../types/directive";
 import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
 import { ChangesMonitor } from "./changes-monitor";
-import { PeekCurrentScope } from "./current-scope";
 import { ElementScopeKey } from "./element-scope-id";
 import { UnbindOutsideEvent } from "./event";
+import { InvalidateComponentCache } from "./cache";
 import { FindComponentById } from "./find";
 
 interface AttributeChangeCallbackInfo{
@@ -173,7 +173,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
             });
         }
         else{//Add whitelist to existing
-            existing.whitelist.push(...(whitelist || []));
+            existing.whitelist.push(...((typeof whitelist === 'string') ? [whitelist] : (whitelist || [])));
         }
 
         this.NotifyListeners_('attribute-change-callbacks', this.callbacks_.attributeChange);
@@ -241,6 +241,8 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
             return;
         }
 
+        this.queuedAttributeChanges_ = null;
+
         this.callbacks_.uninit.splice(0).forEach((callback) => {
             try{
                 callback();
@@ -265,7 +267,10 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
         delete this.element_[ElementScopeKey];//Remove id value on element
         if (this.isRoot_){//Remove component -- wait for changes to finalize
             const componentId = this.componentId_;
-            component?.GetBackend().changes.AddNextTickHandler(() => GetGlobal().RemoveComponent(componentId));
+            component?.GetBackend().changes.AddNextTickHandler(() => {
+                GetGlobal().RemoveComponent(componentId);
+                InvalidateComponentCache(componentId);
+            });
         }
     }
 

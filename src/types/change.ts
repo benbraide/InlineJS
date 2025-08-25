@@ -13,4 +13,4 @@ export interface IBubbledChange{
     path: string;
 }
 
-export type ChangeCallbackType = (changes?: Array<IChange | IBubbledChange>) => void;
+export type ChangeCallbackType = (changes: Array<IChange | IBubbledChange>) => void;

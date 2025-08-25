@@ -2,6 +2,7 @@ import { FindComponentById } from "../component/find";
 import { JournalError } from "../journal/error";
 import { IBubbledChange, IChange } from "../types/change";
 import { IChanges } from "../types/changes";
+import { IProxyAccessStorage } from "../types/storage";
 
 export interface ISubscribeDetails{
     changes: Array<IChange | IBubbledChange>;
@@ -13,29 +14,29 @@ export type SubscribeCallbackType = (details?: ISubscribeDetails) => void | bool
 
 export interface ISubscribeToChangesParams{
     componentId: string;
-    changes: IChanges;
+    proxyAccessStorage: IProxyAccessStorage;
     callback: SubscribeCallbackType;
     subscriptionsCallback?: SubscriptionsCallbackType;
     contextElement?: HTMLElement;
 }
 
-export function SubscribeToChanges({ componentId, changes, callback, subscriptionsCallback, contextElement }: ISubscribeToChangesParams){
-    changes.PopAllGetAccessStorageSnapshots(false);//Remove all outstanding checkpoints
-    changes.RestoreOptimizedGetAccessStorage();//Restore previously swapped optimized storage
-
-    const { optimized, raw } = changes.PopGetAccessStorage()!;
-    if (((optimized || raw)?.entries.length || 0) == 0){
-        if (subscriptionsCallback){//Alert no subscriptions
-            subscriptionsCallback({});
-        }
+export function SubscribeToChanges({ componentId, proxyAccessStorage, callback, subscriptionsCallback, contextElement }: ISubscribeToChangesParams){
+    if (proxyAccessStorage.IsEmpty()){// No reactive access
+        subscriptionsCallback?.({});
         return null;
     }
 
     let subscriptionIds: Record<string, Array<string>> = {}, unsubscribeAll = () => {
-        Object.keys(subscriptionIds).map(componentId => FindComponentById(componentId)).filter(component => !!component).forEach((component) => {
-            const { changes } = component!.GetBackend();
-            subscriptionIds[component!.GetId()].forEach(subscriptionId => changes.Unsubscribe(subscriptionId));
-        });
+        for (const cId in subscriptionIds){
+            const component = FindComponentById(cId);
+            if (!component){
+                continue;
+            }
+
+            const { changes } = component.GetBackend();
+            subscriptionIds[cId].forEach(id => changes.Unsubscribe(id));
+        }
+        
         subscriptionIds = {};
     };
 
@@ -43,7 +44,7 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
         canceled = true;
     };
 
-    const onChange = (list?: Array<IChange | IBubbledChange>) => {
+    const onChange = (list: Array<IChange | IBubbledChange>) => {
         const component = FindComponentById(componentId);
         if (!component || canceled){
             unsubscribeAll();
@@ -55,7 +56,7 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
 
         try{
             callback({
-                changes: (list || []),
+                changes: list,
                 cancel: cancel,
             });
         }
@@ -69,25 +70,28 @@ export function SubscribeToChanges({ componentId, changes, callback, subscriptio
         }
     };
 
-    const uniqueEntries: Record<string, Record<string, boolean>> = {};//Extract unique path-componentId pairs
-    (optimized || raw)?.entries.forEach(details => ((uniqueEntries[details.path] = (uniqueEntries[details.path] || {}))[details.compnentId] = true));
+    const groupedEntries = proxyAccessStorage.GetGroupedEntries();
+    
+    for (const cId in groupedEntries){
+        const component = FindComponentById(cId);
+        if (!component){
+            continue;
+        }
+        
+        const newSubscriptionIds = new Array<string>(), { changes } = component.GetBackend();
+        groupedEntries[cId].forEach(details => newSubscriptionIds.push(changes.Subscribe(details.path, onChange)));
 
-    Object.entries(uniqueEntries).forEach(([path, compnentIds]) => {
-        Object.keys(compnentIds).map(componentId => FindComponentById(componentId)).filter(component => !!component).forEach((component) => {
-            (subscriptionIds[component!.GetId()] = (subscriptionIds[component!.GetId()] || [])).push(component!.GetBackend().changes.Subscribe(path, onChange));
-        });
-    });
+        subscriptionIds[cId] = newSubscriptionIds;
+    }
 
-    if (contextElement){
+    if (contextElement){// Unsubscribe all when element is destroyed
         FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => {
             cancel();
             unsubscribeAll();
         });
     }
 
-    if (subscriptionsCallback){//Alert all subscriptions
-        subscriptionsCallback(subscriptionIds);
-    }
+    subscriptionsCallback?.(subscriptionIds);
 
     return unsubscribeAll;
 }

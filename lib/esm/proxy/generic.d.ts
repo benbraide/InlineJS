@@ -17,4 +17,5 @@ export declare class GenericProxy implements IProxy {
     AddChild(child: IProxy): void;
     RemoveChild(child: IProxy | string): void;
     FindChild(name: string): IProxy | null;
+    Destroy(): void;
 }

@@ -1,5 +1,5 @@
 import { IBubbledChange, IChange } from "../types/change";
-import { IChanges } from "../types/changes";
+import { IProxyAccessStorage } from "../types/storage";
 export interface ISubscribeDetails {
     changes: Array<IChange | IBubbledChange>;
     cancel: () => void;
@@ -8,9 +8,9 @@ export type SubscriptionsCallbackType = (list: Record<string, Array<string>>) =>
 export type SubscribeCallbackType = (details?: ISubscribeDetails) => void | boolean;
 export interface ISubscribeToChangesParams {
     componentId: string;
-    changes: IChanges;
+    proxyAccessStorage: IProxyAccessStorage;
     callback: SubscribeCallbackType;
     subscriptionsCallback?: SubscriptionsCallbackType;
     contextElement?: HTMLElement;
 }
-export declare function SubscribeToChanges({ componentId, changes, callback, subscriptionsCallback, contextElement }: ISubscribeToChangesParams): (() => void) | null;
+export declare function SubscribeToChanges({ componentId, proxyAccessStorage, callback, subscriptionsCallback, contextElement }: ISubscribeToChangesParams): (() => void) | null;

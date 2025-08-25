@@ -4,7 +4,6 @@ import { EvaluateMagicProperty } from "../magic/evaluate";
 import { IComponent } from "../types/component";
 import { IProxy } from "../types/proxy";
 import { ContextKeys } from "../utilities/context-keys";
-import { Nothing } from "../values/nothing";
 import { DeleteProxyProp } from "./delete-prop";
 import { GetProxyProp } from "./get-prop";
 import { SetProxyProp } from "./set-prop";
@@ -19,7 +18,11 @@ export class GenericProxy implements IProxy{
         parent?.AddChild(this);
         
         const componentId = this.componentId_, isFalseRoot = !!scopeId, path = this.GetPath(), noResultHandler = (component?: IComponent, prop?: string): any => {
-            const { context } = component?.GetBackend()!, isMagic = prop?.startsWith('$');
+            if (!component){
+                return GetGlobal().CreateNothing();
+            }
+            
+            const { context } = component.GetBackend(), isMagic = prop?.startsWith('$');
             if (isMagic){
                 const value = context.Peek(prop!.substring(1), GetGlobal().CreateNothing());
                 if (!GetGlobal().IsNothing(value)){
@@ -36,7 +39,7 @@ export class GenericProxy implements IProxy{
             return ((prop && GetGlobal().IsNothing(result) && GetGlobal().GetConfig().GetUseGlobalWindow() && (prop in globalThis)) ? globalThis[prop] : result);
         };
         
-        const isRoot = (!isFalseRoot && !this.parentPath_), handler = {
+        const isRoot = (!isFalseRoot && !this.parentPath_), self = this, handler = {
             get(target: object, prop: string | number | symbol){
                 if (typeof prop === 'symbol' || prop === 'prototype'){
                     return Reflect.get(target, prop);
@@ -60,7 +63,7 @@ export class GenericProxy implements IProxy{
                     return result;
                 }
 
-                return GetProxyProp(componentId, target, path, prop.toString(), (isRoot ? noResultHandler : undefined));
+                return GetProxyProp(componentId, self, target, path, prop.toString(), (isRoot ? noResultHandler : undefined));
             },
             set(target: object, prop: string | number | symbol, value: any){
                 if (typeof prop === 'symbol' || prop === 'prototype'){
@@ -93,15 +96,20 @@ export class GenericProxy implements IProxy{
                 return DeleteProxyProp(componentId, target, path, prop.toString());
             },
             has(target: object, prop: string | number | symbol){
-                if (isRoot && typeof prop !== 'symbol'){//Check for handler
+                if (typeof prop === 'symbol'){
+                    return Reflect.has(target, prop);
+                }
+
+                if (isRoot){//Check for handler
                     const handler = GetGlobal().FindComponentById(componentId)?.GetProxyAccessHandler();
-                    const result = ((handler && handler.Has) ? handler.Has(prop, target) : GetGlobal().CreateNothing());
-                    if (!GetGlobal().IsNothing(result)){
-                        return (result as any as boolean);
+                    if (handler && handler.Has){
+                        return !!handler.Has(prop, target);
                     }
+
+                    return true;// This enable dynamic lookup on the root proxy
                 }
                 
-                return (typeof prop !== 'symbol' || Reflect.has(target, prop));
+                return Reflect.has(target, prop);
             },
         };
 
@@ -146,5 +154,19 @@ export class GenericProxy implements IProxy{
 
     public FindChild(name: string){
         return (this.children_.hasOwnProperty(name) ? this.children_[name] : null);
+    }
+
+    public Destroy(){
+        // Destroy children
+        Object.values(this.children_).forEach(child => child.Destroy());
+        
+        this.componentId_ = '';
+        this.name_ = '';
+        
+        this.target_ = null;
+        this.parentPath_ = '';
+        
+        this.native_ = null;
+        this.children_ = {};
     }
 }

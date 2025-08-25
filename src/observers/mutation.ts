@@ -114,4 +114,12 @@ export class MutationObserver implements IMutationObserver{
             delete this.handlers_[target];
         }
     }
+
+    public Destroy(){
+        this.uniqueMarkers_ = GetDefaultUniqueMarkers();
+        this.handlers_ = {};
+
+        this.observer_?.disconnect();
+        this.observer_ = null;
+    }
 }

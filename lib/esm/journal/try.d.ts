@@ -1,1 +1,1 @@
-export declare function JournalTry(callback: () => any, context?: string, contextElement?: Element): any;
+export declare function JournalTry<T = any>(callback: () => T, context?: string, contextElement?: Element): T | undefined;

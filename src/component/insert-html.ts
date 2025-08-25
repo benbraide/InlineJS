@@ -5,6 +5,8 @@ import { JournalTry } from "../journal/try";
 import { IComponent } from "../types/component";
 import { FindComponentById } from "./find";
 
+import DOMPurify from "dompurify";
+
 export type InsertionType = 'replace' | 'append' | 'prepend';
 
 export interface InsertionOptions{
@@ -13,16 +15,23 @@ export interface InsertionOptions{
     type?: InsertionType;
     component?: IComponent | string;
     processDirectives?: boolean;
+    beforeRemove?: (beforeTransition: boolean) => void | boolean;
     afterRemove?: () => void;
+    beforeInsert?: () => void | boolean;
     afterInsert?: () => void;
     afterTransitionCallback?: () => void;
     transitionScope?: HTMLElement;
+    useTransition?: boolean;
 }
 
-export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, afterRemove, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions){
+export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, beforeRemove, afterRemove, beforeInsert, afterInsert, afterTransitionCallback, transitionScope, useTransition }: InsertionOptions){
     const componentId = ((typeof component === 'string') ? component : (component?.GetId() || '')), insert = () => {
+        if ((beforeInsert && JournalTry(beforeInsert, 'InlineJS.InsertHtml', element)) === false){
+            return;
+        }
+        
         const tmpl = document.createElement('template');
-        tmpl.innerHTML = html;
+        tmpl.innerHTML = DOMPurify.sanitize(html);
 
         if (type === 'replace' || type === 'append'){
             element.append(...Array.from(tmpl.content.childNodes));
@@ -31,7 +40,7 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             element.prepend(...Array.from(tmpl.content.childNodes));
         }
 
-        (afterInsert && JournalTry(afterInsert, 'InlineJS.InsertHtml', element));
+        afterInsert && JournalTry(afterInsert, 'InlineJS.InsertHtml', element);
 
         const resolvedComponent = FindComponentById(componentId);
         if (processDirectives && resolvedComponent){
@@ -46,40 +55,49 @@ export function InsertHtml({ element, html, type = 'replace', component, process
             }));
         }
 
-        if (afterTransitionCallback){
+        if (afterTransitionCallback || useTransition){
             (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.begin', { detail: { insert: true } }));
             WaitTransition({ componentId,
                 contextElement: (transitionScope || element),
                 target: element,
                 callback: () => {
                     (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.end', { detail: { insert: true } }));
-                    afterTransitionCallback();
+                    afterTransitionCallback && afterTransitionCallback();
                 },
             });
         }
     };
 
+    const destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
+        const resolvedComponent = FindComponentById(componentId), global = GetGlobal();
+        Array.from(el.children).forEach((child) => {
+            let elementScope = resolvedComponent?.FindElementScope(child);
+            if (elementScope || (elementScope = global.InferComponentFrom(<HTMLElement>child)?.FindElementScope(child))){
+                elementScope.Destroy();
+            }
+            else{
+                destroyOffspring(child);
+            }
+        });
+    };
+
+    const remove = () => {
+        if ((beforeRemove && JournalTry(() => beforeRemove(false), 'InlineJS.InsertHtml', element)) === false){
+            return;
+        }
+        
+        destroyOffspring(element);
+        Array.from(element.childNodes).forEach(child => child.remove());
+
+        afterRemove && JournalTry(afterRemove, 'InlineJS.InsertHtml', element);
+    };
+    
     if (type === 'replace' && element.childNodes.length != 0){//Remove all child nodes
-        const destroyOffspring = (el: Element) => {//Destroy offspring with scopes or search down the tree
-            const resolvedComponent = FindComponentById(componentId), global = GetGlobal();
-            Array.from(el.children).forEach((child) => {
-                let elementScope = resolvedComponent?.FindElementScope(child);
-                if (elementScope || (elementScope = global.InferComponentFrom(<HTMLElement>child)?.FindElementScope(child))){
-                    elementScope.Destroy();
-                }
-                else{
-                    destroyOffspring(child);
-                }
-            });
-        };
-
-        const remove = () => {
-            destroyOffspring(element);
-            Array.from(element.childNodes).forEach(child => child.remove());
-            (afterRemove && JournalTry(afterRemove, 'InlineJS.InsertHtml', element));
-        };
-
-        if (afterTransitionCallback){
+        if ((beforeRemove && JournalTry(() => beforeRemove(true), 'InlineJS.InsertHtml', element)) === false){
+            return;
+        }
+        
+        if (afterTransitionCallback || useTransition){
             (transitionScope || element).dispatchEvent(new CustomEvent('html.transition.begin', { detail: { insert: false } }));
             WaitTransition({ componentId,
                 contextElement: (transitionScope || element),

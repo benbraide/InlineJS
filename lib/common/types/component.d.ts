@@ -14,6 +14,8 @@ export interface IComponentBackend {
     changes: IChanges;
 }
 export interface IComponent {
+    Destroy(): void;
+    IsDestroyed(): boolean;
     SetReactiveState(state: ReactiveStateType): void;
     GetReactiveState(): ReactiveStateType;
     GetId(): string;

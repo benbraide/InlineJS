@@ -75,52 +75,75 @@ export function AddOutsideEventListener(target: HTMLElement, events: string | Ar
 }
 
 export function RemoveOutsideEventListener(target: HTMLElement, events: string | Array<string>, handler: (event?: Event) => void){
-    const targetScope = GetOutsideEventGlobalBlock().targetScopes.find(scope => (scope.target === target));
+    const block = GetOutsideEventGlobalBlock();
+    const targetScope = block.targetScopes.find(scope => (scope.target === target));
     if (!targetScope){
         return;
     }
 
     (Array.isArray(events) ? events : [events]).forEach((event) => {
-        if (event in targetScope!.listeners){
+        if (event in targetScope.listeners){
             if (handler){
-                targetScope!.listeners[event].handlers = targetScope!.listeners[event].handlers.filter(info => (info.callback !== handler));
+                targetScope.listeners[event].handlers = targetScope.listeners[event].handlers.filter(info => (info.callback !== handler));
+                if (targetScope.listeners[event].handlers.length === 0){
+                    delete targetScope.listeners[event];
+                }
             }
             else{//Remove all
-                delete targetScope!.listeners[event];
+                delete targetScope.listeners[event];
             }
+        }
+
+        // If no more scopes are listening for this event, remove the global listener
+        if (event in block.eventCallbacks && !block.targetScopes.some(scope => event in scope.listeners)) {
+            window.removeEventListener(event, block.eventCallbacks[event]);
+            delete block.eventCallbacks[event];
         }
     });
 }
 
 export function AddOutsideEventExcept(target: HTMLElement, list: Record<string, Array<HTMLElement> | HTMLElement>, handler?: (event?: Event) => void){
     const targetScope = GetOutsideEventGlobalBlock().targetScopes.find(scope => (scope.target === target));
-    if (!targetScope){
+    if (!targetScope) {
         return;
     }
 
-    Object.keys(list).forEach((event) => {
-        if (!(event in targetScope!.listeners)){
+    Object.entries(list).forEach(([event, exceptsToAdd]) => {
+        const listenerInfo = targetScope.listeners[event];
+        if (!listenerInfo) {
             return;
         }
 
-        if (handler){
-            const info = targetScope!.listeners[event].handlers.find(item => (item.callback === handler));
-            if (info){
-                info.excepts = (info.excepts || new Array<HTMLElement>());
-                (Array.isArray(list[event]) ? (list[event] as Array<HTMLElement>) : [(list[event] as HTMLElement)]).forEach((item) => {
-                    info!.excepts!.push(item);
-                });
+        const excepts = Array.isArray(exceptsToAdd) ? exceptsToAdd : [exceptsToAdd];
+        if (handler) {
+            const handlerInfo = listenerInfo.handlers.find(item => (item.callback === handler));
+            if (handlerInfo) {
+                handlerInfo.excepts = (handlerInfo.excepts || []);
+                handlerInfo.excepts.push(...excepts);
             }
         }
-        else{//General
-            targetScope!.listeners[event].excepts = (targetScope!.listeners[event].excepts || new Array<HTMLElement>());
-            (Array.isArray(list[event]) ? (list[event] as Array<HTMLElement>) : [(list[event] as HTMLElement)]).forEach((item) => {
-                targetScope!.listeners[event].excepts!.push(item);
-            });
+        else { //General
+            listenerInfo.excepts = (listenerInfo.excepts || []);
+            listenerInfo.excepts.push(...excepts);
         }
     });
 }
 
 export function UnbindOutsideEvent(target: HTMLElement){
-    GetOutsideEventGlobalBlock().targetScopes = GetOutsideEventGlobalBlock().targetScopes.filter(scope => (scope.target !== target && !target.contains(scope.target)));
+    const block = GetOutsideEventGlobalBlock();
+    const oldScopes = block.targetScopes;
+
+    block.targetScopes = block.targetScopes.filter(scope => (scope.target !== target && !target.contains(scope.target)));
+
+    if (oldScopes.length === block.targetScopes.length){
+        return; // No scopes were removed
+    }
+
+    // A scope is removed, check for orphaned window events
+    Object.keys(block.eventCallbacks).forEach(event => {
+        if (!block.targetScopes.some(scope => event in scope.listeners)) {
+            window.removeEventListener(event, block.eventCallbacks[event]);
+            delete block.eventCallbacks[event];
+        }
+    });
 }

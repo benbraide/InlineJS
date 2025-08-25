@@ -1,11 +1,18 @@
 import { Stack } from "../stack";
 import { IContext } from "../types/context";
+import { IStack } from "../types/stack";
 
 export class Context implements IContext{
-    private record_: Record<string, Stack<any>> = {};
+    private record_: Record<string, IStack<any>> = {};
     
     public Push(key: string, value: any){
         (this.record_[key] = (this.record_[key] || new Stack<any>())).Push(value);
+    }
+
+    public Purge(){
+        const record = this.record_;
+        this.record_ = {};
+        return record;
     }
 
     public Pop(key: string, noResult?: any){

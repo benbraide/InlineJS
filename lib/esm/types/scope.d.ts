@@ -6,6 +6,7 @@ export interface IScope {
     GetName(): string;
     GetRoot(): HTMLElement;
     GetProxy(): IProxy;
-    FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null;
+    FindElement(deepestElement: HTMLElement, predicate: (element: HTMLElement) => boolean): HTMLElement | null;
     FindAncestor(target: HTMLElement, index?: number): HTMLElement | null;
+    Destroy(): void;
 }

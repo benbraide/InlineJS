@@ -27,8 +27,8 @@ export function CreateInplaceProxy({ target, getter, setter, deleter, lookup, al
 
             const value = (getter ? getter(prop.toString(), target) : target[prop]);
             if (!GetGlobal().IsNothing(value)){
-                if (alert && (!alert.list || prop in alert.list)){
-                    FindComponentById(alert.componentId)?.GetBackend().changes.AddGetAccess(`${alert.id}.${prop}`);
+                if (alert && (!alert.list || alert.list.includes(prop.toString()))){
+                    GetGlobal().GetCurrentProxyAccessStorage()?.Put(alert.componentId, `${alert.id}.${prop.toString()}`);//Alert GET access
                 }
                 return value;
             }
@@ -40,14 +40,14 @@ export function CreateInplaceProxy({ target, getter, setter, deleter, lookup, al
                 return Reflect.set(target, prop, value);
             }
 
-            return (setter ? (setter(prop.toString(), value, target) !== false) : (!!target[prop] || true));
+            return (setter ? (setter(prop.toString(), value, target) !== false) : Reflect.set(target, prop, value));
         },
         deleteProperty(target: object, prop: string | number | symbol){
             if (typeof prop === 'symbol' || (typeof prop === 'string' && prop === 'prototype')){
                 return Reflect.deleteProperty(target, prop);
             }
 
-            return (deleter ? (deleter(prop.toString(), target) !== false) : (!!(delete target[prop]) || true));
+            return (deleter ? (deleter(prop.toString(), target) !== false) : Reflect.deleteProperty(target, prop));
         },
         has(target: object, prop: string | number | symbol){
             if (Reflect.has(target, prop)){

@@ -63,6 +63,7 @@ export interface IAnimationTransition {
     ease: IAnimationEase | AnimationEaseCallbackType | null;
     actor: IAnimationActor | AnimationActorCallbackType | null;
     duration: number;
+    initialDelay?: number;
     delay: number;
     repeats: number;
     allowed?: AnimationAllowedType;

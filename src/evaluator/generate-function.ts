@@ -50,17 +50,16 @@ export function GenerateVoidFunction(expression: string, componentId?: string, a
 
 export function CallIfFunction(value: any, handler?: (value: any) => void, componentId?: string, params: Array<any> = []){
     if (typeof value === 'function'){//Call function
-        const component = FindComponentById(componentId || ''), lastContext = component?.FindProxy(component?.GetBackend().changes.GetLastAccessContext());
-        const result = value.apply(((lastContext || component?.GetRootProxy())?.GetNative() || null), (params || []));
+        const result = value(...params);
         return (handler ? handler(result) : result);
     }
 
     return (handler ? handler(value) : value);
 }
 
-export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Array<any>, contexts?: Record<string, any>) => any;
+export type GeneratedFunctionType = (handler?: (value: any) => void, params?: Array<any>, contexts?: Record<string, any>, waitMessage?: string) => any;
 
-export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive', voidOnly }: IEvaluateOptions): GeneratedFunctionType{
+export function GenerateFunctionFromString({ componentId, contextElement, expression, disableFunctionCall = false, waitPromise = 'recursive', voidOnly }: IEvaluateOptions): GeneratedFunctionType {
     const nullHandler = (handler?: (value: any) => void) => {
         handler && handler(null);
         return null;
@@ -90,7 +89,6 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         const { context = null, changes = null } = (component?.GetBackend() || {});
 
         context?.Push(ContextKeys.self, contextElement);
-        changes?.ResetLastAccessContext();
         
         PushCurrentComponent(componentId);
         Object.entries(contexts || {}).forEach(([key, value]) => context?.Push(key, value));
@@ -116,11 +114,10 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
             }
 
             if (!disableFunctionCall){
-                CallIfFunction(result, handleResult, componentId, params);
+                return CallIfFunction(result, handleResult, componentId, params);
             }
-            else{//No function check
-                handleResult(result);
-            }
+
+            return handleResult(result);//No function check
         }
         catch (err){
             if (!forwardSyntaxErrors || !(err instanceof SyntaxError)){

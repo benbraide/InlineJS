@@ -19,6 +19,8 @@ interface IAttributeObserverInfo {
 export declare class BaseComponent extends ChangesMonitor implements IComponent {
     protected id_: string;
     protected root_: HTMLElement;
+    protected isDestroying_: boolean;
+    protected isDestroyed_: boolean;
     protected reactiveState_: ReactiveStateType;
     protected name_: string;
     protected proxyAccessHandler_: IProxyAccessHandler | null;
@@ -37,6 +39,8 @@ export declare class BaseComponent extends ChangesMonitor implements IComponent 
         intersections: Record<string, IIntersectionObserver>;
     };
     constructor(id_: string, root_: HTMLElement);
+    Destroy(): void;
+    IsDestroyed(): boolean;
     SetReactiveState(state: ReactiveStateType): void;
     GetReactiveState(): ReactiveStateType;
     GetId(): string;

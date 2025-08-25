@@ -11,25 +11,46 @@ export interface ILoopCallbackInfo{
 
 type CallbackType = (value: ILoopCallbackInfo) => void;
 
-function CreateLoop_(requestNextLoop: (callback: FrameRequestCallback) => void, delay: number, repeats: number, repeatDelay: number, duration?: number){
+function CreateLoop_(requestNextLoop: (callback: FrameRequestCallback) => void, delay: number, repeats: number, repeatDelay: number, duration?: number, resolution = 1){
     let aborted = false, abort = () => (aborted = true), repeated = 0, computeSteps = (elapsed: number) => (delay ? Math.floor(elapsed / delay) : elapsed);
-    let startTimestamp = performance.now(), lastTimestamp = startTimestamp, pass = (doWhile: CallbackType, doFinal: CallbackType, timestamp: DOMHighResTimeStamp) => {
+    let startTimestamp = performance.now(), lastTimestamp = startTimestamp, requests = 0;
+    
+    const call = (doWhile: CallbackType, doFinal: CallbackType, doAbort: () => void) => {
+        requestNextLoop((timestamp) => {
+            if (resolution > 1){
+                if (requests++ % resolution === 0){
+                    pass(doWhile, doFinal, doAbort, timestamp);
+                }
+                else{
+                    call(doWhile, doFinal, doAbort);
+                }
+            }
+            else{
+                pass(doWhile, doFinal, doAbort, timestamp);
+            }
+        });
+    };
+    
+    const pass = (doWhile: CallbackType, doFinal: CallbackType, doAbort: () => void, timestamp: DOMHighResTimeStamp) => {
         if (aborted){
+            doAbort();
             return;
         }
 
         const elapsed = (timestamp - startTimestamp);
         if (duration && elapsed >= duration){//Finished
             if (repeats && (repeats < 0 || repeated < repeats)){//Repeat
+                requests = 0;//Reset requests
+                
                 const offset = (elapsed - duration);
                 if (repeatDelay > 0 && offset < repeatDelay){//Continue after delay
                     setTimeout(() => {
                         startTimestamp = performance.now();//Reset start timestamp
-                        requestNextLoop(pass.bind(null, doWhile, doFinal));
+                        call(doWhile, doFinal, doAbort);
                     }, (repeatDelay - offset));
                 }
                 else{//No delay
-                    requestNextLoop(pass.bind(null, doWhile, doFinal));
+                    call(doWhile, doFinal, doAbort);
                 }
 
                 repeated += 1;//Increment repeats
@@ -41,24 +62,22 @@ function CreateLoop_(requestNextLoop: (callback: FrameRequestCallback) => void, 
             }
         }
         else{//Continue
-            requestNextLoop(pass.bind(null, doWhile, doFinal));
+            call(doWhile, doFinal, doAbort);
 
             const progress = (timestamp - lastTimestamp);
             if (progress >= delay){//Call
-                lastTimestamp = (timestamp + (delay ? (progress % delay) : progress));//Update last timestamp
+                lastTimestamp = (delay ? (timestamp - (progress % delay)) : timestamp);//Update last timestamp
                 JournalTry(() => doWhile({ repeats: repeated, steps: computeSteps(elapsed), elapsed, duration, abort }));
             }
         }
     };
 
-    return new Loop<ILoopCallbackInfo>((doWhile, doFinal) => {
-        requestNextLoop(pass.bind(null, doWhile, doFinal));
-    });
+    return new Loop<ILoopCallbackInfo>((doWhile, doFinal, doAbort) => call(doWhile, doFinal, doAbort));
 }
 
 const knownPeriods = [50, 40, 30, 25, 20, 15, 10, 5, 4, 3, 2, 1, 0];
 
-export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0, vsync = true){
+export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0, vsync = true, resolution = 1){
     let period = 0, suitableDelay = Math.floor(delay / 2.2);
     for (const knownPeriod of knownPeriods){
         if (knownPeriod <= suitableDelay){
@@ -71,9 +90,9 @@ export function CreateLoop(duration?: number, delay = 1000, repeats = 0, repeatD
         vsync ? requestAnimationFrame(callback) : callback(performance.now());
     }, period);
 
-    return CreateLoop_(requestNextLoop, delay, repeats, repeatDelay, duration);
+    return CreateLoop_(requestNextLoop, delay, repeats, repeatDelay, duration, resolution);
 }
 
-export function CreateAnimationLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0){
-    return CreateLoop_(requestAnimationFrame, delay, repeats, repeatDelay, duration);
+export function CreateAnimationLoop(duration?: number, delay = 1000, repeats = 0, repeatDelay = 0, resolution = 1){
+    return CreateLoop_(requestAnimationFrame, delay, repeats, repeatDelay, duration, resolution);
 }

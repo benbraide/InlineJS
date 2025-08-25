@@ -59,8 +59,8 @@ export function EvaluateMagicProperty(component: IComponent | string, contextEle
 
     return JournalTry(() => {//Catch errors
         return handler!({
-            componentId: resolvedComponent!.GetId(),
-            component: resolvedComponent!,
+            componentId: resolvedComponent.GetId(),
+            component: resolvedComponent,
             contextElement: contextElement,
         });
     }, 'InlineJS.EvaluateMagicProperty', contextElement);

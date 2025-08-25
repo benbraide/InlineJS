@@ -55,17 +55,19 @@ export function ProcessDirectives({ component, element, options = {}, proxyAcces
     elementScope?.ExecutePostAttributesProcessCallbacks();
     
     const componentId = resolvedComponent.GetId(), processChildren = () => {
-        const resolvedComponent = FindComponentById(componentId);
-        if (resolvedComponent && !options.ignoreChildren && !IsTemplate(element)){//Process children
-            resolvedComponent.PushSelectionScope();
+        const reResolvedComponent = FindComponentById(componentId);
+        if (reResolvedComponent && !reResolvedComponent.IsDestroyed() && !options.ignoreChildren && !IsTemplate(element)){//Process children
+            reResolvedComponent.PushSelectionScope();
 
             const childOptions = {
                 checkTemplate: false,
                 checkDocument: false,
             };
 
+            // Important: Use the re-resolved component instance for recursion
             const processChildDirectives = (child: Element, ignoreChildren: boolean) => ProcessDirectives({
-                component, proxyAccessHandler,
+                component: reResolvedComponent,
+                proxyAccessHandler,
                 options: { ...childOptions, ignoreChildren },
                 element: child,
             });
@@ -77,7 +79,7 @@ export function ProcessDirectives({ component, element, options = {}, proxyAcces
                 Array.from(element.children).forEach(child => processChildDirectives(child, child.contains(element)));
             }
             
-            resolvedComponent.PopSelectionScope();
+            reResolvedComponent.PopSelectionScope();
         }
 
         elementScope?.ExecutePostProcessCallbacks();

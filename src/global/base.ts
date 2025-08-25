@@ -1,5 +1,6 @@
 import { BaseComponent } from "../component/base";
 import { ChangesMonitor } from "../component/changes-monitor";
+import { InvalidateComponentCache } from "../component/cache";
 import { SetProxyAccessHandler } from "../component/set-proxy-access-handler";
 import { DirectiveManager } from "../directive/manager";
 import { JournalTry } from "../journal/try";
@@ -21,11 +22,16 @@ import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { Config } from "./config";
 import { NativeFetchConcept } from "./native-fetch";
+import { IProxyAccessStorage } from "../types/storage";
+import { ProxyAccessStorage } from "../storage/get-access";
+import { RangeValueType, Range } from "../values/range";
 
 export class BaseGlobal extends ChangesMonitor implements IGlobal{
     protected nothing_ = new Nothing;
     
     protected config_: IConfig;
+    protected currentProxyAccessStorage_: IProxyAccessStorage | null = null;
+    
     protected storedObjects_: Record<string, any> = {};
     protected lastStoredObjectKey_ = '';
     
@@ -66,6 +72,37 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
 
     public GetConfig(){
         return this.config_;
+    }
+
+    public SetCurrentProxyAccessStorage(storage: IProxyAccessStorage | null): IProxyAccessStorage | null {
+        const old = this.currentProxyAccessStorage_;
+        this.currentProxyAccessStorage_ = storage;
+        return old;
+    }
+
+    public GetCurrentProxyAccessStorage(): IProxyAccessStorage | null {
+        return this.currentProxyAccessStorage_;
+    }
+
+    public UseProxyAccessStorage<T = any>(callback: (storage: IProxyAccessStorage) => T | undefined, storage?: IProxyAccessStorage | null): T | undefined {
+        storage = storage || new ProxyAccessStorage();
+        
+        const old = this.SetCurrentProxyAccessStorage(storage);
+        const result = JournalTry(() => callback(storage), 'InlineJS.Global.UseProxyAccessStorage');
+
+        this.SetCurrentProxyAccessStorage(old);
+
+        return result;
+    }
+
+    public SuspendProxyAccessStorage<T = any>(callback: () => T | undefined): T | undefined {
+        const current = this.currentProxyAccessStorage_;
+        current?.Suspend();
+
+        const result = JournalTry(() => callback());
+        current?.Resume();
+
+        return result;
     }
 
     public GenerateUniqueId(prefix?: string, suffix?: string){
@@ -133,7 +170,11 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         const key = ((typeof component === 'string') ? component : component.GetId());
         if (this.components_.hasOwnProperty(key)){
             const component = this.components_[key];
+
             delete this.components_[key];
+            component.Destroy();
+
+            InvalidateComponentCache(key);
 
             this.componentsMonitorList_.slice(0).forEach(monitor => JournalTry(() => monitor({ action: 'remove', component }), 'InlineJS.Global.RemoveComponent'));
             this.NotifyListeners_('components', this.components_);
@@ -145,15 +186,19 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
     }
 
     public FindComponentById(id: string): IComponent | null{
-        return ((id && id in this.components_) ? this.components_[id] : null);
+        return (id && this.components_.hasOwnProperty(id)) ? this.components_[id] : null;
     }
 
     public FindComponentByName(name: string): IComponent | null{
-        return ((name && Object.values(this.components_).find(component => (component.GetName() === name))) || null);
+        return (name && Object.values(this.components_).find(component => (component.GetName() === name))) || null;
     }
     
-    public FindComponentByRoot(root: HTMLElement): IComponent | null{
-        return ((root && Object.values(this.components_).find(component => (component.GetRoot() === root))) || null);
+    public FindComponentByRoot(root: HTMLElement|null): IComponent | null{
+        return (root && Object.values(this.components_).find(component => (component.GetRoot() === root))) || null;
+    }
+
+    public FindComponentByCallback(callback: (component: IComponent) => boolean): IComponent | null {
+        return Object.values(this.components_).find(callback) || null;
     }
 
     public PushCurrentComponent(componentId: string){
@@ -207,12 +252,8 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         this.NotifyListeners_('attribute-processors', this.attributeProcessors_);
     }
 
-    public DispatchAttributeProcessing({ componentId, component, contextElement, proxyAccessHandler, ...rest }: IAttributeProcessorParams){
-        const resolvedComponent = (component || this.FindComponentById(componentId)), pahCallback = SetProxyAccessHandler(resolvedComponent, (proxyAccessHandler || null));
-        this.attributeProcessors_.forEach((processor) => {
-            JournalTry(() => processor({ componentId, component, contextElement, proxyAccessHandler, ...rest }), 'InlineJS.Global.DispatchAttribute', contextElement);
-        });
-        pahCallback();
+    public DispatchAttributeProcessing(params: IAttributeProcessorParams){
+        this.DispatchProcessing_(this.attributeProcessors_, params, 'InlineJS.Global.DispatchAttribute');
     }
 
     public AddTextContentProcessor(processor: TextContentProcessorType){
@@ -220,12 +261,8 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         this.NotifyListeners_('text-content-processors', this.textContentProcessors_);
     }
 
-    public DispatchTextContentProcessing({ componentId, component, contextElement, proxyAccessHandler, ...rest }: ITextContentProcessorParams){
-        const resolvedComponent = (component || this.FindComponentById(componentId)), pahCallback = SetProxyAccessHandler(resolvedComponent, (proxyAccessHandler || null));
-        this.textContentProcessors_.forEach((processor) => {
-            JournalTry(() => processor({ componentId, component, contextElement, proxyAccessHandler, ...rest }), 'InlineJS.Global.DispatchTextContent', contextElement);
-        });
-        pahCallback();
+    public DispatchTextContentProcessing(params: ITextContentProcessorParams){
+        this.DispatchProcessing_(this.textContentProcessors_, params, 'InlineJS.Global.DispatchTextContent');
     }
 
     public GetMutationObserver(){
@@ -293,6 +330,14 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         return (value instanceof Nothing);
     }
 
+    public CreateRange<T extends RangeValueType>(from: T, to: T): Range<T> {
+        return new Range(from, to);
+    }
+
+    public IsRange(value: any){
+        return value instanceof Range;
+    }
+
     protected RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean){
         if (contextElement){
             const component = (this.FindComponentById(componentId || '') || this.InferComponentFrom(contextElement));
@@ -320,5 +365,17 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
         }
 
         return this.CreateNothing();
+    }
+
+    protected DispatchProcessing_(
+        processors: Array<AttributeProcessorType|TextContentProcessorType>,
+        params: IAttributeProcessorParams|ITextContentProcessorParams,
+        contextString: string
+    ){
+        const resolvedComponent = (params.component || this.FindComponentById(params.componentId)), pahCallback = SetProxyAccessHandler(resolvedComponent, (params.proxyAccessHandler || null));
+        processors.forEach((processor) => {
+            JournalTry(() => (processor as any)(params), contextString, params.contextElement);
+        });
+        pahCallback();
     }
 }

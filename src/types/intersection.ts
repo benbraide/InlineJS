@@ -11,4 +11,5 @@ export interface IIntersectionObserver{
     GetNative(): globalThis.IntersectionObserver | null;
     Observe(target: Element, handler: IntersectionObserverHandlerType): void;
     Unobserve(target: Element): void;
+    Destroy(): void;
 }

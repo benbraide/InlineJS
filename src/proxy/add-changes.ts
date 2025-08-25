@@ -1,6 +1,14 @@
 import { ChangeType, IChange } from "../types/change";
 import { IChanges } from "../types/changes";
 
+/**
+ * 
+ * @param type The type of change ('set' | 'delete')
+ * @param path The full path to the property that changed (e.g. 'myProxy.data.name')
+ * @param prop The name of the property that changed (e.g. 'name')
+ * @param changes The changes instance to add the change to
+ * @param shouldBubble Whether to bubble the change up to parent paths
+ */
 export function AddChanges(type: ChangeType, path: string, prop: string, changes?: IChanges, shouldBubble = true) {
     if (!changes){
         return;
@@ -20,7 +28,7 @@ export function AddChanges(type: ChangeType, path: string, prop: string, changes
     }
 
     const parts = path.split('.');
-    while (parts.length > 2){//Skip root
+    while (parts.length > 2){//Bubble up while skipping root
         parts.pop();
         changes.Add({
             original: change,

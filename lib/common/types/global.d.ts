@@ -1,5 +1,6 @@
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
+import { Range, RangeValueType } from "../values/range";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directive";
@@ -10,6 +11,7 @@ import { AttributeProcessorType, IAttributeProcessorParams, ITextContentProcesso
 import { IProxy } from "./proxy";
 import { IResizeObserver } from "./resize-observer";
 import { IScope } from "./scope";
+import { IProxyAccessStorage } from "./storage";
 export interface IComponentsMonitorParams {
     action: 'add' | 'remove';
     component: IComponent;
@@ -28,6 +30,10 @@ export type ComponentsMonitorType = (params: IComponentsMonitorParams) => void;
 export interface IGlobal {
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
+    SetCurrentProxyAccessStorage(storage: IProxyAccessStorage | null): IProxyAccessStorage | null;
+    GetCurrentProxyAccessStorage(): IProxyAccessStorage | null;
+    UseProxyAccessStorage<T = any>(callback: (storage: IProxyAccessStorage) => T | undefined, storage?: IProxyAccessStorage | null): T | undefined;
+    SuspendProxyAccessStorage<T = any>(callback: () => T | undefined): T | undefined;
     GenerateUniqueId(prefix?: string, suffix?: string): string;
     StoreObject(params: IObjectStoreParams): string;
     RetrieveObject(params: IObjectRetrievalParams): any;
@@ -40,7 +46,8 @@ export interface IGlobal {
     TraverseComponents(callback: (component: IComponent) => void | boolean): void;
     FindComponentById(id: string): IComponent | null;
     FindComponentByName(name: string): IComponent | null;
-    FindComponentByRoot(root: HTMLElement): IComponent | null;
+    FindComponentByRoot(root: HTMLElement | null): IComponent | null;
+    FindComponentByCallback(callback: (component: IComponent) => boolean): IComponent | null;
     PushCurrentComponent(componentId: string): void;
     PopCurrentComponent(): string | null;
     PeekCurrentComponent(): string | null;
@@ -69,4 +76,6 @@ export interface IGlobal {
     IsFuture(value: any): boolean;
     CreateNothing(): Nothing;
     IsNothing(value: any): boolean;
+    CreateRange<T extends RangeValueType>(from: T, to: T): Range<T>;
+    IsRange(value: any): boolean;
 }

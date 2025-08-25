@@ -13,6 +13,10 @@ export class Stack<T> implements IStack<T>{
         this.list_.push(value);
     }
 
+    public Purge(){
+        return this.list_.splice(0);
+    }
+
     public Pop(): T | null{
         return ((this.list_.length == 0) ? null : (this.list_.pop() as T));
     }

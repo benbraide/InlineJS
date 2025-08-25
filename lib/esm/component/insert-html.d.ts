@@ -6,9 +6,12 @@ export interface InsertionOptions {
     type?: InsertionType;
     component?: IComponent | string;
     processDirectives?: boolean;
+    beforeRemove?: (beforeTransition: boolean) => void | boolean;
     afterRemove?: () => void;
+    beforeInsert?: () => void | boolean;
     afterInsert?: () => void;
     afterTransitionCallback?: () => void;
     transitionScope?: HTMLElement;
+    useTransition?: boolean;
 }
-export declare function InsertHtml({ element, html, type, component, processDirectives, afterRemove, afterInsert, afterTransitionCallback, transitionScope }: InsertionOptions): void;
+export declare function InsertHtml({ element, html, type, component, processDirectives, beforeRemove, afterRemove, beforeInsert, afterInsert, afterTransitionCallback, transitionScope, useTransition }: InsertionOptions): void;

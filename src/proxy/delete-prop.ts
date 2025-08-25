@@ -13,7 +13,7 @@ export function DeleteProxyProp(componentId: string, target: any, path: string, 
     delete target[prop];
 
     component?.RemoveProxy(`${path}.${prop}`);
-    AddChanges('delete', path, prop, component?.GetBackend().changes);
+    AddChanges('delete', `${path}.${prop}`, prop, component?.GetBackend().changes);
     
     return true;
 }

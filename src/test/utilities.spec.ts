@@ -154,17 +154,17 @@ describe('unique-markers utility', () => {
 
 describe('path utility', () => {
     it('should tidy a path', () => {
-        expect(TidyPath('//path/from//to??arg1=val1&arg2=val2&&arg3==val3')).equal('path/from/to?arg1=val1&arg2=val2&arg3=val3');
-        expect(TidyPath('/path?arg1=val1?arg2=val2')).equal('path?arg1=val1&arg2=val2');
-        expect(TidyPath('/path?arg1=val1?&arg2=val2&?arg3=val3')).equal('path?arg1=val1&arg2=val2&arg3=val3');
-        expect(TidyPath('https:/path?')).equal('https://path');
+        expect(TidyPath('//path/from//to??arg1=val1&arg2=val2&&arg3==val3', true)).equal('path/from/to?arg1=val1&arg2=val2&arg3=val3');
+        expect(TidyPath('/path?arg1=val1?arg2=val2', true)).equal('path?arg1=val1&arg2=val2');
+        expect(TidyPath('/path?arg1=val1?&arg2=val2&?arg3=val3', true)).equal('path?arg1=val1&arg2=val2&arg3=val3');
+        expect(TidyPath('https:/path?', true)).equal('https://path');
     });
 
     it('should transform an absolute path to a tidied relative path and prepend prefix if available', () => {
-        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300')).equal('/path');
-        expect(PathToRelative('https://localhost:300/path?arg1=val1?&arg2=val2&', 'https://localhost:300')).equal('/path?arg1=val1&arg2=val2');
-        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', 'ajax')).equal('/ajax/path');
-        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', '/ajax')).equal('/ajax/path');
+        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', undefined, true)).equal('/path');
+        expect(PathToRelative('https://localhost:300/path?arg1=val1?&arg2=val2&', 'https://localhost:300', undefined, true)).equal('/path?arg1=val1&arg2=val2');
+        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', 'ajax', true)).equal('/ajax/path');
+        expect(PathToRelative('https://localhost:300/path', 'https://localhost:300', '/ajax', true)).equal('/ajax/path');
     });
 
     it('should split a path', () => {

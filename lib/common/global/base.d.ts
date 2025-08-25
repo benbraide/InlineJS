@@ -14,9 +14,12 @@ import { IScope } from "../types/scope";
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { NativeFetchConcept } from "./native-fetch";
+import { IProxyAccessStorage } from "../types/storage";
+import { RangeValueType, Range } from "../values/range";
 export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     protected nothing_: Nothing;
     protected config_: IConfig;
+    protected currentProxyAccessStorage_: IProxyAccessStorage | null;
     protected storedObjects_: Record<string, any>;
     protected lastStoredObjectKey_: string;
     protected componentsMonitorList_: ComponentsMonitorType[];
@@ -39,6 +42,10 @@ export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     constructor(configOptions?: IConfigOptions, idOffset?: number);
     SwapConfig(config: IConfig): void;
     GetConfig(): IConfig;
+    SetCurrentProxyAccessStorage(storage: IProxyAccessStorage | null): IProxyAccessStorage | null;
+    GetCurrentProxyAccessStorage(): IProxyAccessStorage | null;
+    UseProxyAccessStorage<T = any>(callback: (storage: IProxyAccessStorage) => T | undefined, storage?: IProxyAccessStorage | null): T | undefined;
+    SuspendProxyAccessStorage<T = any>(callback: () => T | undefined): T | undefined;
     GenerateUniqueId(prefix?: string, suffix?: string): string;
     StoreObject({ object, componentId, contextElement }: IObjectStoreParams): string;
     RetrieveObject(params: IObjectRetrievalParams): any;
@@ -51,7 +58,8 @@ export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     TraverseComponents(callback: (component: IComponent) => void | boolean): void;
     FindComponentById(id: string): IComponent | null;
     FindComponentByName(name: string): IComponent | null;
-    FindComponentByRoot(root: HTMLElement): IComponent | null;
+    FindComponentByRoot(root: HTMLElement | null): IComponent | null;
+    FindComponentByCallback(callback: (component: IComponent) => boolean): IComponent | null;
     PushCurrentComponent(componentId: string): void;
     PopCurrentComponent(): string | null;
     PeekCurrentComponent(): string | null;
@@ -63,9 +71,9 @@ export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     GetDirectiveManager(): DirectiveManager;
     GetMagicManager(): MagicManager;
     AddAttributeProcessor(processor: AttributeProcessorType): void;
-    DispatchAttributeProcessing({ componentId, component, contextElement, proxyAccessHandler, ...rest }: IAttributeProcessorParams): void;
+    DispatchAttributeProcessing(params: IAttributeProcessorParams): void;
     AddTextContentProcessor(processor: TextContentProcessorType): void;
-    DispatchTextContentProcessing({ componentId, component, contextElement, proxyAccessHandler, ...rest }: ITextContentProcessorParams): void;
+    DispatchTextContentProcessing(params: ITextContentProcessorParams): void;
     GetMutationObserver(): MutationObserver;
     GetResizeObserver(): ResizeObserver;
     SetFetchConcept(concept: IFetchConcept | null): void;
@@ -80,5 +88,8 @@ export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     IsFuture(value: any): boolean;
     CreateNothing(): Nothing;
     IsNothing(value: any): boolean;
+    CreateRange<T extends RangeValueType>(from: T, to: T): Range<T>;
+    IsRange(value: any): boolean;
     protected RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean): any;
+    protected DispatchProcessing_(processors: Array<AttributeProcessorType | TextContentProcessorType>, params: IAttributeProcessorParams | ITextContentProcessorParams, contextString: string): void;
 }

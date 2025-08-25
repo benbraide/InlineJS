@@ -22,7 +22,7 @@ import { Changes } from "./changes";
 import { ChangesMonitor } from "./changes-monitor";
 import { Context } from "./context";
 import { ElementScope } from "./element-scope";
-import { ElementScopeKey, GetElementScopeId, GetElementScopeIdWithElement } from "./element-scope-id";
+import { ElementScopeKey } from "./element-scope-id";
 import { FindComponentById } from "./find";
 import { GetConfig } from "./get-config";
 import { Scope } from "./scope";
@@ -33,6 +33,9 @@ interface IAttributeObserverInfo{
 }
 
 export class BaseComponent extends ChangesMonitor implements IComponent{
+    protected isDestroying_ = false;
+    protected isDestroyed_ = false;
+    
     protected reactiveState_: ReactiveStateType = 'default';
     protected name_ = '';
 
@@ -128,6 +131,50 @@ export class BaseComponent extends ChangesMonitor implements IComponent{
                 }
             });
         }, ['add', 'remove', 'attribute']);
+    }
+
+    public Destroy(): void {
+        if (this.isDestroying_ || this.isDestroyed_){
+            return;
+        }
+
+        this.isDestroying_ = true;
+        
+        this.reactiveState_ = 'default';
+        this.name_ = '';
+
+        this.proxyAccessHandler_ = null;
+
+        this.context_.Purge();
+        JournalTry(() => this.changes_.Destroy());
+
+        Object.values(this.scopes_).forEach(scope => JournalTry(() => scope.Destroy()));
+        this.scopes_ = {};
+
+        Object.values(this.elementScopes_).forEach(scope => JournalTry(() => scope.Destroy()));
+        this.elementScopes_ = {};
+
+        JournalTry(() => this.rootProxy_.Destroy());
+        this.refs_ = {};
+
+        Object.values(this.proxies_).forEach(proxy => JournalTry(() => proxy.Destroy()));
+        this.proxies_ = {};
+
+        this.currentScope_.Purge();
+        this.selectionScopes_.Purge();
+        this.uniqueMarkers_ = GetDefaultUniqueMarkers();
+
+        this.attributeObservers_ = [];
+
+        Object.values(this.observers_.intersections).forEach(observer => JournalTry(() => observer.Destroy()));
+        this.observers_.intersections = {};
+
+        this.isDestroyed_ = true;
+        this.isDestroying_ = false;
+    }
+
+    public IsDestroyed(){
+        return this.isDestroying_ || this.isDestroyed_;;
     }
     
     public SetReactiveState(state: ReactiveStateType){
@@ -436,7 +483,7 @@ export class BaseComponent extends ChangesMonitor implements IComponent{
     }
 
     public RemoveAttributeChangeCallback(element: HTMLElement, callback?: (nlist: Array<IMutationObserverAttributeInfo>) => void){
-        this.attributeObservers_ = this.attributeObservers_.filter(info => (info.element !== element && info.callback !== callback));
+        this.attributeObservers_ = this.attributeObservers_.filter(info => info.element !== element || (callback && info.callback !== callback));
         this.NotifyListeners_('attribute-observers', this.attributeObservers_);
     }
 

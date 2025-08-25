@@ -40,4 +40,10 @@ export class ResizeObserver implements IResizeObserver{
         this.handlers_ = this.handlers_.filter(info => (info.target === target));
         this.observer_?.unobserve(target);
     }
+
+    public Destroy(){
+        this.handlers_ = [];
+        this.observer_?.disconnect();
+        this.observer_ = null;
+    }
 }

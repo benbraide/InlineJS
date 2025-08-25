@@ -39,4 +39,12 @@ export class IntersectionObserver implements IIntersectionObserver{
         this.handlers_ = this.handlers_.filter(info => (info.target === target));
         this.observer_?.unobserve(target);
     }
+
+    public Destroy(){
+        this.handlers_.forEach(({ target }) => this.observer_?.unobserve(target));
+        this.handlers_ = [];
+        
+        this.observer_?.disconnect();
+        this.observer_ = null;
+    }
 }

@@ -7,6 +7,7 @@ import { IBubbledChange, IChange } from '../types/change';
 import { IsEqual } from '../utilities/is-equal';
 import { IsObject } from '../utilities/is-object';
 import { ProxyKeys } from '../utilities/proxy-keys';
+import { ProxyAccessStorage } from '../storage/get-access';
 
 describe('proxy', () => {
     it('should be able to be created as root or child', () => {
@@ -82,48 +83,88 @@ describe('proxy', () => {
             age: 36,
             isAlien: true,
         };
-        
-        component.GetBackend().changes.PushGetAccessStorage();
 
+        const storage = new ProxyAccessStorage;
+
+        global.UseProxyAccessStorage(() => {
+            root.GetNative()['state'];
+        }, storage);
+        
         root.GetNative()['state'];
 
-        expect(component.GetBackend().changes.GetLastAccessContext()).equal(`Proxy<${component.GetId()}>`);
+        let entries = storage.GetEntries();
 
-        let storage = component.GetBackend().changes.PopGetAccessStorage()!;
+        expect(entries.length).equal(1);
+        expect(entries[0].componentId).equal(component.GetId());
+        expect(entries[0].path).equal(`Proxy<${component.GetId()}>.state`);
 
-        expect(storage.raw?.entries.length).equal(1);
-        expect(storage.raw?.entries[0].compnentId).equal(component.GetId());
-        expect(storage.raw?.entries[0].path).equal(`Proxy<${component.GetId()}>.state`);
+        storage.Clear();
 
-        expect(storage.optimized?.entries.length).equal(1);
-        expect(storage.optimized?.entries[0].compnentId).equal(component.GetId());
-        expect(storage.optimized?.entries[0].path).equal(`Proxy<${component.GetId()}>.state`);
+        global.UseProxyAccessStorage(() => {
+            root.GetNative()['quantity'];
+            root.GetNative()['bio']['name'];
+        }, storage);
 
-        component.GetBackend().changes.PushGetAccessStorage();
+        entries = storage.GetEntries();
+
+        expect(entries.length).equal(2);
+        expect(entries[0].componentId).equal(component.GetId());
+        expect(entries[0].path).equal(`Proxy<${component.GetId()}>.quantity`);
+        expect(entries[1].componentId).equal(component.GetId());
+        expect(entries[1].path).equal(`Proxy<${component.GetId()}>.bio.name`);
+    });
+
+    it('should be able to suspned and resume access tracking ong get operations', () => {
+        const global = CreateGlobal(), component = global.CreateComponent(document.createElement('div')), root = component.GetRootProxy();
+
+        global.GetConfig().SetReactiveState('optimized');
         
-        root.GetNative()['quantity'];
+        root.GetNative()['state'] = true;
+        root.GetNative()['quantity'] = 72;
+        root.GetNative()['list'] = [1, 2, 3, 4, 5];
+        root.GetNative()['bio'] = {
+            name: 'Clark Kent',
+            alt: 'Superman',
+            age: 36,
+            isAlien: true,
+        };
 
-        expect(component.GetBackend().changes.GetLastAccessContext()).equal(`Proxy<${component.GetId()}>`);
+        const storage = new ProxyAccessStorage;
+
+        global.UseProxyAccessStorage(() => {
+            root.GetNative()['state'];
+        }, storage);
         
-        root.GetNative()['bio']['name'];
+        root.GetNative()['state'];
 
-        expect(component.GetBackend().changes.GetLastAccessContext()).equal(`Proxy<${component.GetId()}>.bio`);
+        let entries = storage.GetEntries();
 
-        storage = component.GetBackend().changes.PopGetAccessStorage()!;
+        expect(entries.length).equal(1);
+        expect(entries[0].componentId).equal(component.GetId());
+        expect(entries[0].path).equal(`Proxy<${component.GetId()}>.state`);
 
-        expect(storage.raw?.entries.length).equal(3);
-        expect(storage.raw?.entries[0].compnentId).equal(component.GetId());
-        expect(storage.raw?.entries[0].path).equal(`Proxy<${component.GetId()}>.quantity`);
-        expect(storage.raw?.entries[1].compnentId).equal(component.GetId());
-        expect(storage.raw?.entries[1].path).equal(`Proxy<${component.GetId()}>.bio`);
-        expect(storage.raw?.entries[2].compnentId).equal(component.GetId());
-        expect(storage.raw?.entries[2].path).equal(`Proxy<${component.GetId()}>.bio.name`);
+        storage.Clear();
 
-        expect(storage.optimized?.entries.length).equal(2);
-        expect(storage.optimized?.entries[0].compnentId).equal(component.GetId());
-        expect(storage.optimized?.entries[0].path).equal(`Proxy<${component.GetId()}>.quantity`);
-        expect(storage.optimized?.entries[1].compnentId).equal(component.GetId());
-        expect(storage.optimized?.entries[1].path).equal(`Proxy<${component.GetId()}>.bio.name`);
+        global.UseProxyAccessStorage(() => {
+            root.GetNative()['quantity'];
+            root.GetNative()['bio']['name'];
+
+            global.SuspendProxyAccessStorage(() => {
+                root.GetNative()['bio']['alt'];
+            });
+
+            root.GetNative()['bio']['age'];
+        }, storage);
+
+        entries = storage.GetEntries();
+
+        expect(entries.length).equal(3);
+        expect(entries[0].componentId).equal(component.GetId());
+        expect(entries[0].path).equal(`Proxy<${component.GetId()}>.quantity`);
+        expect(entries[1].componentId).equal(component.GetId());
+        expect(entries[1].path).equal(`Proxy<${component.GetId()}>.bio.name`);
+        expect(entries[2].componentId).equal(component.GetId());
+        expect(entries[2].path).equal(`Proxy<${component.GetId()}>.bio.age`);
     });
 
     it('should report changes', () => {
@@ -184,10 +225,10 @@ describe('proxy', () => {
         })).equal(true);
 
         delete root.GetNative()['bio']['age'];
-        expect(IsEqual(component.GetBackend().changes.GetLastChange(), <IChange>{
+        expect(IsEqual(component.GetBackend().changes.GetLastChange(1), <IChange>{
             type: 'delete',
             componentId: component.GetId(),
-            path: `${proxyName}.bio`,
+            path: `${proxyName}.bio.age`,
             prop: 'age',
             origin: null,
         })).equal(true);

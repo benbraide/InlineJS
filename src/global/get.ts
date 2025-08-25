@@ -7,5 +7,5 @@ export function GetGlobal(): IGlobal{
 }
 
 export function WaitForGlobal(){
-    return (GetGlobal() ? Promise.resolve() : new Promise(resolve => window.addEventListener(GlobalCreatedEvent, resolve)));
+    return (GetGlobal() ? Promise.resolve() : new Promise(resolve => window.addEventListener(GlobalCreatedEvent, resolve, { once: true })));
 }

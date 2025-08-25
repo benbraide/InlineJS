@@ -1,6 +1,6 @@
 import { ISplitPath } from "../types/path";
 
-export function TidyPath(path: string){
+export function TidyPath(path: string, convertAfterQuery = false){
     path = (path ? path.trim() : '');
     if (!path){
         return '';
@@ -15,12 +15,13 @@ export function TidyPath(path: string){
         .replace(/[\/?&=]+$/, '');//Truncate '/', '=', '?' and '&'
 
     !path.startsWith('/?') && (path = path.replace(/^[\/?&=]+/, ''));//Skip '/', '=', '?' and '&'
-
-    return path.split(/[?&]/).reduce((prev, part, index) => (prev ? `${prev}${(index < 2) ? '?' : '&'}${part}` : part), '');//Convert every '?' after the first '=', '?' or '&' to '&'
+    convertAfterQuery && (path = path.split(/[?&]/).reduce((prev, part, index) => (prev ? `${prev}${(index < 2) ? '?' : '&'}${part}` : part), ''));//Convert every '?' after the first '=', '?' or '&' to '&'
+    
+    return path;
 }
 
-export function PathToRelative(path: string, origin: string, prefix?: string){
-    path = TidyPath(path);
+export function PathToRelative(path: string, origin: string, prefix?: string, convertAfterQuery = false){
+    path = TidyPath(path, convertAfterQuery);
     if (path === origin){//Root
         path = (prefix ? (prefix || '/') : '/');
         return (path.startsWith('/') ? path : `/${path}`);
@@ -51,11 +52,11 @@ export function SplitPath(path: string, origin?: string, prefix?: string): ISpli
     };
 }
 
-export function JoinPath({ base, query }: ISplitPath, origin?: string, prefix?: string, prependOrigin?: boolean){
-    let path = `${TidyPath(base)}?${query}`;
+export function JoinPath({ base, query }: ISplitPath, origin?: string, prefix?: string, prependOrigin?: boolean, convertAfterQuery = false){
+    let path = `${TidyPath(base, convertAfterQuery)}?${query}`;
 
-    path = (origin ? PathToRelative(path, origin, prefix) : TidyPath(path));
-    path = (prependOrigin ? TidyPath(`${origin}/${path}`) : ((path.startsWith('/') || /^[a-zA-Z0-9_]+:\/\//.test(path)) ? path : `/${path}`));
+    path = (origin ? PathToRelative(path, origin, prefix) : TidyPath(path, convertAfterQuery));
+    path = (prependOrigin ? TidyPath(`${origin}/${path}`, convertAfterQuery) : ((path.startsWith('/') || /^[a-zA-Z0-9_]+:\/\//.test(path)) ? path : `/${path}`));
 
     return path;
 }

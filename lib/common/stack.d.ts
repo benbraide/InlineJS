@@ -3,6 +3,7 @@ export declare class Stack<T> implements IStack<T> {
     private list_;
     constructor(duplicate?: Stack<T>);
     Push(value: T): void;
+    Purge(): T[];
     Pop(): T | null;
     Peek(): T | null;
     IsEmpty(): boolean;

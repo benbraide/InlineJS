@@ -6,7 +6,6 @@ import { JournalTry } from "../journal/try";
 import { JournalWarn } from "../journal/warn";
 import { IComponent } from "../types/component";
 import { DirectiveHandlerCallbackType, IDirective } from "../types/directive";
-import { IProxyAccessHandler } from "../types/proxy";
 import { FlattenDirective } from "./flatten";
 
 export function DispatchDirective(component: IComponent | string, element: HTMLElement, directive: IDirective, repeats = 0){
@@ -16,7 +15,7 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
         return false;
     }
 
-    let handler: DirectiveHandlerCallbackType | null = null, elementScope = resolvedComponent.FindElementScope(element), proxyAccessHandler: IProxyAccessHandler | null = null;
+    let handler: DirectiveHandlerCallbackType | null = null, elementScope = resolvedComponent.FindElementScope(element);
     if (elementScope){//Check element scope
         handler = elementScope.GetDirectiveManager().FindHandler(directive.meta.name.joined);
         ++repeats;
@@ -39,8 +38,8 @@ export function DispatchDirective(component: IComponent | string, element: HTMLE
     
     JournalTry(() => {//Catch errors
         handler!({ ...FlattenDirective(directive),
-            componentId: resolvedComponent!.GetId(),
-            component: resolvedComponent!,
+            componentId: resolvedComponent.GetId(),
+            component: resolvedComponent,
             contextElement: element,
         });
     }, 'InlineJS.DispatchDirective', element);

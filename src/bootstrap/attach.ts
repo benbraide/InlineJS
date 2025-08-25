@@ -13,21 +13,28 @@ export function BootstrapAndAttach(mount?: HTMLElement){
     }
     
     const global = GetGlobal(), config = global.GetConfig();
-    [config.GetDirectiveName('data', true), config.GetDirectiveName('data', false)].forEach((name) => {
-        (mount || document).querySelectorAll(`[${name}]`).forEach((element) => {
-            if (!element.hasAttribute(name) || !document.contains(element)){//Probably contained inside another region
-                return;
-            }
+    const dataNames = [config.GetDirectiveName('data', true), config.GetDirectiveName('data', false)];
+    const selector = dataNames.map(name => `[${name}]`).join(', ');
 
-            ProcessDirectives({
-                component: global.CreateComponent(<HTMLElement>element),
-                element: <HTMLElement>element,
-                options: {
-                    checkTemplate: true,
-                    checkDocument: false,
-                    ignoreChildren: false,
-                },
-            });
+    const potentialRoots = new Set<Element>();
+    if (mount) {
+        if (dataNames.some(name => mount.hasAttribute(name))) {
+            potentialRoots.add(mount);
+        }
+        mount.querySelectorAll(selector).forEach(el => potentialRoots.add(el));
+    } else {
+        document.querySelectorAll(selector).forEach(el => potentialRoots.add(el));
+    }
+
+    potentialRoots.forEach((element) => {
+        if (!dataNames.some(name => element.hasAttribute(name)) || !document.contains(element)){//Already processed
+            return;
+        }
+
+        ProcessDirectives({
+            component: global.CreateComponent(<HTMLElement>element),
+            element: <HTMLElement>element,
+            options: { checkTemplate: true, checkDocument: false, ignoreChildren: false },
         });
     });
 }

@@ -134,18 +134,8 @@ describe('interpolation', () => {
         });
         
         await waitFor(() => {
-            expect(el.textContent).equal('I am John Doe and {{ age }} years old.');
-            expect(el.querySelector('span')).equal(span);
-            expect(span.textContent).equal('{{ age }} years');
-        });
-
-        Interpolate({
-            componentId: component.GetId(),
-            contextElement: span,
-        });
-
-        await waitFor(() => {
             expect(el.textContent).equal('I am John Doe and 72 years old.');
+            expect(el.querySelector('span')).equal(span);
             expect(span.textContent).equal('72 years');
         });
     });
@@ -167,33 +157,17 @@ describe('interpolation', () => {
         });
         
         await waitFor(() => {
-            expect(el.textContent).equal('I am John Doe and {{ age }} years old.');
-            expect(el.querySelector('span')).equal(span);
-            expect(span.textContent).equal('{{ age }} years');
-        });
-
-        Interpolate({
-            componentId: component.GetId(),
-            contextElement: span,
-        });
-
-        await waitFor(() => {
             expect(el.textContent).equal('I am John Doe and 72 years old.');
+            expect(el.querySelector('span')).equal(span);
             expect(span.textContent).equal('72 years');
         });
 
         component.GetRootProxy().GetNative()['name'] = 'Jane Doe';
-
-        await waitFor(() => {
-            expect(el.textContent).equal('I am Jane Doe and 72 years old.');
-            expect(el.querySelector('span')).equal(span);
-            expect(span.textContent).equal('72 years');
-        });
-
         component.GetRootProxy().GetNative()['age'] = 18;
 
         await waitFor(() => {
             expect(el.textContent).equal('I am Jane Doe and 18 years old.');
+            expect(el.querySelector('span')).equal(span);
             expect(span.textContent).equal('18 years');
         });
     });

@@ -10,14 +10,17 @@ import { IsObject } from "../utilities/is-object";
 
 export function AddDirectiveHandler(handler: IDirectiveHandler | IDirectiveHandlerCallbackDetails | FunctionDirectiveHandlerType | WrappedFunctionDirectiveHandlerType, target?: string){
     let name = '', callback: DirectiveHandlerCallbackType | null = null;
-    if (typeof handler === 'function'){
-        const response = handler();
-        if (!response){//Query name and callback
-            name = <string>(handler as WrappedFunctionDirectiveHandlerType)('name');
-            callback = <DirectiveHandlerCallbackType>(handler as WrappedFunctionDirectiveHandlerType)('callback');
+    if (typeof handler === 'function') {
+        // Differentiate between handler types by checking the number of arguments (arity)
+        if (handler.length === 0) { // Assumed FunctionDirectiveHandlerType: () => IDirectiveHandlerCallbackDetails | void
+            const response = (handler as FunctionDirectiveHandlerType)();
+            if (response) { // Details returned
+                ({ name, callback } = response);
+            }
         }
-        else{//Details returned
-            ({name, callback} = <IDirectiveHandlerCallbackDetails>response);
+        else { // Assumed WrappedFunctionDirectiveHandlerType: (key: 'name' | 'callback') => ...
+            name = (handler as WrappedFunctionDirectiveHandlerType)('name') as string;
+            callback = (handler as WrappedFunctionDirectiveHandlerType)('callback') as DirectiveHandlerCallbackType;
         }
     }
     else if (IsObject(handler)){//Details provided

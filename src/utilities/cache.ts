@@ -15,21 +15,31 @@ export function SetCacheValue<T = any>(cacheKey: string, key: string, value: any
     (cache && typeof cache === 'object') && (cache[key] = value);
 }
 
-export function FindCacheValue<T = any>(cacheKey: string, key: string){
-    const cache = ((cacheKey in globalThis && globalThis[cacheKey]) || null);
-    return (((cache && typeof cache === 'object' && key in cache)) ? <T>cache[key] : undefined);
+export function FindCacheValue<T = any>(cacheKey: string, key: string): T | undefined{
+    const scope = GetGlobalScope('cache');
+    const cache = scope.hasOwnProperty(cacheKey) ? scope[cacheKey] : undefined;
+    if (cache && typeof cache === 'object' && key in cache){
+        return cache[key];
+    }
 }
 
-export function UseCache<T = any, U = any>(callback: () => T, cacheKey: string, value: any, defaultValue: T | (() => T), getter?: (cache: T) => [any, U]){
+export function UseCache<T = any, U = any>(callback: () => T | false, cacheKey: string, defaultValue: T | (() => T), hitTest: (cache: T) => boolean, onHit: (cache: T) => U, onMiss: () => U){
     let cache = GetCache<T>(cacheKey, defaultValue);
-    if (cache){
-        const [ck, cv] = (getter ? getter(cache) : [cache, (cache as unknown as U)]);
-        if (ck === value){//Cache hit
-            return cv;
-        }
+    if (cache && hitTest(cache)) { //Cache hit
+        return onHit(cache);
     }
 
-    InitCache(cacheKey, (cache = callback()));//Cache miss - add cache entry
+    const newEntry = callback();
+    if (newEntry === false){// New entry is false - return default value
+        return onMiss();
+    }
     
-    return (getter ? getter(cache)[1] : (cache as unknown as U));
+    InitCache(cacheKey, newEntry);//Cache miss - add cache entry
+    
+    return onHit(newEntry);
+}
+
+export function InvalidateCache(cacheKey: string){
+    const scope = GetGlobalScope('cache');
+    scope.hasOwnProperty(cacheKey) && delete scope[cacheKey];
 }

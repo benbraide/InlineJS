@@ -51,7 +51,12 @@ export function LazyCheck({ componentId, component, contextElement, expression, 
                 if (entry?.isIntersecting){//Element is visible
                     const pahCallback =  SetProxyAccessHandler(componentId, (proxyAccessHandler || null));//Use captured proxyAccessHandler
 
-                    FindComponentById(componentId)?.RemoveIntersectionObserver(id!);
+                    if (id) {
+                        const component = FindComponentById(componentId);
+                        component?.FindIntersectionObserver(id)?.Destroy();
+                        component?.RemoveIntersectionObserver(id);
+                    }
+                    
                     JournalTry(effect);
 
                     pahCallback();

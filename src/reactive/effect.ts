@@ -1,8 +1,9 @@
 import { FindComponentById } from "../component/find";
-import { SetProxyAccessHandler, StoreProxyHandler } from "../component/set-proxy-access-handler";
-import { JournalError } from "../journal/error";
-import { JournalTry } from "../journal/try";
+import { StoreProxyHandler } from "../component/set-proxy-access-handler";
+import { IElementScope } from "../types/element-scope";
 import { SubscribeCallbackType, SubscribeToChanges, SubscriptionsCallbackType } from "./subscribe";
+import { GetGlobal } from "../global/get";
+import { ProxyAccessStorage } from "../storage/get-access";
 
 export interface IUseEffectOptions{
     nextTick?: boolean;
@@ -23,31 +24,27 @@ export function UseEffect({ componentId, callback, contextElement, options, subs
             return;
         }
 
-        let canceled = false;
-        const { changes } = component.GetBackend(), elScope = (contextElement ? component.FindElementScope(contextElement) : null), cancel = () => {
+        let canceled = false, elScope: IElementScope | null = null, cancel = () => {
             canceled = true;
         };
 
-        const element = elScope?.GetElement();
-        try{
-            changes.PushGetAccessStorage();//Push new storage onto the stack
+        if (contextElement){
+            elScope = (contextElement instanceof HTMLElement) ? component.CreateElementScope(contextElement) : component.FindElementScope(contextElement);
+        }
+
+        const proxyAccessStorage = new ProxyAccessStorage;
+        GetGlobal().UseProxyAccessStorage(() => {
             callback({
                 changes: [],
                 cancel: cancel,
             });
-        }
-        catch (err){
-            JournalError(err, `InlineJS.Component<${componentId}>.UseEffect`, element);
-        }
+        }, proxyAccessStorage);
 
-        if (canceled){//Pop storage
-            changes.PopAllGetAccessStorageSnapshots(false);//Remove all outstanding checkpoints
-            changes.RestoreOptimizedGetAccessStorage();//Restore previously swapped optimized storage
-            changes.PopGetAccessStorage();
-            return;
-        }
-
-        SubscribeToChanges({ componentId, changes, callback: details => storedProxyHandler(() => callback(details)), subscriptionsCallback, contextElement: element });
+        !canceled && SubscribeToChanges({
+            componentId, proxyAccessStorage, subscriptionsCallback,
+            callback: details => storedProxyHandler(() => callback(details)),
+            contextElement: elScope?.GetElement()
+        });
     };
 
     if (options?.nextTick){

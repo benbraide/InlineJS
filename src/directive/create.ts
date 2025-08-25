@@ -45,6 +45,10 @@ export function CreateDirective(name: string, value: string, proxyAccessHandler?
         nameValue = argParts[0];
     }
 
+    if (!nameValue){
+        return null;
+    }
+
     argParts.splice(0, 1);//Delete first entry
     const nameParts = nameValue.split('-'), meta: IDirectiveMeta = {
         view: {

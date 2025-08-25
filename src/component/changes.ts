@@ -1,30 +1,24 @@
 import { JournalTry } from "../journal/try";
 import { Stack } from "../stack";
 import { ChangeCallbackType, IBubbledChange, IChange } from "../types/change";
-import { IChanges, IGetAccessDetails, IGetAccessStorage, IGetAccessStorageDetails, ISubscriberInfo } from "../types/changes";
+import { IChanges } from "../types/changes";
 import { DeepCopy } from "../utilities/deep-copy";
 import { ChangesMonitor } from "./changes-monitor";
-import { PeekCurrentComponent } from "./current";
 import { FindComponentById } from "./find";
 
-interface IChangeBatchInfo{
-    callback: ChangeCallbackType;
-    changes: Array<IChange | IBubbledChange>;
-}
-
 export class Changes extends ChangesMonitor implements IChanges{
-    private nextTickHandlers_ = new Array<() => void>();
-    private nextIdleHandlers_ = new Array<() => void>();
-    private nextNonIdleHandlers_ = new Array<() => void>();
+    private nextTickHandlers_ = new Array<() => void>();// Gets notified at the end of a schedule run
+    private nextIdleHandlers_ = new Array<() => void>();// Gets notified when a scheduke runs without any changes
+    private nextNonIdleHandlers_ = new Array<() => void>();// Gets notified when a schedule runs with changes
 
     private isScheduled_ = false;
     private isIdle_ = true;
+    private isDestroyed_ = false;
 
     private list_ = new Array<IChange | IBubbledChange>();
-    private subscribers_: Record<string, ISubscriberInfo> = {};
+    private subscribers_: Record<string, Record<string, ChangeCallbackType>> = {};
+    private subscriberPaths_: Record<string, string> = {};
 
-    private lastAccessContext_ = '';
-    private getAccessStorages_ = new Stack<IGetAccessStorage>();
     private origins_ = new Stack<ChangeCallbackType>();
     
     public constructor(private componentId_: string){
@@ -54,54 +48,66 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
 
     public Schedule(){
-        if (this.isScheduled_){
+        if (this.isDestroyed_ || this.isScheduled_){
             return;
         }
 
         this.isScheduled_ = true;
         queueMicrotask(() => {//Defer dispatches
             this.isScheduled_ = false;
-            const batches = new Array<IChangeBatchInfo>(), addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
-                const batch = batches.find(info => (info.callback === callback));
-                if (!batch){
-                    batches.push({
-                        callback: callback,
-                        changes: new Array(change),
-                    });
+            const batches = new Map<ChangeCallbackType, Array<IChange | IBubbledChange>>();
+            const addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
+                if (!batches.has(callback)){
+                    batches.set(callback, [change]);
                 }
                 else{//Add to existing batch
-                    batch.changes.push(change);
+                    batches.get(callback)!.push(change);
                 }
             };
 
             const getOrigin = (change: IChange | IBubbledChange) => (('original' in change) ? change.original.origin : change.origin);
             if (this.list_.length != 0){
-                this.list_.splice(0).forEach((change) => {//Process changes into batches
-                    Object.values(this.subscribers_).filter(sub => (sub.path === change.path && sub.callback !== getOrigin(change))).forEach(sub => addBatch(change, sub.callback));
+                const pendingChanges = this.list_.splice(0);
+                pendingChanges.forEach((change) => {
+                    const origin = getOrigin(change);
+                    Object.keys(this.subscribers_).forEach((path) => {
+                        if (path === change.path || path.startsWith(`${change.path}.`)){
+                            Object.values(this.subscribers_[path]).filter(callback => (callback !== origin)).forEach(callback => addBatch(change, callback));
+                        }
+                    });
                 });
                 this.NotifyListeners_('list', this.list_);
             }
 
-            if (batches.length == 0){
-                if (!this.isIdle_){
+            if (batches.size == 0) {// Idle
+                if (!this.isIdle_) {
                     this.isIdle_ = true;
-                    if (this.nextIdleHandlers_.length != 0){
-                        this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
-                        this.NotifyListeners_('next-idle-handlers', this.nextIdleHandlers_);
-                    }
                 }
+
+                if (this.nextIdleHandlers_.length != 0) { //Always check for idle handlers if there are no batches
+                    this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
+                    this.NotifyListeners_('next-idle-handlers', this.nextIdleHandlers_);
+                }
+                
+                if (this.nextTickHandlers_.length != 0){
+                    this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
+                    this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
+                }
+
                 return;
             }
 
-            if (this.isIdle_){// Out of idle
+            if (this.isIdle_) { // Out of idle
                 this.isIdle_ = false;
-                if (this.nextNonIdleHandlers_.length != 0){
-                    this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
-                    this.NotifyListeners_('next-non-idle-handlers', this.nextNonIdleHandlers_);
-                }
             }
 
-            batches.forEach(batch => batch.callback(batch.changes));
+            batches.forEach((changes, callback) => JournalTry(() => callback(changes), `InlineJs.Region<${this.componentId_}>.Schedule`));
+            
+            if (this.nextNonIdleHandlers_.length != 0) { //Always check for non-idle handlers if there are batches
+                this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
+                this.NotifyListeners_('next-non-idle-handlers', this.nextNonIdleHandlers_);
+            }
+
             if (this.nextTickHandlers_.length != 0){
                 this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
                 this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
@@ -144,141 +150,6 @@ export class Changes extends ChangesMonitor implements IChanges{
         return DeepCopy(this.list_.at(-(index + 1)) || null);
     }
 
-    public AddGetAccess(path: string){
-        const targetObject = (<Changes>FindComponentById(PeekCurrentComponent() || '')?.GetBackend().changes || this);
-        
-        const lastPointIndex = path.lastIndexOf('.');
-        targetObject.lastAccessContext_ = ((lastPointIndex == -1) ? '' : path.substring(0, lastPointIndex));
-        
-        const storage = targetObject.getAccessStorages_.Peek();
-        if (!storage?.details){
-            return;
-        }
-
-        storage.details.raw?.entries.push({
-            compnentId: this.componentId_,
-            path: path,
-        });
-
-        if (storage.details.optimized && storage.details.optimized.entries !== storage.details.raw?.entries && //Optimized is not linked to raw
-            storage.details.optimized.entries.length != 0 && //Optimized list is not empty
-            storage.lastAccessPath && storage.lastAccessPath.length < path.length && //Last access path is possibly a substring of path
-            path.indexOf(`${storage.lastAccessPath}.`) == 0 //Last access path is confirmed as a substring of path
-        ){
-            storage.details.optimized.entries.at(-1)!.path = path; //Replace last optimized entry
-        }
-        else if (storage.details.optimized && storage.details.optimized.entries !== storage.details.raw?.entries){ //Add a new optimized entry
-            storage.details.optimized.entries.push({
-                compnentId: this.componentId_,
-                path: path,
-            });
-        }
-
-        storage.lastAccessPath = path; //Update last access path
-        this.NotifyListeners_('last-access-context', this.list_);
-        targetObject.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-    }
-
-    public GetLastAccessContext(){
-        return this.lastAccessContext_;
-    }
-
-    public ResetLastAccessContext(){
-        this.lastAccessContext_ = '';
-        this.NotifyListeners_('last-access-context', this.lastAccessContext_);
-    }
-    
-    public PushGetAccessStorage(storage?: IGetAccessStorageDetails){
-        this.getAccessStorages_.Push({
-            details: (storage || {
-                optimized: ((FindComponentById(this.componentId_)?.GetReactiveState() === 'optimized') ? {
-                    entries: new Array<IGetAccessDetails>(),
-                    snapshots: new Stack<Array<IGetAccessDetails>>(),
-                } : undefined),
-                raw: {
-                    entries: new Array<IGetAccessDetails>(),
-                    snapshots: new Stack<Array<IGetAccessDetails>>(),
-                },
-            }),
-            lastAccessPath: '',
-        });
-        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-    }
-    
-    public PopGetAccessStorage(): IGetAccessStorageDetails | null{
-        const details = (this.getAccessStorages_.Pop()?.details || null);
-        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-        return details;
-    }
-
-    public SwapOptimizedGetAccessStorage(){
-        const storage = this.getAccessStorages_.Peek();
-        if (storage?.details.optimized && storage.details.raw){
-            storage.details.optimized.entries = storage.details.raw.entries;
-            this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-        }
-    }
-
-    public RestoreOptimizedGetAccessStorage(){
-        const storage = this.getAccessStorages_.Peek();
-        if (storage?.details.optimized && storage.details.optimized.entries === storage.details.raw?.entries){
-            storage.details.optimized.entries = storage.details.raw.entries.slice(0);
-            this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-        }
-    }
-
-    public FlushRawGetAccessStorage(){
-        this.getAccessStorages_.Peek()?.details.raw?.entries.splice(0);
-        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-    }
-
-    public PushGetAccessStorageSnapshot(){
-        const storage = this.getAccessStorages_.Peek();
-        storage?.details.optimized?.snapshots.Push(storage.details.optimized.entries.slice(0).map(entry => ({ ...entry })));
-        storage?.details.raw?.snapshots.Push(storage.details.raw.entries.slice(0).map(entry => ({ ...entry })));
-        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-    }
-
-    public PopGetAccessStorageSnapshot(discard?: boolean){
-        const storage = this.getAccessStorages_.Peek();
-
-        const optimizedSnapshot = storage?.details.optimized?.snapshots.Pop();
-        if (!discard && optimizedSnapshot && storage?.details.optimized?.entries){
-            storage.details.optimized.entries = optimizedSnapshot;
-        }
-
-        const rawSnapshot = storage?.details.raw?.snapshots.Pop();
-        if (!discard && rawSnapshot && storage?.details.raw?.entries){
-            storage.details.raw.entries = rawSnapshot;
-        }
-
-        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-    }
-    
-    public PopAllGetAccessStorageSnapshots(discard?: boolean){
-        const storage = this.getAccessStorages_.Peek();
-
-        let optimizedSnapshot = storage?.details.optimized?.snapshots.Pop();
-        while (storage?.details.optimized?.snapshots && !storage.details.optimized.snapshots.IsEmpty()){
-            optimizedSnapshot = storage.details.optimized.snapshots.Pop();
-        }
-
-        if (!discard && optimizedSnapshot && storage?.details.optimized?.entries){
-            storage.details.optimized.entries = optimizedSnapshot;
-        }
-
-        let rawSnapshot = storage?.details.raw?.snapshots.Pop();
-        while (storage?.details.raw?.snapshots && !storage.details.raw.snapshots.IsEmpty()){
-            rawSnapshot = storage.details.raw.snapshots.Pop();
-        }
-
-        if (!discard && rawSnapshot && storage?.details.raw?.entries){
-            storage.details.raw.entries = rawSnapshot;
-        }
-
-        this.NotifyListeners_('get-access-storages', this.getAccessStorages_);
-    }
-
     public PushOrigin(origin: ChangeCallbackType){
         this.origins_.Push(origin);
         this.NotifyListeners_('origins', this.origins_);
@@ -297,10 +168,8 @@ export class Changes extends ChangesMonitor implements IChanges{
     public Subscribe(path: string, handler: ChangeCallbackType){
         const id = FindComponentById(this.componentId_)?.GenerateUniqueId('sub_');
         if (id){//Add new subscription
-            this.subscribers_[id] = {
-                path: path,
-                callback: handler,
-            };
+            (this.subscribers_[path] = (this.subscribers_[path] || {}))[id] = handler;
+            this.subscriberPaths_[id] = path;
             this.NotifyListeners_('subscribers', this.subscribers_);
         }
         
@@ -309,18 +178,51 @@ export class Changes extends ChangesMonitor implements IChanges{
 
     public Unsubscribe(subscribed: ChangeCallbackType | string, path?: string){
         if (typeof subscribed !== 'string'){
-            Object.entries(this.subscribers_).filter(([id, entry]) => (subscribed === entry.callback && (!path || path === entry.path))).map(([id]) => id).forEach(id => {
-                this.Unsubscribe_(id);
+            const paths = (path ? [path] : Object.keys(this.subscribers_));
+            paths.forEach(p => {
+                if (p in this.subscribers_){
+                    Object.entries(this.subscribers_[p])
+                        .filter(([id, entry]) => (subscribed === entry))
+                        .map(([id]) => id)
+                        .forEach(id => this.Unsubscribe_(id));
+                }
             });
         }
-        else if (subscribed in this.subscribers_){
+        else if (subscribed in this.subscriberPaths_){
             this.Unsubscribe_(subscribed);
         }
 
         this.NotifyListeners_('subscribers', this.subscribers_);
     }
 
+    public Destroy(){
+        if (this.isDestroyed_) return;
+
+        this.isDestroyed_ = true;
+        this.componentId_ = '';
+        
+        this.nextTickHandlers_.splice(0);
+        this.nextIdleHandlers_.splice(0);
+        this.nextNonIdleHandlers_.splice(0);
+
+        this.isScheduled_ = false;
+        this.isIdle_ = true;
+
+        this.list_.splice(0);
+        this.subscribers_ = {};
+        this.subscriberPaths_ = {};
+
+        this.origins_.Purge();
+    }
+
     private Unsubscribe_(id: string){
-        delete this.subscribers_[id];
+        const path = this.subscriberPaths_[id];
+        if (path && path in this.subscribers_ && id in this.subscribers_[path]){
+            delete this.subscribers_[path][id];
+            delete this.subscriberPaths_[id];
+            if (Object.keys(this.subscribers_[path]).length == 0){
+                delete this.subscribers_[path];
+            }
+        }
     }
 }

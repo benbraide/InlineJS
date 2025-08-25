@@ -6,18 +6,21 @@ interface IDirectiveHandlerComposition{
     extensions: Record<string, DirectiveHandlerCallbackType>;
 }
 
-function CreateComposedDirectiveHandler(handler: DirectiveHandlerCallbackType){
-    return <IDirectiveHandlerComposition>{
-        handler({ argKey, ...rest }: IDirectiveHandlerParams){
-            if (this.extensions.hasOwnProperty(argKey)){
-                this.extensions[argKey]({ argKey, ...rest });
+function CreateComposedDirectiveHandler(originalHandler: DirectiveHandlerCallbackType): IDirectiveHandlerComposition{
+    const composition: IDirectiveHandlerComposition = {
+        handler: ({ argKey, ...rest }: IDirectiveHandlerParams) => {
+            // Call extension if it exists
+            if (composition.extensions.hasOwnProperty(argKey)){
+                composition.extensions[argKey]({ argKey, ...rest });
             }
-            else{//Pass to main handler
-                handler({ argKey, ...rest });
+            else{ // Pass to main handler
+                originalHandler({ argKey, ...rest });
             }
         },
         extensions: {},
     };
+
+    return composition;
 }
 
 function AddDirectiveHandlerExtension(ref: DirectiveHandlerCallbackType | IDirectiveHandlerComposition, name: string, handler: DirectiveHandlerCallbackType){
@@ -96,7 +99,7 @@ export class DirectiveManager implements IDirectiveManager{
         }
 
         const info = this.handlers_[name];
-        return ((typeof info === 'function') ? info : info.handler.bind(info));
+        return ((typeof info === 'function') ? info : info.handler);
     }
 
     public AddHandlerExtension(target: string, handler: IDirectiveHandler | DirectiveHandlerCallbackType, name?: string){

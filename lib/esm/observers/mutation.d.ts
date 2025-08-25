@@ -7,4 +7,5 @@ export declare class MutationObserver implements IMutationObserver {
     GetNative(): globalThis.MutationObserver | null;
     Observe(target: Node, handler: MutationObserverHandlerType, whitelist?: Array<IMutationType>): string;
     Unobserve(target: Node | string): void;
+    Destroy(): void;
 }

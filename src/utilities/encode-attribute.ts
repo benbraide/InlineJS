@@ -1,4 +1,3 @@
-import { InferComponent } from "../component/infer";
 import { EncodeValue } from "./encode-value";
 import { SupportsAttributes } from "./supports-attributes";
 

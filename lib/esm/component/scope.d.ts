@@ -13,6 +13,7 @@ export declare class Scope implements IScope {
     GetName(): string;
     GetRoot(): HTMLElement;
     GetProxy(): RootProxy;
-    FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null;
+    FindElement(deepestElement: HTMLElement, predicate: (element: HTMLElement) => boolean): HTMLElement | null;
     FindAncestor(target: HTMLElement, index?: number): HTMLElement | null;
+    Destroy(): void;
 }

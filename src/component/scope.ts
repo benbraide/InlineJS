@@ -1,3 +1,4 @@
+import { JournalTry } from "../journal/try";
 import { RootProxy } from "../proxy/root";
 import { IScope } from "../types/scope";
 
@@ -33,26 +34,39 @@ export class Scope implements IScope{
         return this.proxy_;
     }
 
-    public FindElement(deepestElement: HTMLElement, predicate: (element?: HTMLElement) => boolean): HTMLElement | null{
+    public FindElement(deepestElement: HTMLElement, predicate: (element: HTMLElement) => boolean): HTMLElement | null{
         if (deepestElement === this.root_ || !this.root_.contains(deepestElement)){
             return null;
         }
 
-        do{
-            deepestElement = <HTMLElement>deepestElement.parentElement;
-            try{
-                if (predicate(deepestElement)){
-                    return deepestElement;
+        for (let current = deepestElement.parentElement; current; current = current.parentElement) {
+            try {
+                if (predicate(current)) {
+                    return current;
                 }
+            } catch {
+                // Ignore errors in predicate and continue traversing
             }
-            catch {}
-        } while (deepestElement !== this.root_);
 
+            if (current === this.root_) {
+                break; // We've processed the root, so we're done
+            }
+        }
+        
         return null;
     }
 
     public FindAncestor(target: HTMLElement, index?: number): HTMLElement | null{
         let realIndex = (index || 0);
         return this.FindElement(target, () => (realIndex-- == 0));
+    }
+
+    public Destroy(){
+        this.componentId_ = '';
+        this.id_ = '';
+        this.name_ = '';
+
+        this.root_ = document.createElement('div');
+        JournalTry(() => this.proxy_.Destroy());
     }
 }

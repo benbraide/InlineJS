@@ -21,8 +21,22 @@ export interface ITransitionParams{
     restore?: boolean;
 }
 
+export interface IAnimationParams{
+    componentId: string;
+    contextElement: HTMLElement;
+    target?: HTMLElement;
+    keyframes: Array<Keyframe>;
+    duration?: number;
+    initialDelay?: number;
+    delay?: number;
+    repeats?: number;
+    callback: (waited: boolean) => any;
+    onAbort?: () => void;
+}
+
 export const DefaultTransitionDuration = 300;
 export const DefaultTransitionDelay = 0;
+export const DefaultTransitionInitialDelay = 0;
 export const DefaultTransitionRepeats = 0;
 
 export function ResolveTransition(info: IAnimationTransition | null, reverse: boolean): IAnimationTransition | null{
@@ -35,10 +49,74 @@ export function ResolveTransition(info: IAnimationTransition | null, reverse: bo
         ease: (info.ease || concept?.GetEaseCollection().Find('default') || null),
         actor: (info.actor || concept?.GetActorCollection().Find('default') || null),
         duration: (info.duration || DefaultTransitionDuration),
+        initialDelay: (info.initialDelay || DefaultTransitionInitialDelay),
         delay: (info.delay || DefaultTransitionDelay),
         repeats: (info.repeats || DefaultTransitionRepeats),
         allowed: (info.allowed || 'both'),
     };
+}
+
+export function WaitAnimation({ componentId, contextElement, target, keyframes, duration = 0, initialDelay = 0, delay = 0, repeats = 0, callback, onAbort }: IAnimationParams): (() => void) | null{
+    if (duration <= 0){
+        JournalTry(() => callback(false));
+        return null;
+    }
+    
+    const resolvedTarget = target || contextElement;
+    
+    let handle: Animation | null = null;
+    const animate = () => {
+        if (aborted) return;
+        
+        resolvedTarget.dispatchEvent(new CustomEvent('transition.enter'));
+        
+        (handle = resolvedTarget.animate(keyframes)).finished.then(() => {
+            resolvedTarget.dispatchEvent(new CustomEvent('transition.leave'));
+
+            if (repeats === -1 || repeats > 0){
+                repeats > 0 && repeats--;
+                setTimeout(() => animate(), delay);
+            }
+
+            JournalTry(() => callback(true));
+        }).catch(() => {
+            onAborted();
+            JournalTry(() => callback(true));
+        });
+    };
+
+    let aborted = false, abortComplete = false;
+    const abort = () => {
+        if (aborted) return;
+        
+        aborted = true;
+        onAborted();
+    };
+    
+    const onAborted = () => {
+        if (abortComplete) return;
+        
+        FindComponentById(componentId)?.FindElementScope(resolvedTarget)?.RemoveUninitCallback(abort);
+        resolvedTarget.dispatchEvent(new CustomEvent('transition.canceled'));
+        
+        handle?.cancel();
+        onAbort && JournalTry(() => onAbort());
+        
+        abortComplete = true;
+
+        return false;
+    };
+
+    FindComponentById(componentId)?.FindElementScope(resolvedTarget)?.AddUninitCallback(abort);
+    
+    if (initialDelay > 0){
+        setTimeout(() => !aborted && animate(), initialDelay);
+    }
+    else{
+        animate();
+    }
+
+    return abort;
 }
 
 export function WaitTransition({ componentId, contextElement, target, callback, onAbort, onPass, reverse, allowRepeats, restore }: ITransitionParams): (() => void) | null{
@@ -84,39 +162,43 @@ export function WaitTransition({ componentId, contextElement, target, callback, 
 
     doStep(0);//Initial step
 
-    CreateAnimationLoop(duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
-        if (aborted){
-            return onAborted();
-        }
-        
-        if (steps == 0){
-            resolvedTarget.style.transform = '';
-            resolvedTarget.style.transformOrigin = '50% 50%';
-            resolvedTarget.dispatchEvent(new CustomEvent('transition.enter'));
-        }
-        
-        doStep(elapsed);
-    }).Final(() => {
-        if (!aborted){
-            const elapsedFraction = getFraction(1);
-            callActor({//Final step
-                duration, elapsedFraction,
-                elapsed: duration,
-                target: resolvedTarget,
-                stage: 'end',
-                fraction: callEase({ duration: info!.duration, elapsed: info!.duration, fraction: elapsedFraction }),
-                reverse: !!reverse,
-            });
+    const run = () => {
+        CreateAnimationLoop(duration, 0, (allowRepeats ? info.repeats : 0), info.delay).While(({ elapsed }) => {
+            if (aborted){
+                return onAborted();
+            }
             
-            callOnPass('end', info!.duration, elapsedFraction);
+            if (steps == 0){
+                resolvedTarget.style.transform = '';
+                resolvedTarget.style.transformOrigin = '50% 50%';
+                resolvedTarget.dispatchEvent(new CustomEvent('transition.enter'));
+            }
+            
+            doStep(elapsed);
+        }).Final(() => {
+            if (!aborted){
+                const elapsedFraction = getFraction(1);
+                callActor({//Final step
+                    duration, elapsedFraction,
+                    elapsed: duration,
+                    target: resolvedTarget,
+                    stage: 'end',
+                    fraction: callEase({ duration: info!.duration, elapsed: info!.duration, fraction: elapsedFraction }),
+                    reverse: !!reverse,
+                });
+                
+                callOnPass('end', info!.duration, elapsedFraction);
+    
+                resolvedTarget.dispatchEvent(new CustomEvent('transition.leave'));
+                JournalTry(() => callback(true));
+            }
+            else{
+                onAborted();
+            }
+        });
+    };
 
-            resolvedTarget.dispatchEvent(new CustomEvent('transition.leave'));
-            JournalTry(() => callback(true));
-        }
-        else{
-            onAborted();
-        }
-    });
+    (info.initialDelay || 0) > 0 ? setTimeout(() => !aborted && run(), info.initialDelay) : run();
     
     return abort;
 }

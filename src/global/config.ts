@@ -1,6 +1,5 @@
-import { IConfig, IConfigOptions, ReactiveStateType, DirectiveNameBuilderType } from "../types/config";
+import { IConfig, IConfigOptions, ReactiveStateType } from "../types/config";
 import { GetGlobalScope } from "../utilities/get-global-scope";
-import { IsObject } from "../utilities/is-object";
 import { MergeObjects } from "../utilities/merge-objects";
 
 export class Config implements IConfig{
@@ -36,9 +35,9 @@ export class Config implements IConfig{
         this.UpdateDirectiveRegex_();
 
         if (!this.options_.directiveNameBuilder){
-            const options = this.options_;
+            const options = this.options_, defaultOptions = this.defaultOptions_;
             options.directiveNameBuilder = ((name: string, addDataPrefix = false) => {
-                const prefix = options.directivePrefix || options.directivePrefix || 'hx';
+                const prefix = options.directivePrefix || defaultOptions.directivePrefix || 'hx';
                 return (addDataPrefix ? `data-${prefix}-${name}` : `${prefix}-${name}`);
             });
         }
@@ -118,7 +117,7 @@ export class Config implements IConfig{
     }
 
     protected UpdateDirectiveRegex_(){
-        return (this.options_.directiveRegex = (this.options_.directiveRegex || new RegExp(`^(data-)?${this.GetDirectivePrefix()}-(.+)$`)));
+        return (this.options_.directiveRegex = new RegExp(`^(data-)?${this.GetDirectivePrefix()}-(.+)$`));
     }
 
     public SetWrapScopedFunctions(value: boolean){
