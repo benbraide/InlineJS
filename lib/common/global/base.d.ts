@@ -15,7 +15,7 @@ import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
 import { NativeFetchConcept } from "./native-fetch";
 import { IProxyAccessStorage } from "../types/storage";
-import { RangeValueType, Range } from "../values/range";
+import { RangeValueType, Range, TimedRange } from "../values/range";
 export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     protected nothing_: Nothing;
     protected config_: IConfig;
@@ -90,6 +90,8 @@ export declare class BaseGlobal extends ChangesMonitor implements IGlobal {
     IsNothing(value: any): boolean;
     CreateRange<T extends RangeValueType>(from: T, to: T): Range<T>;
     IsRange(value: any): boolean;
+    CreateTimedRange<T extends RangeValueType>(from: T, to: T, duration: number, delay: number): TimedRange<T>;
+    IsTimedRange(value: any): boolean;
     protected RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean): any;
     protected DispatchProcessing_(processors: Array<AttributeProcessorType | TextContentProcessorType>, params: IAttributeProcessorParams | ITextContentProcessorParams, contextString: string): void;
 }

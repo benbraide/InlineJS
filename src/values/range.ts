@@ -68,3 +68,17 @@ export class Range<T extends RangeValueType> {
         return false;
     }
 }
+
+export class TimedRange<T extends RangeValueType> extends Range<T> {
+    constructor(from: T, to: T, protected duration_: number, protected delay_: number){
+        super(from, to);
+    }
+
+    public GetDuration(): number {
+        return this.duration_;
+    }
+
+    public GetDelay(): number {
+        return this.delay_;
+    }
+}

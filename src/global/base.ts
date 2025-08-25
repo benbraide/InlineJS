@@ -24,7 +24,7 @@ import { Config } from "./config";
 import { NativeFetchConcept } from "./native-fetch";
 import { IProxyAccessStorage } from "../types/storage";
 import { ProxyAccessStorage } from "../storage/get-access";
-import { RangeValueType, Range } from "../values/range";
+import { RangeValueType, Range, TimedRange } from "../values/range";
 
 export class BaseGlobal extends ChangesMonitor implements IGlobal{
     protected nothing_ = new Nothing;
@@ -336,6 +336,14 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
 
     public IsRange(value: any){
         return value instanceof Range;
+    }
+
+    public CreateTimedRange<T extends RangeValueType>(from: T, to: T, duration: number, delay: number): TimedRange<T> {
+        return new TimedRange(from, to, duration, delay);
+    }
+
+    public IsTimedRange(value: any): boolean {
+        return value instanceof TimedRange;
     }
 
     protected RetrieveObject_({ key, componentId, contextElement }: IObjectRetrievalParams, remove: boolean){

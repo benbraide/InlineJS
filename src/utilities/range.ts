@@ -1,13 +1,19 @@
+import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
-import { Range, RangeValueType } from "../values/range";
+import { Range, RangeValueType, TimedRange } from "../values/range";
 import { IsEqual } from "./is-equal";
 import { CreateAnimationLoop } from "./loop";
 
-export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (value: T) => boolean, duration: number = 1000){
+export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (value: T) => boolean | undefined, duration: number = 3000, delay = 1000){
     const doLastStep = () => {
         const lastStep = range.Step(1);
         lastStep !== null && JournalTry(() => callback(lastStep));
     };
+
+    if (GetGlobal().IsTimedRange(range)){
+        duration = (range as TimedRange<T>).GetDuration() || duration;
+        delay = (range as TimedRange<T>).GetDelay() || delay;
+    }
     
     if (duration <= 0){// Duration is invalid
         doLastStep();
@@ -21,9 +27,9 @@ export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (v
     }
     
     let previousStep: T = firstStep;
-    JournalTry(() => callback(previousStep));
+    if (JournalTry(() => callback(previousStep)) === false) return;
     
-    CreateAnimationLoop(duration).While(({ elapsed, abort }) => {
+    CreateAnimationLoop(duration, delay).While(({ elapsed, abort }) => {
         const step = range.Step(elapsed / duration);
         if (step === null){
             abort?.();

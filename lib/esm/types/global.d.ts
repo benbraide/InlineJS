@@ -1,6 +1,6 @@
 import { Future } from "../values/future";
 import { Nothing } from "../values/nothing";
-import { Range, RangeValueType } from "../values/range";
+import { Range, RangeValueType, TimedRange } from "../values/range";
 import { IComponent } from "./component";
 import { IConfig } from "./config";
 import { IDirectiveManager } from "./directive";
@@ -78,4 +78,6 @@ export interface IGlobal {
     IsNothing(value: any): boolean;
     CreateRange<T extends RangeValueType>(from: T, to: T): Range<T>;
     IsRange(value: any): boolean;
+    CreateTimedRange<T extends RangeValueType>(from: T, to: T, duration: number, delay: number): TimedRange<T>;
+    IsTimedRange(value: any): boolean;
 }
