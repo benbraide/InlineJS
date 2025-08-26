@@ -221,7 +221,7 @@ AddMagicHandler(greeter);
 ## Security
 If you find a security vulnerability, please send an email to [benplaeska@gmail.com]()
 
-`InlineJS` relies on a custom implementation using the `Function` object to evaluate its directives. Despite being more secure then `eval()`, its use is prohibited in some environments, such as Google Chrome App, using restrictive Content Security Policy (CSP).
+`InlineJS` relies on a custom implementation using the `Function` object to evaluate its directives. Despite being more secure than `eval()`, its use is prohibited in some environments, such as Google Chrome App, using restrictive Content Security Policy (CSP).
 
 If you use `InlineJS` in a website dealing with sensitive data and requiring [CSP](https://csp.withgoogle.com/docs/strict-csp.html), you need to include `unsafe-eval` in your policy. A robust policy correctly configured will help protecting your users when using personal or financial data.
 

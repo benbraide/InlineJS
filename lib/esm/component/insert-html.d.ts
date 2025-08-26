@@ -13,5 +13,6 @@ export interface InsertionOptions {
     afterTransitionCallback?: () => void;
     transitionScope?: HTMLElement;
     useTransition?: boolean;
+    sanitize?: boolean;
 }
-export declare function InsertHtml({ element, html, type, component, processDirectives, beforeRemove, afterRemove, beforeInsert, afterInsert, afterTransitionCallback, transitionScope, useTransition }: InsertionOptions): void;
+export declare function InsertHtml({ element, html, type, component, processDirectives, beforeRemove, afterRemove, beforeInsert, afterInsert, afterTransitionCallback, transitionScope, useTransition, sanitize }: InsertionOptions): void;

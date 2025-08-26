@@ -3,14 +3,27 @@ import { EvaluateLater } from "../evaluator/evaluate-later";
 import { GeneratedFunctionType } from "../evaluator/generate-function";
 import { UseEffect } from "../reactive/effect";
 import { EncodeValue } from "../utilities/encode-value";
+import { ConsiderRange } from "../utilities/range";
 
 /**
- * Interface for interpolation parameters
+ * Interface for interpolation parameters.
  */
 export interface IInterpolateParams{
+    /**
+     * The ID of the component that owns the interpolation.
+     */
     componentId: string;
+    /**
+     * The HTML element that serves as the context for the interpolation.
+     */
     contextElement: HTMLElement;
+    /**
+     * Optional text to interpolate. If not provided, the function will scan the element's child nodes.
+     */
     text?: string;
+    /**
+     * Optional callback to handle the interpolated value.
+     */
     handler?: (value: string) => void;
     /**
      * Optional regex to use for matching interpolation syntax. Defaults to `InterpolateInlineRegex`.
@@ -23,12 +36,24 @@ export interface IInterpolateParams{
 }
 
 /**
- * Interface for text interpolation parameters
+ * Interface for text interpolation parameters.
  */
 export interface IInterpolateTextParams{
+    /**
+     * The ID of the component that owns the interpolation.
+     */
     componentId: string;
+    /**
+     * The HTML element that serves as the context for the interpolation.
+     */
     contextElement: HTMLElement;
+    /**
+     * The text containing interpolation syntax.
+     */
     text: string;
+    /**
+     * A callback to handle the evaluated value.
+     */
     handler: (value: string) => void;
     /**
      * Optional regex to use for matching interpolation syntax. Defaults to `InterpolateInlineRegex`.
@@ -46,32 +71,6 @@ export interface IInterpolateTextParams{
 
 const InterpolateInlineRegex = /\{\{\s*(.+?)\s*\}\}/g;
 const InterpolateInlineTestRegex = /\{\{.+?\}\}/;
-
-/**
- * Utility to serialize an element's content to an HTML string. Not currently used by the interpolation system.
- * @param el - The element to get content from
- * @returns An HTML string representing the element's content
- */
-export function GetElementContent(el: Element){
-    const computeContent = (node: Element) => {
-        return [...node.childNodes].reduce((prev, child) => `${prev}${((child.nodeType != 3) ? computeText(<Element>child) : (child.textContent || ''))}`, '');
-    }
-
-    const computeText = (node: Element) => {
-        const tag = ([...node.attributes].reduce((prev, attr) => `${prev} ${attr.name}="${attr.value}"`, `<${node.tagName.toLowerCase()}`) + '>');
-        return `${tag}${computeContent(node)}</${node.tagName.toLowerCase()}>`;
-    };
-
-    return computeContent(el);
-}
-
-/**
- * @deprecated This interface is no longer used by the current interpolation implementation.
- */
-export interface IInterpolateTextNode{
-    text: string;
-    evaluated: string;
-}
 
 /**
  * Replaces the given text with its evaluated value, setting up a reactive effect to keep it updated.
@@ -105,10 +104,18 @@ export function ReplaceText({ componentId, contextElement, text, handler, testRe
         });
     }
 
+    let checkpoint = 0;
     if (evaluate){
         FindComponentById(componentId)?.CreateElementScope(contextElement);
-        UseEffect({ componentId, contextElement,
-            callback: () => evaluate(injectedHandler || handler),
+        UseEffect({
+            componentId, contextElement,
+            callback: () => evaluate((value) => {
+                const myCheckpoint = ++checkpoint;
+                ConsiderRange(value, (val) => {
+                    if (myCheckpoint !== checkpoint) return false;
+                    (injectedHandler || handler)?.(val);
+                });
+            }),
         });
     }
 }
@@ -124,8 +131,8 @@ export function InterpolateText({ text, testRegex, matchRegex, ...rest }: IInter
 }
 
 /**
- * Scans an element's child nodes for text content with interpolation syntax (`{{...}}`) and replaces it with reactive text nodes.
- * This function is the entry point for interpolating an element's entire content.
+ * Scans an element's direct child text nodes for interpolation syntax (`{{...}}`) and replaces them with reactive text nodes.
+ * This will not recurse into child elements.
  * @param componentId - The ID of the component
  * @param contextElement - The element whose content will be interpolated
  * @param text - Optional text to interpolate. If provided, it will be handled by `InterpolateText`.
@@ -137,61 +144,51 @@ export function Interpolate({ componentId, contextElement, text, handler, testRe
     if (typeof text === 'string') {
         return (handler && InterpolateText({ componentId, contextElement, text, handler, testRegex, matchRegex }));
     }
-    
-    if (!(testRegex || matchRegex || InterpolateInlineTestRegex).test(contextElement.textContent || '')) {
-        return;
-    }
 
     /**
-     * Recursively scans a node and its children for text nodes to interpolate.
-     * @param node - The node to scan
+     * Processes a single node, replacing it with interpolated content if it's a matching text node.
+     * @param node - The node to process
      */
-    const scan = (node: Node, ctx: HTMLElement) => {
-        if (node.nodeType === 3 && node.textContent && InterpolateInlineTestRegex.test(node.textContent)) {
+    const processNode = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent && (testRegex || InterpolateInlineTestRegex).test(node.textContent)) {
             const text = node.textContent;
-            const matches = [...text.matchAll(InterpolateInlineRegex)];
+            const matches = [...text.matchAll(matchRegex || InterpolateInlineRegex)];
             
             if (matches.length === 0) {
                 return;
             }
 
-            // Create a document fragment to hold the new nodes
             const fragment = document.createDocumentFragment();
             let lastIndex = 0;
 
             matches.forEach((match) => {
                 const expression = match[1];
                 const staticText = text.substring(lastIndex, match.index);
-
+ 
                 if (staticText) {
                     fragment.appendChild(document.createTextNode(staticText));
                 }
 
-                // Create a placeholder text node that will be reactively updated
                 const placeholder = document.createTextNode('');
                 fragment.appendChild(placeholder);
 
-                ReplaceText({ componentId, contextElement: ctx, text: `{{${expression}}}`, handler: (value) => {
-                    // Update the placeholder's content when the expression value changes
+                ReplaceText({ componentId, contextElement, text: `{{ ${expression} }}`, handler: (value) => {
                     placeholder.textContent = value;
                 }});
 
                 lastIndex = (match.index || 0) + match[0].length;
             });
-
+ 
             const remainingText = text.substring(lastIndex);
             if (remainingText) {
                 fragment.appendChild(document.createTextNode(remainingText));
             }
 
-            // Replace the original text node with the new fragment
             node.parentNode?.replaceChild(fragment, node);
-        }
-        else if (node instanceof HTMLElement && node.childNodes.length > 0) {
-            [...node.childNodes].forEach(child => scan(child, node));
         }
     };
 
-    // Start scanning from the context element's direct children
-    [...contextElement.childNodes].forEach(child => scan(child, contextElement));
+    // Process only the context element's direct children
+    [...contextElement.childNodes].forEach(processNode);
 }
+

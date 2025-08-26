@@ -1,10 +1,22 @@
 /**
- * Interface for interpolation parameters
+ * Interface for interpolation parameters.
  */
 export interface IInterpolateParams {
+    /**
+     * The ID of the component that owns the interpolation.
+     */
     componentId: string;
+    /**
+     * The HTML element that serves as the context for the interpolation.
+     */
     contextElement: HTMLElement;
+    /**
+     * Optional text to interpolate. If not provided, the function will scan the element's child nodes.
+     */
     text?: string;
+    /**
+     * Optional callback to handle the interpolated value.
+     */
     handler?: (value: string) => void;
     /**
      * Optional regex to use for matching interpolation syntax. Defaults to `InterpolateInlineRegex`.
@@ -16,12 +28,24 @@ export interface IInterpolateParams {
     testRegex?: RegExp;
 }
 /**
- * Interface for text interpolation parameters
+ * Interface for text interpolation parameters.
  */
 export interface IInterpolateTextParams {
+    /**
+     * The ID of the component that owns the interpolation.
+     */
     componentId: string;
+    /**
+     * The HTML element that serves as the context for the interpolation.
+     */
     contextElement: HTMLElement;
+    /**
+     * The text containing interpolation syntax.
+     */
     text: string;
+    /**
+     * A callback to handle the evaluated value.
+     */
     handler: (value: string) => void;
     /**
      * Optional regex to use for matching interpolation syntax. Defaults to `InterpolateInlineRegex`.
@@ -35,19 +59,6 @@ export interface IInterpolateTextParams {
      * If true, treats the entire text as a single expression and stores the resulting object instead of stringifying it.
      */
     storeObject?: boolean;
-}
-/**
- * Utility to serialize an element's content to an HTML string. Not currently used by the interpolation system.
- * @param el - The element to get content from
- * @returns An HTML string representing the element's content
- */
-export declare function GetElementContent(el: Element): any;
-/**
- * @deprecated This interface is no longer used by the current interpolation implementation.
- */
-export interface IInterpolateTextNode {
-    text: string;
-    evaluated: string;
 }
 /**
  * Replaces the given text with its evaluated value, setting up a reactive effect to keep it updated.
@@ -66,8 +77,8 @@ export declare function ReplaceText({ componentId, contextElement, text, handler
  */
 export declare function InterpolateText({ text, testRegex, matchRegex, ...rest }: IInterpolateTextParams): void;
 /**
- * Scans an element's child nodes for text content with interpolation syntax (`{{...}}`) and replaces it with reactive text nodes.
- * This function is the entry point for interpolating an element's entire content.
+ * Scans an element's direct child text nodes for interpolation syntax (`{{...}}`) and replaces them with reactive text nodes.
+ * This will not recurse into child elements.
  * @param componentId - The ID of the component
  * @param contextElement - The element whose content will be interpolated
  * @param text - Optional text to interpolate. If provided, it will be handled by `InterpolateText`.

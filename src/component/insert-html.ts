@@ -22,16 +22,17 @@ export interface InsertionOptions{
     afterTransitionCallback?: () => void;
     transitionScope?: HTMLElement;
     useTransition?: boolean;
+    sanitize?: boolean;
 }
 
-export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, beforeRemove, afterRemove, beforeInsert, afterInsert, afterTransitionCallback, transitionScope, useTransition }: InsertionOptions){
+export function InsertHtml({ element, html, type = 'replace', component, processDirectives = true, beforeRemove, afterRemove, beforeInsert, afterInsert, afterTransitionCallback, transitionScope, useTransition, sanitize = true }: InsertionOptions){
     const componentId = ((typeof component === 'string') ? component : (component?.GetId() || '')), insert = () => {
         if ((beforeInsert && JournalTry(beforeInsert, 'InlineJS.InsertHtml', element)) === false){
             return;
         }
         
         const tmpl = document.createElement('template');
-        tmpl.innerHTML = DOMPurify.sanitize(html);
+        tmpl.innerHTML = sanitize ? DOMPurify.sanitize(html) : html;
 
         if (type === 'replace' || type === 'append'){
             element.append(...Array.from(tmpl.content.childNodes));

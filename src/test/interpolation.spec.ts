@@ -117,7 +117,7 @@ describe('interpolation', () => {
         await waitFor(() => { expect(el.textContent).equal('I am Jane Doe and 18 years old.') });
     });
 
-    it('should support nesting', async () => {
+    it('should not replace text in child elements', async () => {
         const component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
@@ -127,20 +127,22 @@ describe('interpolation', () => {
         el.innerHTML = 'I am {{ name }} and <span>{{ age }} years</span> old.';
 
         const span = el.querySelector('span')!;
-        
+
         Interpolate({
             componentId: component.GetId(),
             contextElement: el,
         });
-        
+
         await waitFor(() => {
-            expect(el.textContent).equal('I am John Doe and 72 years old.');
+            // 'name' is in a direct text node of 'el', so it gets replaced.
+            // 'age' is inside a child 'span', so it is NOT replaced.
+            expect(el.textContent).equal('I am John Doe and {{ age }} years old.');
             expect(el.querySelector('span')).equal(span);
-            expect(span.textContent).equal('72 years');
+            expect(span.textContent).equal('{{ age }} years');
         });
     });
 
-    it('should support nesting and be reactive', async () => {
+    it('should not replace text in child elements but should be reactive on parent', async () => {
         const component = CreateGlobal().CreateComponent(document.createElement('template')), el = document.createElement('p');
 
         component.GetRootProxy().GetNative()['name'] = 'John Doe';
@@ -149,26 +151,25 @@ describe('interpolation', () => {
         component.GetRoot().append(el);
         el.innerHTML = 'I am {{ name }} and <span>{{ age }} years</span> old.';
 
-        const span = el.querySelector('span')!;
-
         Interpolate({
             componentId: component.GetId(),
             contextElement: el,
         });
         
-        await waitFor(() => {
-            expect(el.textContent).equal('I am John Doe and 72 years old.');
-            expect(el.querySelector('span')).equal(span);
-            expect(span.textContent).equal('72 years');
-        });
+        await waitFor(() => { expect(el.textContent).equal('I am John Doe and {{ age }} years old.'); });
 
+        // Update 'name' - this should be reactive because it's in a direct text node.
         component.GetRootProxy().GetNative()['name'] = 'Jane Doe';
+
+        await waitFor(() => { expect(el.textContent).equal('I am Jane Doe and {{ age }} years old.'); });
+
+        // Update 'age' - this should NOT be reactive because it's in a child element.
         component.GetRootProxy().GetNative()['age'] = 18;
 
-        await waitFor(() => {
-            expect(el.textContent).equal('I am Jane Doe and 18 years old.');
-            expect(el.querySelector('span')).equal(span);
-            expect(span.textContent).equal('18 years');
-        });
+        // Wait a tick to ensure no reactive update happens, then check.
+        // The text content should remain unchanged because 'age' was never bound.
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(el.textContent).equal('I am Jane Doe and {{ age }} years old.');
+        expect(el.querySelector('span')?.textContent).equal('{{ age }} years');
     });
 });

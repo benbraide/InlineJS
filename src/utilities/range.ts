@@ -4,10 +4,23 @@ import { Range, RangeValueType, TimedRange } from "../values/range";
 import { IsEqual } from "./is-equal";
 import { CreateAnimationLoop } from "./loop";
 
-export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (value: T) => boolean | undefined, duration: number = 3000, delay = 1000){
+export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (value: T) => boolean | undefined | void, duration: number = 3000, delay = 1000, checkIntegers = true){
+    const applyValue = (value: T) => {
+        if (!checkIntegers){
+            return JournalTry(() => callback(value));
+        }
+
+        const from = range.GetFrom(), to = range.GetTo();
+        if (typeof from !== "number" || typeof to !== "number"){
+            return JournalTry(() => callback(value));
+        }
+
+        return JournalTry(() => callback(Number.isInteger(from) && Number.isInteger(to) ? (Math.floor(value as number) as T) : value));
+    };
+    
     const doLastStep = () => {
         const lastStep = range.Step(1);
-        lastStep !== null && JournalTry(() => callback(lastStep));
+        lastStep !== null && applyValue(lastStep);
     };
 
     if (GetGlobal().IsTimedRange(range)){
@@ -27,7 +40,7 @@ export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (v
     }
     
     let previousStep: T = firstStep;
-    if (JournalTry(() => callback(previousStep)) === false) return;
+    if (applyValue(previousStep) === false) return;
     
     CreateAnimationLoop(duration, delay).While(({ elapsed, abort }) => {
         const step = range.Step(elapsed / duration);
@@ -36,7 +49,16 @@ export function UseRange<T extends RangeValueType>(range: Range<T>, callback: (v
         }
         else if (!IsEqual(step, previousStep)) {
             previousStep = step;
-            JournalTry(() => callback(step)) === false && abort?.();
+            applyValue(step) === false && abort?.();
         }
     }).Final(doLastStep);
+}
+
+export function ConsiderRange(value: any, callback: (value: any) => boolean | undefined | void, duration: number = 3000, delay = 1000, checkIntegers = true){
+    if (GetGlobal().IsRange(value)){
+        UseRange(value, callback, duration, delay, checkIntegers);
+    }
+    else{
+        JournalTry(() => callback(value));
+    }
 }
