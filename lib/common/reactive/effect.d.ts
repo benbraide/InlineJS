@@ -8,5 +8,6 @@ export interface IUseEffectInfo {
     contextElement: HTMLElement | string | null;
     options?: IUseEffectOptions;
     subscriptionsCallback?: SubscriptionsCallbackType;
+    cancelCallback?: (cancel: () => void) => void;
 }
-export declare function UseEffect({ componentId, callback, contextElement, options, subscriptionsCallback }: IUseEffectInfo): void;
+export declare function UseEffect({ componentId, callback, contextElement, options, subscriptionsCallback, cancelCallback }: IUseEffectInfo): void;

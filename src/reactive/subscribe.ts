@@ -85,7 +85,7 @@ export function SubscribeToChanges({ componentId, proxyAccessStorage, callback, 
     }
 
     if (contextElement){// Unsubscribe all when element is destroyed
-        FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => {
+        FindComponentById(componentId)?.FindElementScope(contextElement)?.AddMarkedCallback(() => {
             cancel();
             unsubscribeAll();
         });

@@ -15,9 +15,10 @@ export interface IUseEffectInfo{
     contextElement: HTMLElement | string | null;
     options?: IUseEffectOptions;
     subscriptionsCallback?: SubscriptionsCallbackType;
+    cancelCallback?: (cancel: () => void) => void;
 }
 
-export function UseEffect({ componentId, callback, contextElement, options, subscriptionsCallback } : IUseEffectInfo){
+export function UseEffect({ componentId, callback, contextElement, options, subscriptionsCallback, cancelCallback } : IUseEffectInfo){
     const storedProxyHandler = StoreProxyHandler(componentId), watch = () => {
         const component = FindComponentById(componentId);
         if (!component){
@@ -40,11 +41,15 @@ export function UseEffect({ componentId, callback, contextElement, options, subs
             });
         }, proxyAccessStorage);
 
-        !canceled && SubscribeToChanges({
+        const unsubscribe = !canceled && SubscribeToChanges({
             componentId, proxyAccessStorage, subscriptionsCallback,
             callback: details => storedProxyHandler(() => callback(details)),
             contextElement: elScope?.GetElement()
         });
+
+        if (unsubscribe && cancelCallback){
+            cancelCallback(cancel);
+        }
     };
 
     if (options?.nextTick){

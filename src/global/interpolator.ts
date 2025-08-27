@@ -1,9 +1,10 @@
 import { FindComponentById } from "../component/find";
 import { EvaluateLater } from "../evaluator/evaluate-later";
-import { GeneratedFunctionType } from "../evaluator/generate-function";
 import { UseEffect } from "../reactive/effect";
 import { EncodeValue } from "../utilities/encode-value";
 import { ConsiderRange } from "../utilities/range";
+import { ToString } from "../utilities/to-string";
+import { GetGlobal } from "./get";
 
 /**
  * Interface for interpolation parameters.
@@ -72,62 +73,86 @@ export interface IInterpolateTextParams{
 const InterpolateInlineRegex = /\{\{\s*(.+?)\s*\}\}/g;
 const InterpolateInlineTestRegex = /\{\{.+?\}\}/;
 
-/**
- * Replaces the given text with its evaluated value, setting up a reactive effect to keep it updated.
- * @param componentId - The ID of the component
- * @param contextElement - The element to use as context for evaluation
- * @param text - The text containing interpolation syntax
- * @param handler - A callback to handle the evaluated value
- * @param testRegex - Optional regex to test for interpolation
- * @param matchRegex - Optional regex to match interpolation
- * @param storeObject - If true, treats the entire text as a single expression and stores the resulting object
- */
-export function ReplaceText({ componentId, contextElement, text, handler, testRegex, matchRegex, storeObject }: IInterpolateTextParams){
-    let evaluate: GeneratedFunctionType | null = null, injectedHandler: ((value: any) => void) | null = null;
-    if (storeObject){
-        const trimmedtext = text.trim();
-        let match = (trimmedtext.match(testRegex || InterpolateInlineTestRegex) || [])[0];
-        if (match && match === trimmedtext){
-            match = match.replace((matchRegex || InterpolateInlineRegex), '$1').trim();
-            evaluate = match ? EvaluateLater({ componentId, contextElement,
-                expression: `return (${match});`,
-                voidOnly: true,
-            }) : (handler => (handler && handler('')));
-            injectedHandler = value => handler(EncodeValue(value, componentId, contextElement));
-        }
-    }
-    
-    if (!evaluate){
-        text = JSON.stringify(text).replace((matchRegex || InterpolateInlineRegex), '"+($1)+"').replace(/"\+\(\s*\)\+"/g, '');
-        evaluate = EvaluateLater({ componentId, contextElement,
-            expression: `const output = ${text}; return output;`,
-        });
+export function TraverseInterpolationReplacements(componentId: string, contextElement: HTMLElement, text: string, matchRegex: RegExp, callback: (index: number, before: string, value: any, after: string) => void){
+    const matches = [...text.matchAll(matchRegex)];
+    if (matches.length === 0) {
+        callback(0, text, GetGlobal().CreateNothing(), '');
+        return;
     }
 
-    let checkpoint = 0;
-    if (evaluate){
-        FindComponentById(componentId)?.CreateElementScope(contextElement);
-        UseEffect({
-            componentId, contextElement,
-            callback: () => evaluate((value) => {
-                const myCheckpoint = ++checkpoint;
-                ConsiderRange(value, (val) => {
-                    if (myCheckpoint !== checkpoint) return false;
-                    (injectedHandler || handler)?.(val);
+    let lastIndex = 0;
+    
+    matches.forEach((match, index) => {
+        const expression = match[1];
+        const before = text.substring(lastIndex, match.index);
+
+        lastIndex = (match.index || 0) + match[0].length;
+        
+        const remainingText = index < matches.length - 1 ? '' : text.substring(lastIndex);
+        let isFirstCall = true, cancelEffect: (() => void) | null = null;
+        
+        UseEffect({ componentId, contextElement,
+            callback: () => {
+                let checkpoint = 0;
+                EvaluateLater({ componentId, contextElement, expression })((value) => {
+                    const myCheckpoint = ++checkpoint;
+                    ConsiderRange(value, (val) => {
+                        if (myCheckpoint !== checkpoint) return false;
+
+                        callback(index, isFirstCall ? before : '', val, isFirstCall ? remainingText : '');
+                        isFirstCall = false;
+                    });
                 });
-            }),
+            },
+            cancelCallback: (cancel) => cancelEffect = cancel,
         });
-    }
+        
+        FindComponentById(componentId)?.FindElementScope(contextElement)?.AddUninitCallback(() => cancelEffect?.());
+    });
 }
 
 /**
- * A wrapper around `ReplaceText` that first tests if the text contains interpolation syntax before processing.
+ * Reactively interpolates a string containing `{{...}}` syntax, calling a handler with the updated string.
  * @param params - The interpolation parameters
  */
-export function InterpolateText({ text, testRegex, matchRegex, ...rest }: IInterpolateTextParams){
-    if ((testRegex || matchRegex || InterpolateInlineTestRegex).test(text)) {
-        ReplaceText({ text, testRegex, matchRegex, ...rest });
+export function InterpolateText({ componentId, contextElement, text, testRegex, matchRegex, storeObject, handler }: IInterpolateTextParams){
+    if (!(testRegex || InterpolateInlineTestRegex).test(text)){
+        return handler(text);
     }
+    
+    const matchCount = [...text.matchAll(matchRegex || InterpolateInlineRegex)].length;
+    if (matchCount === 0) { // Should be caught by testRegex, but for safety
+        return handler(text);
+    }
+
+    const parts = new Array<string>();
+    let initializedCount = 0;
+    
+    TraverseInterpolationReplacements(componentId, contextElement, text, matchRegex || InterpolateInlineRegex, (index, before, value, after) => {
+        const localIndex = index * 3;
+
+        if (localIndex >= parts.length){
+            parts.push(before);
+        
+            if (GetGlobal().IsNothing(value)){
+                parts.push('');
+            }
+            else{
+                parts.push(storeObject ? EncodeValue(value, componentId, contextElement) : ToString(value));
+            }
+            
+            parts.push(after);
+
+            initializedCount++;
+            if (initializedCount === matchCount) {
+                handler(parts.join(''));
+            }
+        }
+        else{
+            parts[localIndex + 1] = storeObject ? EncodeValue(value, componentId, contextElement) : ToString(value);
+            handler(parts.join(''));
+        }
+    });
 }
 
 /**
@@ -150,45 +175,33 @@ export function Interpolate({ componentId, contextElement, text, handler, testRe
      * @param node - The node to process
      */
     const processNode = (node: Node) => {
-        if (node.nodeType === Node.TEXT_NODE && node.textContent && (testRegex || InterpolateInlineTestRegex).test(node.textContent)) {
+        if (node.parentNode && node.nodeType === Node.TEXT_NODE && node.textContent && (testRegex || InterpolateInlineTestRegex).test(node.textContent)) {
             const text = node.textContent;
-            const matches = [...text.matchAll(matchRegex || InterpolateInlineRegex)];
-            
-            if (matches.length === 0) {
-                return;
-            }
-
             const fragment = document.createDocumentFragment();
-            let lastIndex = 0;
+            const placeholders = new Array<Text>();
 
-            matches.forEach((match) => {
-                const expression = match[1];
-                const staticText = text.substring(lastIndex, match.index);
- 
-                if (staticText) {
-                    fragment.appendChild(document.createTextNode(staticText));
+            TraverseInterpolationReplacements(componentId, contextElement, text, matchRegex || InterpolateInlineRegex, (index, before, value, after) => {
+                before && fragment.appendChild(document.createTextNode(before));
+
+                if (!GetGlobal().IsNothing(value)){
+                    if (index >= placeholders.length){
+                        const placeholder = document.createTextNode('');
+                        fragment.appendChild(placeholder);
+                        placeholder.textContent = ToString(value);
+                        placeholders.push(placeholder);
+                    }
+                    else{
+                        placeholders[index].textContent = ToString(value);
+                    }
                 }
 
-                const placeholder = document.createTextNode('');
-                fragment.appendChild(placeholder);
-
-                ReplaceText({ componentId, contextElement, text: `{{ ${expression} }}`, handler: (value) => {
-                    placeholder.textContent = value;
-                }});
-
-                lastIndex = (match.index || 0) + match[0].length;
+                after && fragment.appendChild(document.createTextNode(after));
             });
- 
-            const remainingText = text.substring(lastIndex);
-            if (remainingText) {
-                fragment.appendChild(document.createTextNode(remainingText));
-            }
 
-            node.parentNode?.replaceChild(fragment, node);
+            node.parentNode.replaceChild(fragment, node);
         }
     };
 
     // Process only the context element's direct children
     [...contextElement.childNodes].forEach(processNode);
 }
-

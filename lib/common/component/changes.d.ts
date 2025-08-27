@@ -1,18 +1,20 @@
+import { Stack } from "../stack";
 import { ChangeCallbackType, IBubbledChange, IChange } from "../types/change";
 import { IChanges } from "../types/changes";
 import { ChangesMonitor } from "./changes-monitor";
 export declare class Changes extends ChangesMonitor implements IChanges {
-    private componentId_;
-    private nextTickHandlers_;
-    private nextIdleHandlers_;
-    private nextNonIdleHandlers_;
-    private isScheduled_;
-    private isIdle_;
-    private isDestroyed_;
-    private list_;
-    private subscribers_;
-    private subscriberPaths_;
-    private origins_;
+    protected componentId_: string;
+    protected nextTickHandlers_: (() => void)[];
+    protected nextIdleHandlers_: (() => void)[];
+    protected nextNonIdleHandlers_: (() => void)[];
+    protected isScheduled_: boolean;
+    protected isIdle_: boolean;
+    protected isDestroyed_: boolean;
+    protected list_: (IChange | IBubbledChange)[];
+    protected subscribers_: Record<string, Record<string, ChangeCallbackType>>;
+    protected subscriberPaths_: Record<string, string>;
+    protected origins_: Stack<ChangeCallbackType>;
+    protected recentRemovals_: Array<ChangeCallbackType> | null;
     constructor(componentId_: string);
     GetComponentId(): string;
     AddNextTickHandler(handler: () => void): void;
@@ -28,5 +30,5 @@ export declare class Changes extends ChangesMonitor implements IChanges {
     Subscribe(path: string, handler: ChangeCallbackType): string;
     Unsubscribe(subscribed: ChangeCallbackType | string, path?: string): void;
     Destroy(): void;
-    private Unsubscribe_;
+    protected Unsubscribe_(id: string): void;
 }

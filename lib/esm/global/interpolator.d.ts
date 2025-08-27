@@ -60,22 +60,12 @@ export interface IInterpolateTextParams {
      */
     storeObject?: boolean;
 }
+export declare function TraverseInterpolationReplacements(componentId: string, contextElement: HTMLElement, text: string, matchRegex: RegExp, callback: (index: number, before: string, value: any, after: string) => void): void;
 /**
- * Replaces the given text with its evaluated value, setting up a reactive effect to keep it updated.
- * @param componentId - The ID of the component
- * @param contextElement - The element to use as context for evaluation
- * @param text - The text containing interpolation syntax
- * @param handler - A callback to handle the evaluated value
- * @param testRegex - Optional regex to test for interpolation
- * @param matchRegex - Optional regex to match interpolation
- * @param storeObject - If true, treats the entire text as a single expression and stores the resulting object
- */
-export declare function ReplaceText({ componentId, contextElement, text, handler, testRegex, matchRegex, storeObject }: IInterpolateTextParams): void;
-/**
- * A wrapper around `ReplaceText` that first tests if the text contains interpolation syntax before processing.
+ * Reactively interpolates a string containing `{{...}}` syntax, calling a handler with the updated string.
  * @param params - The interpolation parameters
  */
-export declare function InterpolateText({ text, testRegex, matchRegex, ...rest }: IInterpolateTextParams): void;
+export declare function InterpolateText({ componentId, contextElement, text, testRegex, matchRegex, storeObject, handler }: IInterpolateTextParams): void;
 /**
  * Scans an element's direct child text nodes for interpolation syntax (`{{...}}`) and replaces them with reactive text nodes.
  * This will not recurse into child elements.

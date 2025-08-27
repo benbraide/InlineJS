@@ -32,6 +32,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
         post: new Array<() => void>(),
         postAttributes: new Array<() => void>(),
         uninit: new Array<() => void>(),
+        marked: new Array<() => void>(),
         treeChange: new Array<TreeChangeCallbackType>(),
         attributeChange: new Array<AttributeChangeCallbackInfo>(),
     };
@@ -135,15 +136,33 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
     }
 
     public AddUninitCallback(callback: () => void){
-        if (!this.state_.isMarked){
+        if (!this.state_.isDestroyed){
             this.callbacks_.uninit.push(callback);
             this.NotifyListeners_('uninit-callbacks', this.callbacks_.uninit);
+        }
+        else{
+            JournalTry(callback);
         }
     }
 
     public RemoveUninitCallback(callback: () => void){
         this.callbacks_.uninit = this.callbacks_.uninit.filter(c => (c !== callback));
         this.NotifyListeners_('uninit-callbacks', this.callbacks_.uninit);
+    }
+
+    public AddMarkedCallback(callback: () => void): void {
+        if (!this.state_.isMarked) {
+            this.callbacks_.marked.push(callback);
+            this.NotifyListeners_('marked-callbacks', this.callbacks_.marked);
+        }
+        else{
+            JournalTry(callback);
+        }
+    }
+
+    public RemoveMarkedCallback(callback: () => void): void {
+        this.callbacks_.marked = this.callbacks_.marked.filter(c => (c !== callback));
+        this.NotifyListeners_('marked-callbacks', this.callbacks_.marked);
     }
 
     public AddTreeChangeCallback(callback: TreeChangeCallbackType){
@@ -225,11 +244,11 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
     }
 
     public Destroy(markOnly?: boolean){
-        if (this.state_.isDestroyed){
-            return;
-        }
+        if (this.state_.isDestroyed) return;
         
         this.state_.isMarked = true;
+        this.callbacks_.marked.splice(0).forEach(callback => JournalTry(callback));
+        
         if (!(this.element_ instanceof HTMLTemplateElement)){
             const component = FindComponentById(this.componentId_);
             if (component){
@@ -237,18 +256,10 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
             }
         }
         
-        if (markOnly){
-            return;
-        }
+        if (markOnly) return;
 
         this.queuedAttributeChanges_ = null;
-
-        this.callbacks_.uninit.splice(0).forEach((callback) => {
-            try{
-                callback();
-            }
-            catch {}
-        });
+        this.callbacks_.uninit.splice(0).forEach(callback => JournalTry(callback));
 
         this.callbacks_.post.splice(0);
         this.callbacks_.treeChange.splice(0);

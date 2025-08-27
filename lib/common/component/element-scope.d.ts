@@ -36,6 +36,8 @@ export declare class ElementScope extends ChangesMonitor implements IElementScop
     ExecutePostAttributesProcessCallbacks(): void;
     AddUninitCallback(callback: () => void): void;
     RemoveUninitCallback(callback: () => void): void;
+    AddMarkedCallback(callback: () => void): void;
+    RemoveMarkedCallback(callback: () => void): void;
     AddTreeChangeCallback(callback: TreeChangeCallbackType): void;
     RemoveTreeChangeCallback(callback: TreeChangeCallbackType): void;
     ExecuteTreeChangeCallbacks(added: Array<Node>, removed: Array<Node>): void;

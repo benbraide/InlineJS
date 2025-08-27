@@ -7,21 +7,22 @@ import { ChangesMonitor } from "./changes-monitor";
 import { FindComponentById } from "./find";
 
 export class Changes extends ChangesMonitor implements IChanges{
-    private nextTickHandlers_ = new Array<() => void>();// Gets notified at the end of a schedule run
-    private nextIdleHandlers_ = new Array<() => void>();// Gets notified when a scheduke runs without any changes
-    private nextNonIdleHandlers_ = new Array<() => void>();// Gets notified when a schedule runs with changes
+    protected nextTickHandlers_ = new Array<() => void>();// Gets notified at the end of a schedule run
+    protected nextIdleHandlers_ = new Array<() => void>();// Gets notified when a scheduke runs without any changes
+    protected nextNonIdleHandlers_ = new Array<() => void>();// Gets notified when a schedule runs with changes
 
-    private isScheduled_ = false;
-    private isIdle_ = true;
-    private isDestroyed_ = false;
+    protected isScheduled_ = false;
+    protected isIdle_ = true;
+    protected isDestroyed_ = false;
 
-    private list_ = new Array<IChange | IBubbledChange>();
-    private subscribers_: Record<string, Record<string, ChangeCallbackType>> = {};
-    private subscriberPaths_: Record<string, string> = {};
+    protected list_ = new Array<IChange | IBubbledChange>();
+    protected subscribers_: Record<string, Record<string, ChangeCallbackType>> = {};
+    protected subscriberPaths_: Record<string, string> = {};
 
-    private origins_ = new Stack<ChangeCallbackType>();
+    protected origins_ = new Stack<ChangeCallbackType>();
+    protected recentRemovals_: Array<ChangeCallbackType> | null = null;
     
-    public constructor(private componentId_: string){
+    public constructor(protected componentId_: string){
         super();
     }
     
@@ -55,14 +56,14 @@ export class Changes extends ChangesMonitor implements IChanges{
         this.isScheduled_ = true;
         queueMicrotask(() => {//Defer dispatches
             this.isScheduled_ = false;
+            
             const batches = new Map<ChangeCallbackType, Array<IChange | IBubbledChange>>();
             const addBatch = (change: IChange | IBubbledChange, callback: ChangeCallbackType) => {
-                if (!batches.has(callback)){
-                    batches.set(callback, [change]);
-                }
-                else{//Add to existing batch
-                    batches.get(callback)!.push(change);
-                }
+                if (this.recentRemovals_?.includes(callback)) return;
+
+                const batch = batches.get(callback) || [];
+                batch.push(change);
+                batches.set(callback, batch);
             };
 
             const getOrigin = (change: IChange | IBubbledChange) => (('original' in change) ? change.original.origin : change.origin);
@@ -79,40 +80,41 @@ export class Changes extends ChangesMonitor implements IChanges{
                 this.NotifyListeners_('list', this.list_);
             }
 
-            if (batches.size == 0) {// Idle
-                if (!this.isIdle_) {
-                    this.isIdle_ = true;
+            const after = () => {
+                if (this.nextTickHandlers_.length != 0){
+                    this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
+                    this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
                 }
+
+                this.recentRemovals_ = null;
+            };
+
+            if (batches.size == 0) {// Idle
+                this.isIdle_ = true;
 
                 if (this.nextIdleHandlers_.length != 0) { //Always check for idle handlers if there are no batches
                     this.nextIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextIdle`));
                     this.NotifyListeners_('next-idle-handlers', this.nextIdleHandlers_);
                 }
                 
-                if (this.nextTickHandlers_.length != 0){
-                    this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
-                    this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
-                }
+                after();
 
                 return;
             }
 
-            if (this.isIdle_) { // Out of idle
-                this.isIdle_ = false;
-            }
+            this.isIdle_ = false;
 
-            batches.forEach((changes, callback) => JournalTry(() => callback(changes), `InlineJs.Region<${this.componentId_}>.Schedule`));
+            batches.forEach((changes, callback) => {
+                !this.recentRemovals_?.includes(callback) && JournalTry(() => callback(changes), `InlineJs.Region<${this.componentId_}>.Schedule`);
+            });
             
             if (this.nextNonIdleHandlers_.length != 0) { //Always check for non-idle handlers if there are batches
                 this.nextNonIdleHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextNonIdle`));
                 this.NotifyListeners_('next-non-idle-handlers', this.nextNonIdleHandlers_);
             }
 
-            if (this.nextTickHandlers_.length != 0){
-                this.nextTickHandlers_.splice(0).forEach(handler => JournalTry(handler, `InlineJs.Region<${this.componentId_}>.NextTick`));
-                this.NotifyListeners_('next-tick-handlers', this.nextTickHandlers_);
-            }
-
+            after();
+            
             this.NotifyListeners_('scheduled', this.isScheduled_);
             this.Schedule();// Defer idle check
         });
@@ -177,6 +179,8 @@ export class Changes extends ChangesMonitor implements IChanges{
     }
 
     public Unsubscribe(subscribed: ChangeCallbackType | string, path?: string){
+        this.recentRemovals_ = this.recentRemovals_ || [];
+        
         if (typeof subscribed !== 'string'){
             const paths = (path ? [path] : Object.keys(this.subscribers_));
             paths.forEach(p => {
@@ -215,11 +219,14 @@ export class Changes extends ChangesMonitor implements IChanges{
         this.origins_.Purge();
     }
 
-    private Unsubscribe_(id: string){
+    protected Unsubscribe_(id: string){
         const path = this.subscriberPaths_[id];
         if (path && path in this.subscribers_ && id in this.subscribers_[path]){
+            this.recentRemovals_?.push(this.subscribers_[path][id]);
+            
             delete this.subscribers_[path][id];
             delete this.subscriberPaths_[id];
+            
             if (Object.keys(this.subscribers_[path]).length == 0){
                 delete this.subscribers_[path];
             }
