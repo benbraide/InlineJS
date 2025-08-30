@@ -1,6 +1,6 @@
 {
   "name": "@benbraide/inlinejs",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Run javascript code by embedding them in your HTML using the element as context.",
   "main": "./lib/common/index.js",
   "module": "./lib/esm/index.js",
