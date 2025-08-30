@@ -1,3 +1,4 @@
+import { IComponent } from "../types/component";
 import { IDirectiveManager } from "../types/directive";
 import { IElementScope, TreeChangeCallbackType } from "../types/element-scope";
 import { ChangesMonitor } from "./changes-monitor";
@@ -14,7 +15,7 @@ export declare class ElementScope extends ChangesMonitor implements IElementScop
     private managers_;
     private callbacks_;
     private state_;
-    constructor(componentId_: string, id_: string, element_: HTMLElement, isRoot_: boolean);
+    constructor(componentId_: string, id_: string, element_: HTMLElement, isRoot_: boolean, component?: IComponent, callback?: (scope: IElementScope) => void);
     SetInitialized(): void;
     IsInitialized(): boolean;
     GetComponentId(): string;

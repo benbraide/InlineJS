@@ -9,6 +9,7 @@ export interface IConfigOptions{
     directivePrefix?: string;
     elementPrefix?: string;
     directiveRegex?: RegExp;
+    elementRegex?: RegExp;
     directiveNameBuilder?: DirectiveNameBuilderType;
 }
 
@@ -17,13 +18,17 @@ export interface IConfig{
 
     SetDirectivePrefix(value: string): void;
     GetDirectivePrefix(): string;
+    GetDirectiveRegex(): RegExp;
+    
+    GetDirectiveName(name: string, addDataPrefix?: boolean): string;
+    MatchesDirective(name: string): boolean;
 
     SetElementPrefix(value: string): void;
     GetElementPrefix(): string;
+    GetElementRegex(): RegExp;
     
-    GetDirectiveRegex(): RegExp;
-    GetDirectiveName(name: string, addDataPrefix?: boolean): string;
     GetElementName(name: string): string;
+    MatchesElement(name: string): boolean;
 
     AddKeyEventMap(key: string, target: string): void;
     RemoveKeyEventMap(key: string): void;

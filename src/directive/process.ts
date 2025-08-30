@@ -1,7 +1,9 @@
 import { FindComponentById } from "../component/find";
+import { GetConfig } from "../component/get-config";
 import { GetGlobal } from "../global/get";
 import { JournalError } from "../journal/error";
 import { IProcessDetails, IProcessOptions } from "../types/process";
+import { IsCustomElement } from "../utilities/is-custom-element";
 import { IsInsideTemplate, IsTemplate } from "../utilities/template";
 import { DispatchDirective } from "./dispatch";
 import { TraverseDirectives } from "./traverse";
@@ -25,10 +27,15 @@ export function ProcessDirectives({ component, element, options = {}, proxyAcces
         return false;
     }
 
+    if (resolvedComponent.IsDestroyed()){
+        JournalError('Component is destroyed.', 'InlineJS.ProcessDirectives', element);
+        return false;
+    }
+
     let repeats = 0;
     TraverseDirectives({ element, proxyAccessHandler,
         callback: (directive) => {
-            if (DispatchDirective(component, <HTMLElement>element, directive, repeats)){
+            if (DispatchDirective(component, element as HTMLElement, directive, repeats)){
                 element.removeAttribute(directive.meta.view.original);
                 ++repeats;//Prevent multiple element scope initialization attempts
             }
@@ -36,22 +43,22 @@ export function ProcessDirectives({ component, element, options = {}, proxyAcces
         attributeCallback: (name, value) => GetGlobal().DispatchAttributeProcessing({ name, value, proxyAccessHandler,
             componentId: resolvedComponent!.GetId(),
             component: resolvedComponent!,
-            contextElement: <HTMLElement>element,
+            contextElement: element as HTMLElement,
         }),
     });
 
-    GetGlobal().DispatchTextContentProcessing({
+    !IsTemplate(element) && GetGlobal().DispatchTextContentProcessing({
         componentId: resolvedComponent.GetId(),
         component: resolvedComponent,
-        contextElement: <HTMLElement>element,
+        contextElement: element as HTMLElement,
         proxyAccessHandler,
     });
 
-    if ('OnElementScopeCreated' in element && typeof (element as any).OnElementScopeCreated === 'function'){
+    if (IsCustomElement(element)){// Element is defined as custom
         resolvedComponent.CreateElementScope((element as unknown as HTMLElement));
     }
 
-    const elementScope = resolvedComponent.FindElementScope(<HTMLElement>element);
+    const elementScope = resolvedComponent.FindElementScope(element);
     elementScope?.ExecutePostAttributesProcessCallbacks();
     
     const componentId = resolvedComponent.GetId(), processChildren = () => {

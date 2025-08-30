@@ -82,9 +82,3 @@ export interface IComponent{
     GetBackend(): IComponentBackend;
     GetGlobal(): IGlobal;
 }
-
-export interface IElementScopeCreatedCallbackParams{
-    componentId: string;
-    component: IComponent | null;
-    scope: IElementScope;
-}

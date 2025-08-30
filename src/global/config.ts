@@ -34,6 +34,9 @@ export class Config implements IConfig{
         this.options_ = MergeObjects({ ...GetGlobalScope('config', true) }, MergeObjects(this.options_, this.defaultOptions_));
         this.UpdateDirectiveRegex_();
 
+        this.options_.directivePrefix && (this.options_.directivePrefix = this.options_.directivePrefix.replace(/\-/g, ''));
+        this.options_.elementPrefix && (this.options_.directivePrefix = this.options_.elementPrefix.replace(/\-/g, ''));
+
         if (!this.options_.directiveNameBuilder){
             const options = this.options_, defaultOptions = this.defaultOptions_;
             options.directiveNameBuilder = ((name: string, addDataPrefix = false) => {
@@ -48,7 +51,7 @@ export class Config implements IConfig{
     }
 
     public SetDirectivePrefix(value: string){
-        this.options_.directivePrefix = value;
+        this.options_.directivePrefix = value.replace(/\-/g, '');
         this.UpdateDirectiveRegex_();
     }
 
@@ -56,14 +59,6 @@ export class Config implements IConfig{
         return this.options_.directivePrefix || this.defaultOptions_.directivePrefix || 'hx';
     }
 
-    public SetElementPrefix(value: string){
-        this.options_.elementPrefix = value;
-    }
-
-    public GetElementPrefix(){
-        return this.options_.elementPrefix || this.GetDirectivePrefix();
-    }
-    
     public GetDirectiveRegex(){
         return this.options_.directiveRegex || this.UpdateDirectiveRegex_();
     }
@@ -72,8 +67,28 @@ export class Config implements IConfig{
         return (this.options_.directiveNameBuilder ? this.options_.directiveNameBuilder(name, addDataPrefix) : name);
     }
 
+    public MatchesDirective(name: string): boolean {
+        return this.GetDirectiveRegex().test(name);
+    }
+
+    public SetElementPrefix(value: string){
+        this.options_.elementPrefix = value.replace(/\-/g, '');
+    }
+
+    public GetElementPrefix(){
+        return this.options_.elementPrefix || this.GetDirectivePrefix();
+    }
+
+    public GetElementRegex(){
+        return this.options_.elementRegex || this.UpdateElementRegex_();
+    }
+
     public GetElementName(name: string){
         return `${this.GetElementPrefix()}-${name}`;
+    }
+
+    public MatchesElement(name: string): boolean {
+        return this.GetElementRegex().test(name);
     }
 
     public AddKeyEventMap(key: string, target: string){
@@ -116,15 +131,19 @@ export class Config implements IConfig{
         return this.options_.useGlobalWindow || false;
     }
 
-    protected UpdateDirectiveRegex_(){
-        return (this.options_.directiveRegex = new RegExp(`^(data-)?${this.GetDirectivePrefix()}-(.+)$`));
-    }
-
     public SetWrapScopedFunctions(value: boolean){
         this.options_.wrapScopedFunctions = value;
     }
 
     public GetWrapScopedFunctions(){
         return this.options_.wrapScopedFunctions || false;
+    }
+
+    protected UpdateDirectiveRegex_(){
+        return (this.options_.directiveRegex = new RegExp(`^(data-)?${this.GetDirectivePrefix()}-(.+)$`));
+    }
+
+    protected UpdateElementRegex_(){
+        return (this.options_.elementRegex = new RegExp(`^${this.GetElementPrefix()}-(.+)$`));
     }
 }

@@ -80,7 +80,7 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
         return nullHandler;
     }
 
-    const runFunction = (handler?: ((value: any) => void) | undefined, target?: any, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true, waitMessage?: string) => {
+    const runFunction = (target: (param: any) => any, handler?: ((value: any) => void) | undefined, params?: Array<any>, contexts?: Record<string, any>, forwardSyntaxErrors = true, waitMessage?: string) => {
         const component = FindComponentById(componentId), proxy = component?.GetRootProxy().GetNative();
         if (!proxy || component?.FindElementScope(contextElement)?.IsDestroyed()){
             return;
@@ -135,18 +135,28 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
     };
     
     return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>, waitMessage?: string) => {
+        if (!func){
+            return nullHandler(handler);
+        }
+
+        const scope = FindComponentById(componentId)?.FindElementScope(contextElement);
+        if (!scope || scope.IsMarked()){
+            return nullHandler(handler);
+        }
+        
         try{
-            return runFunction(handler, func!.bind(contextElement), (params || []), (contexts || {}), undefined, waitMessage);
+            return runFunction(func.bind(contextElement), handler, (params || []), (contexts || {}), undefined, waitMessage);
         }
         catch (err){
             if (err instanceof SyntaxError && !voidGenerated){
                 voidGenerated = true;
                 func = GenerateVoidFunction(expression, componentId, true);
+
                 if (!func){
                     return nullHandler(handler);
                 }
 
-                return runFunction(handler, func!.bind(contextElement), (params || []), (contexts || {}), false);
+                return runFunction(func.bind(contextElement), handler, (params || []), (contexts || {}), false);
             }
             else{
                 JournalError(err, `InlineJs.Region<${componentId}>.RunFunction('${expression}')`);

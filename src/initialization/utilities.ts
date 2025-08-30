@@ -24,6 +24,7 @@ import { FindAncestor } from '../utilities/find-ancestor';
 
 import { InsertHtml } from '../component/insert-html';
 import { IsInsideTemplate, IsTemplate } from '../utilities/template';
+import { IsCustomElement } from '../utilities/is-custom-element';
 
 export function InitializeUtilities(){
     InitializeGlobalScope('utilities', {
@@ -43,6 +44,7 @@ export function InitializeUtilities(){
         getTargets: GetTargets,
         isEqual: IsEqual,
         isObject: IsObject,
+        isCustomElement: IsCustomElement,
         toString: ToString,
         deepCopy: DeepCopy,
         mergeObjects: MergeObjects,

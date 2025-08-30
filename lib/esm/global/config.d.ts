@@ -8,11 +8,14 @@ export declare class Config implements IConfig {
     GetAppName(): string;
     SetDirectivePrefix(value: string): void;
     GetDirectivePrefix(): string;
-    SetElementPrefix(value: string): void;
-    GetElementPrefix(): string;
     GetDirectiveRegex(): RegExp;
     GetDirectiveName(name: string, addDataPrefix?: boolean): string;
+    MatchesDirective(name: string): boolean;
+    SetElementPrefix(value: string): void;
+    GetElementPrefix(): string;
+    GetElementRegex(): RegExp;
     GetElementName(name: string): string;
+    MatchesElement(name: string): boolean;
     AddKeyEventMap(key: string, target: string): void;
     RemoveKeyEventMap(key: string): void;
     MapKeyEvent(key: string): string | string[];
@@ -23,7 +26,8 @@ export declare class Config implements IConfig {
     GetReactiveState(): ReactiveStateType;
     SetUseGlobalWindow(value: boolean): void;
     GetUseGlobalWindow(): boolean;
-    protected UpdateDirectiveRegex_(): RegExp;
     SetWrapScopedFunctions(value: boolean): void;
     GetWrapScopedFunctions(): boolean;
+    protected UpdateDirectiveRegex_(): RegExp;
+    protected UpdateElementRegex_(): RegExp;
 }

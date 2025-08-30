@@ -9,6 +9,13 @@ import { ElementScopeKey } from "./element-scope-id";
 import { UnbindOutsideEvent } from "./event";
 import { InvalidateComponentCache } from "./cache";
 import { FindComponentById } from "./find";
+import { FindFirstAttribute } from "../utilities/get-attribute";
+import { GetConfig } from "./get-config";
+import { CreateDirective } from "../directive/create";
+import { DispatchDirective } from "../directive/dispatch";
+import { IsTemplate } from "../utilities/template";
+import { IsCustomElement } from "../utilities/is-custom-element";
+import { ICustomElement } from "../types/custom-element";
 
 interface AttributeChangeCallbackInfo{
     callback: (name?: string) => void;
@@ -42,8 +49,33 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
         isDestroyed: false,
     };
     
-    public constructor(private componentId_: string, private id_: string, private element_: HTMLElement, private isRoot_: boolean){
+    public constructor(private componentId_: string, private id_: string, private element_: HTMLElement, private isRoot_: boolean, component?: IComponent, callback?: (scope: IElementScope) => void){
         super();
+
+        element_[ElementScopeKey] = id_;
+        callback?.(this);
+        
+        const processDirective = (names: Array<string>) => {
+            const info = FindFirstAttribute(element_, names);
+            if (info){
+                const directive = CreateDirective(info.name, info.value);
+                directive && DispatchDirective(component || componentId_, element_, directive);
+            }
+        };
+
+        const config = GetConfig();
+        const knownDirectives = ['data', 'component', 'ref', 'locals', 'init'].map(name => [config.GetDirectiveName(name, false), config.GetDirectiveName(name, true)]);
+
+        knownDirectives.forEach(processDirective);
+        this.isInitialized_ = true;
+
+        if (IsCustomElement(element_)){
+            JournalTry(() => (element_ as unknown as ICustomElement).OnElementScopeCreated({
+                componentId: this.id_,
+                component: component || null,
+                scope: this,
+            }));
+        }
     }
 
     public SetInitialized(){
@@ -246,28 +278,44 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
     public Destroy(markOnly?: boolean){
         if (this.state_.isDestroyed) return;
         
-        this.state_.isMarked = true;
-        this.callbacks_.marked.splice(0).forEach(callback => JournalTry(callback));
+        const isCustomElement = IsCustomElement(this.element_);
+        const isTemplate = IsTemplate(this.element_);
         
-        if (!(this.element_ instanceof HTMLTemplateElement)){
-            const component = FindComponentById(this.componentId_);
-            if (component){
-                this.DestroyChildren_(component, this.element_, (markOnly || false));
+        if (!this.state_.isMarked){
+            this.state_.isMarked = true;
+            this.callbacks_.marked.splice(0).forEach(callback => JournalTry(callback));
+
+            if (isCustomElement){
+                JournalTry(() => (this.element_ as unknown as ICustomElement).OnElementScopeMarked(this));
+            }
+            
+            if (markOnly && !isTemplate){
+                const component = FindComponentById(this.componentId_);
+                component && this.DestroyChildren_(component, this.element_, true);
             }
         }
         
         if (markOnly) return;
 
+        this.state_.isDestroyed = true;
         this.queuedAttributeChanges_ = null;
         this.callbacks_.uninit.splice(0).forEach(callback => JournalTry(callback));
 
+        if (isCustomElement){
+            JournalTry(() => (this.element_ as unknown as ICustomElement).OnElementScopeDestroyed(this));
+        }
+
+        if (!isTemplate){
+            const component = FindComponentById(this.componentId_);
+            component && this.DestroyChildren_(component, this.element_, false);
+        }
+        
         this.callbacks_.post.splice(0);
         this.callbacks_.treeChange.splice(0);
         this.callbacks_.attributeChange.splice(0);
 
         this.data_ = {};
         this.locals_ = {};
-        this.state_.isDestroyed = true;
 
         UnbindOutsideEvent(this.element_);
         GetGlobal().GetMutationObserver().Unobserve(this.element_);

@@ -376,8 +376,8 @@ export class BaseGlobal extends ChangesMonitor implements IGlobal{
     }
 
     protected DispatchProcessing_(
-        processors: Array<AttributeProcessorType|TextContentProcessorType>,
-        params: IAttributeProcessorParams|ITextContentProcessorParams,
+        processors: Array<AttributeProcessorType | TextContentProcessorType>,
+        params: IAttributeProcessorParams | ITextContentProcessorParams,
         contextString: string
     ){
         const resolvedComponent = (params.component || this.FindComponentById(params.componentId)), pahCallback = SetProxyAccessHandler(resolvedComponent, (params.proxyAccessHandler || null));

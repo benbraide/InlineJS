@@ -1,12 +1,10 @@
-import { CreateDirective } from "../directive/create";
-import { DispatchDirective } from "../directive/dispatch";
 import { ProcessDirectives } from "../directive/process";
 import { GetGlobal } from "../global/get";
 import { JournalTry } from "../journal/try";
 import { RootProxy } from "../proxy/root";
 import { Stack } from "../stack";
 import { IChanges } from "../types/changes";
-import { IComponent, IComponentBackend, IElementScopeCreatedCallbackParams } from "../types/component";
+import { IComponent, IComponentBackend } from "../types/component";
 import { ReactiveStateType } from "../types/config";
 import { IElementScope } from "../types/element-scope";
 import { IIntersectionObserver } from "../types/intersection";
@@ -16,7 +14,6 @@ import { IRootElement } from "../types/root-element";
 import { IScope } from "../types/scope";
 import { ISelectionStackEntry } from "../types/selection";
 import { ContextKeys } from "../utilities/context-keys";
-import { FindFirstAttribute } from "../utilities/get-attribute";
 import { GenerateUniqueId, GetDefaultUniqueMarkers } from "../utilities/unique-markers";
 import { Changes } from "./changes";
 import { ChangesMonitor } from "./changes-monitor";
@@ -355,28 +352,9 @@ export class BaseComponent extends ChangesMonitor implements IComponent{
             return null;
         }
 
-        const elementScope = new ElementScope(this.id_, this.GenerateUniqueId('elscope_'), element, (element === this.root_));
-        this.elementScopes_[elementScope.GetId()] = elementScope;
-        element[ElementScopeKey] = elementScope.GetId();
-
-        const processDirective = (name: string) => {
-            const info = FindFirstAttribute(element, [GetConfig().GetDirectiveName(name, false), GetConfig().GetDirectiveName(name, true)]);
-            if (info){
-                const directive = CreateDirective(info.name, info.value);
-                directive && DispatchDirective(this, element, directive);
-            }
-        };
-
-        ['data', 'component', 'ref', 'locals', 'init'].forEach(dir => processDirective(dir));
-        elementScope.SetInitialized();
-
-        if ('OnElementScopeCreated' in element && typeof (element as any).OnElementScopeCreated === 'function'){
-            JournalTry(() => ((element as any).OnElementScopeCreated as (params: IElementScopeCreatedCallbackParams) => void)({
-                componentId: this.id_,
-                component: this,
-                scope: elementScope,
-            }));
-        }
+        const elementScope = new ElementScope(this.id_, this.GenerateUniqueId('elscope_'), element, element === this.root_, this, (scope) => {
+            this.elementScopes_[scope.GetId()] = scope;
+        });
 
         this.NotifyListeners_('element-scopes', this.elementScopes_);
 
