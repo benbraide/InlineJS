@@ -135,12 +135,12 @@ export function GenerateFunctionFromString({ componentId, contextElement, expres
     };
     
     return (handler?: (value: any) => void, params: Array<any> = [], contexts?: Record<string, any>, waitMessage?: string) => {
-        if (!func){
+        if (!func || (contextElement && !contextElement.isConnected)){
             return nullHandler(handler);
         }
 
         const scope = FindComponentById(componentId)?.FindElementScope(contextElement);
-        if (!scope || scope.IsMarked()){
+        if (scope?.IsMarked()){
             return nullHandler(handler);
         }
         
