@@ -71,7 +71,7 @@ export class ElementScope extends ChangesMonitor implements IElementScope{
 
         if (IsCustomElement(element_)){
             JournalTry(() => (element_ as unknown as ICustomElement).OnElementScopeCreated({
-                componentId: this.id_,
+                componentId: componentId_,
                 component: component || null,
                 scope: this,
             }));
